@@ -1,2 +1,2 @@
-# Haxe-ReflectCompiler
-A framework for creating Haxe language compilation targets using macros
+# Reflect Compiler for Haxe
+A framework for creating Haxe language compilation targets using macros.
