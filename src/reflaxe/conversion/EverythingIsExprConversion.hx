@@ -18,14 +18,17 @@ using reflaxe.helpers.TypedExprHelper;
 import haxe.macro.Type;
 
 class EverythingIsExprConversion {
+	// -------------------------------------------------------
 	// Stores the original, provided expression
 	public var haxeExpr: TypedExpr;
 
+	// -------------------------------------------------------
 	// Stores the sub-expression list if the original is a TBlock
 	// Otherwise, is an array of length one containing "haxeExpr"
 	public var topScopeArray: Array<TypedExpr>;
 	var index: Int = 0;
 
+	// -------------------------------------------------------
 	// If this expression is not null, the final expression of
 	// "topScopeArray" needs to be modified into an assignment
 	// expression assigning the final expression to "assigneeExpr"
@@ -34,6 +37,7 @@ class EverythingIsExprConversion {
 	// the latter being the standard syntax most languages use.
 	public var assigneeExpr: Null<TypedExpr>;
 
+	// -------------------------------------------------------
 	// If this "EverythingIsExprConversion" was created from another
 	// "EverythingIsExprConversion", this is a reference to that
 	// original object.
@@ -42,6 +46,7 @@ class EverythingIsExprConversion {
 	// new temporary variables names that are being created.
 	public var parent: Null<EverythingIsExprConversion> = null;
 
+	// -------------------------------------------------------
 	// TODO, write overly eloborate comment here
 	public var nameGenerator: TempVariableNameGenerator;
 
@@ -69,6 +74,7 @@ class EverythingIsExprConversion {
 		while(index < topScopeArray.length) {
 			var expr = topScopeArray[index];
 
+			// -------------------------------------------------------
 			// Depending on the expression, we can determine
 			// which expressions are treated like "values" in
 			// the Haxe code.
@@ -77,6 +83,7 @@ class EverythingIsExprConversion {
 			// a recursive-like system when necessary.
 			processExpr(expr);
 
+			// -------------------------------------------------------
 			// If this is the last expression in the block, and this block is
 			// expected to result in a value, we modify this final expression
 			// to assign to the provided "assignee" expression.
@@ -181,6 +188,7 @@ class EverythingIsExprConversion {
 		}
 	}
 
+	// -------------------------------------------------------
 	// Private function that is called on expressions that
 	// are expected to return a value no matter what.
 	//
@@ -198,6 +206,7 @@ class EverythingIsExprConversion {
 		}
 	}
 
+	// -------------------------------------------------------
 	// If a top-level, "block-like" expression is encountered
 	// that is not expected to provide a value, we can simply
 	// recursively use our "EverythingIsExprConversion" class
@@ -207,6 +216,7 @@ class EverythingIsExprConversion {
 		e.expr = eiec.convertedExpr().expr;
 	}
 
+	// -------------------------------------------------------
 	// If the expression is a type of syntax that is typically
 	// not an expression in other languages, but instead an
 	// "expression holder", this returns true.

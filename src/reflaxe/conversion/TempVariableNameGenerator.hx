@@ -19,6 +19,7 @@ package reflaxe.conversion;
 import haxe.macro.Type;
 
 class TempVariableNameGenerator {
+	// -------------------------------------------------------
 	// Count how many times a variable name is used so if it's
 	// used again we can append a "2", "3", etc. to keep it unique.
 	var variableNameCounts: Map<String, Int> = [];
@@ -26,6 +27,7 @@ class TempVariableNameGenerator {
 	public function new() {
 	}
 
+	// -------------------------------------------------------
 	// Generate variable name based on the type
 	public function generateName(t: Null<Type>, baseNameOverride: Null<String> = null) {
 		final baseName = baseNameOverride != null ? baseNameOverride : generateBaseName(t);
@@ -42,11 +44,13 @@ class TempVariableNameGenerator {
 		return result;
 	}
 
+	// -------------------------------------------------------
 	// The "base" name if the type cannot be determined
 	public function unknownBaseTypeName(): String {
 		return "var";
 	}
 
+	// -------------------------------------------------------
 	// Generate name from the base and number of uses
 	public function makeName(baseName: String, count: Int) {
 		final base = baseName.substring(0, 1).toUpperCase() + baseName.substring(1).toLowerCase();
@@ -54,6 +58,7 @@ class TempVariableNameGenerator {
 		return "temp" + base + suffix;
 	}
 
+	// -------------------------------------------------------
 	// Get the "base" name of the variable using type.
 	// tempTYPENAME123 - etc: tempNum, tempString3, tempFunction2
 	function generateBaseName(t: Null<Type>) {
