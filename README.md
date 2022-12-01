@@ -11,5 +11,6 @@ Here's what needs to be done:
 - [x] File Output File Per Module
 - [x] File Output File Per Class
 - [ ] Smart DCE
+- [ ] Smart Track and Delete Old Output Files
 - [ ] Fix EverythingIsExprConversion
 - [ ] Better Tests
