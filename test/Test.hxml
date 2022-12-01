@@ -1,0 +1,14 @@
+-cp ../src/
+-cp .
+
+-main MyClass
+
+# We set "testoutput" as our output define in ReflectCompiler.AddCompiler,
+# so now it tells the compiler to compile to our "test" target to the "out" directory.
+-D testoutput=out
+
+# This will normally be called automatically by the library, but we do it like this for testing.
+--macro reflaxe.ReflectCompiler.Start()
+
+# Initiate our compiler with our own function, required for all compilers.
+--macro TestCompiler.Start()

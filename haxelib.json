@@ -1,0 +1,19 @@
+{
+	"name": "reflaxe",
+	"version": "1.0.0",
+	"description": "A framework for creating Haxe language compilation targets using macros.",
+	"url": "https://github.com/RobertBorghese/reflaxe",
+	"license": "MIT",
+	"tags": [
+		"macro",
+		"compiler",
+		"reflection",
+		"target",
+		"externs",
+		"metadata",
+		"extension"
+	],
+	"classPath": "src/",
+	"releasenote": "Initial release.",
+	"contributors": ["RobertBorghese"]
+}
