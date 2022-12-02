@@ -83,6 +83,15 @@ class BaseCompilerOptions {
 	public var smartDCE: Bool = false;
 
 	// -------------------------------------------------------
+	// If "true", any old output files that are not generated
+	// in the most recent compilation will be deleted.
+	// A text file containing all the current output files is
+	// saved in the output directory to help keep track. 
+	//
+	// This feature is ignored when "fileOutputType" is SingleFile.
+	public var deleteOldOutput: Bool = true;
+
+	// -------------------------------------------------------
 	// If "true", an error is thrown if a function without
 	// a body is encountered. Typically this occurs when
 	// an umimplemented Haxe API function is encountered.
