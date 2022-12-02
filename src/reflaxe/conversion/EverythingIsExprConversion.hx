@@ -55,7 +55,7 @@ class EverythingIsExprConversion {
 	public function new(expr: TypedExpr, assignee: Null<TypedExpr> = null) {
 		haxeExpr = expr.copy();
 
-		topScopeArray = switch(expr.expr) {
+		topScopeArray = switch(haxeExpr.expr) {
 			case TBlock(exprs): exprs.map(e -> e.copy());
 			case _: [haxeExpr];
 		}
@@ -72,16 +72,19 @@ class EverythingIsExprConversion {
 	public function convertedExpr(): TypedExpr {
 		index = 0;
 		while(index < topScopeArray.length) {
-			var expr = topScopeArray[index];
-
 			// -------------------------------------------------------
-			// Depending on the expression, we can determine
-			// which expressions are treated like "values" in
-			// the Haxe code.
-			//
-			// An infinite while loop is used to locally replicate
-			// a recursive-like system when necessary.
-			processExpr(expr);
+			// Process the current expression, and if we get a 
+			// modified TypedExprDef, we use it to make a copy
+			// of the existing TypedExpr with the new definition.
+			final expr = topScopeArray[index];
+			final newExprDef = processExpr(expr);
+			if(newExprDef != null) {
+				topScopeArray[index] = {
+					expr: newExprDef,
+					pos: expr.pos,
+					t: expr.t
+				};
+			}
 
 			// -------------------------------------------------------
 			// If this is the last expression in the block, and this block is
@@ -112,78 +115,117 @@ class EverythingIsExprConversion {
 		return index == (topScopeArray.length - 1);
 	}
 
-	function processExpr(expr: TypedExpr) {
-		switch(expr.expr) {
+	// -------------------------------------------------------
+	// Depending on the expression, we can determine
+	// which expressions are treated like "values" in
+	// the Haxe code.
+	//
+	// An infinite while loop is used to locally replicate
+	// a recursive-like system when necessary.
+	function processExpr(expr: TypedExpr): Null<TypedExprDef> {
+		return switch(expr.expr) {
 			case TArray(e1, e2): {
-				handleValueExpr(e1, "array");
-				handleValueExpr(e2, "index");
+				TArray(
+					handleValueExpr(e1, "array"),
+					handleValueExpr(e2, "index")
+				);
 			}
-			case TBinop(_, e1, e2): {
-				handleValueExpr(e1, "left");
-				handleValueExpr(e2, "right");
+			case TBinop(op, e1, e2): {
+				TBinop(
+					op,
+					handleValueExpr(e1, "left"),
+					handleValueExpr(e2, "right")
+				);
 			}
-			case TField(e, _): {
-				handleValueExpr(e);
+			case TField(e, field): {
+				TField(handleValueExpr(e), field);
 			}
 			case TParenthesis(e): {
-				processExpr(e);
+				TParenthesis(expr.copy(processExpr(e)));
 			}
 			case TObjectDecl(fields): {
+				final newFields = [];
 				for(field in fields) {
-					handleValueExpr(field.expr);
+					newFields.push({ name: field.name, expr: handleValueExpr(field.expr) });
 				}
+				TObjectDecl(newFields);
 			}
 			case TArrayDecl(el): {
-				for(e in el) {
-					handleValueExpr(e);
-				}
+				TArrayDecl(handleValueExprList(el));
 			}
 			case TCall(expr, el): {
-				handleValueExpr(expr);
-				for(e in el) {
-					handleValueExpr(e);
-				}
+				TCall(
+					handleValueExpr(expr),
+					handleValueExprList(el)
+				);
 			}
-			case TNew(_, _, el): {
-				for(e in el) {
-					handleValueExpr(e);
-				}
+			case TNew(c, params, el): {
+				TNew(c, params, handleValueExprList(el));
 			}
-			case TUnop(_, _, expr): {
-				handleValueExpr(expr);
+			case TUnop(op, postfix, expr): {
+				TUnop(op, postfix, handleValueExpr(expr));
 			}
 			case TFunction(tfunc): {
-				handleNonValueBlock(tfunc.expr);
+				final newTFunc = Reflect.copy(tfunc);
+				newTFunc.expr = handleNonValueBlock(tfunc.expr);
+				TFunction(newTFunc);
 			}
 			case TVar(tvar, expr): {
-				handleValueExpr(expr);
+				TVar(tvar, handleValueExpr(expr));
 			}
 			case TBlock(exprs): {
-				handleNonValueBlock(expr);
+				handleNonValueBlock(expr).expr;
 			}
-			case TFor(_, e1, e2): {
-				handleValueExpr(e1);
-				handleNonValueBlock(e2);
+			case TFor(v, e1, e2): {
+				TFor(
+					v,
+					handleValueExpr(e1),
+					handleNonValueBlock(e2)
+				);
 			}
 			case TIf(econd, ifExpr, elseExpr): {
-				handleValueExpr(econd, "cond");
-				handleNonValueBlock(ifExpr);
-				if(elseExpr != null) {
-					handleNonValueBlock(elseExpr);
-				}
+				TIf(
+					handleValueExpr(econd, "cond"),
+					handleNonValueBlock(ifExpr),
+					elseExpr != null ? handleNonValueBlock(elseExpr) : null
+				);
 			}
-			case TWhile(econd, expr, _): {
-				handleValueExpr(econd, "cond");
-				handleNonValueBlock(expr);
+			case TWhile(econd, expr, normalWhile): {
+				TWhile(
+					handleValueExpr(econd, "cond"),
+					handleNonValueBlock(expr),
+					normalWhile
+				);
 			}
 			case TSwitch(expr, cases, edef): {
-				handleValueExpr(expr);
+				final newCases = [];
 				for(c in cases) {
-					handleNonValueBlock(c.expr);
+					newCases.push({ values: c.values, expr: handleNonValueBlock(c.expr) });
 				}
-				handleNonValueBlock(edef);
+				TSwitch(
+					handleValueExpr(expr),
+					newCases,
+					handleNonValueBlock(edef)
+				);
+			}
+			case TReturn(expr): {
+				TReturn(handleValueExpr(expr, "result"));
+			}
+			case TMeta(m, e): {
+				TMeta(m, handleValueExpr(e));
+			}
+			case TThrow(e): {
+				TThrow(handleValueExpr(e, "error"));
+			}
+			case TTry(e, catches): {
+				final newCatches = [];
+				for(c in catches) {
+					newCatches.push({ v: c.v, expr: handleNonValueBlock(c.expr) });
+				}
+				TTry(handleNonValueBlock(e), newCatches);
 			}
 			case _: {
+				null;
 			}
 		}
 	}
@@ -196,14 +238,30 @@ class EverythingIsExprConversion {
 	// we call "standardizeSubscopeValue" to transform it
 	// into a variable declaraion and scoped block that
 	// modifies the aforementioned variable.
-	function handleValueExpr(e: TypedExpr, varNameOverride: Null<String> = null) {
+	function handleValueExpr(e: TypedExpr, varNameOverride: Null<String> = null): TypedExpr {
 		if(isBlocklikeExpr(e)) {
-			if(standardizeSubscopeValue(e, index, varNameOverride)) {
+			final newExpr = standardizeSubscopeValue(e, index, varNameOverride);
+			if(newExpr != null) {
 				index += 2;
+				return newExpr;
 			}
 		} else {
-			processExpr(e);
+			final newExprDef = processExpr(e);
+			if(newExprDef != null) {
+				return e.copy(newExprDef);
+			}
 		}
+		return e.copy();
+	}
+
+	// -------------------------------------------------------
+	// Same as handleValueExpr, but works on Array of TypedExpr.
+	function handleValueExprList(el: Array<TypedExpr>): Array<TypedExpr> {
+		final newExprs = [];
+		for(e in el) {
+			newExprs.push(handleValueExpr(e));
+		}
+		return newExprs;
 	}
 
 	// -------------------------------------------------------
@@ -211,9 +269,9 @@ class EverythingIsExprConversion {
 	// that is not expected to provide a value, we can simply
 	// recursively use our "EverythingIsExprConversion" class
 	// to tranverse it and handle its sub-expressions.
-	function handleNonValueBlock(e: TypedExpr) {
+	function handleNonValueBlock(e: TypedExpr): TypedExpr {
 		final eiec = new EverythingIsExprConversion(e, isLastExpression() ? assigneeExpr : null);
-		e.expr = eiec.convertedExpr().expr;
+		return eiec.convertedExpr();
 	}
 
 	// -------------------------------------------------------
@@ -230,7 +288,7 @@ class EverythingIsExprConversion {
 		}
 	}
 
-	function standardizeSubscopeValue(e: TypedExpr, index: Int, varNameOverride: Null<String> = null): Bool {
+	function standardizeSubscopeValue(e: TypedExpr, index: Int, varNameOverride: Null<String> = null): Null<TypedExpr> {
 		var varName = nameGenerator.generateName(e.t, varNameOverride);
 
 		final varAssignExpr = { expr: TConst(TNull), pos: e.pos, t: e.t };
@@ -261,9 +319,8 @@ class EverythingIsExprConversion {
 
 		topScopeArray.insert(index, varExpr);
 		topScopeArray.insert(index + 1, eiec.convertedExpr());
-		e.expr = tvarExprDef;
 
-		return true;
+		return e.copy(tvarExprDef);
 	}
 }
 

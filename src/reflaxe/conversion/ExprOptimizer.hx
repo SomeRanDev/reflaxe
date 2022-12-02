@@ -16,6 +16,8 @@ package reflaxe.conversion;
 
 import haxe.macro.Type;
 
+using reflaxe.helpers.TypedExprHelper;
+
 class ExprOptimizer {
 	public static function optimizeAndUnwrap(expr: TypedExpr): Array<TypedExpr> {
 		return unwrapBlock(optimizeBlocks(expr));
@@ -24,7 +26,7 @@ class ExprOptimizer {
 	public static function unwrapBlock(expr: TypedExpr): Array<TypedExpr> {
 		return switch(expr.expr) {
 			case TBlock(exprList): exprList;
-			case _: [expr];
+			case _: [expr.copy()];
 		}
 	}
 
@@ -44,7 +46,7 @@ class ExprOptimizer {
 					};
 				}
 			}
-			case _: expr;
+			case _: expr.copy();
 		}
 	}
 }

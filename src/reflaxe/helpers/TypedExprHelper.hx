@@ -11,9 +11,9 @@ package reflaxe.helpers;
 import haxe.macro.Type;
 
 class TypedExprHelper {
-	public static function copy(e: TypedExpr): TypedExpr {
+	public static function copy(e: TypedExpr, newDef: Null<TypedExprDef> = null): TypedExpr {
 		return {
-			expr: e.expr,
+			expr: newDef != null ? newDef : e.expr,
 			pos: e.pos,
 			t: e.t
 		}
