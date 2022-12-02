@@ -130,14 +130,14 @@ class TestCompiler extends BaseCompiler {
 				}
 			}
 			case TWhile(econd, blockExpr, normalWhile): {
-				final gdCond = compileExpression(econd);
+				final cond = compileExpression(econd);
 				if(normalWhile) {
-					result = "while " + gdCond + ":\n";
+					result = "while " + cond + ":\n";
 					result += toIndentedScope(blockExpr);
 				} else {
 					result = "while true:\n";
 					result += toIndentedScope(blockExpr);
-					result += "\tif " + gdCond + ":\n";
+					result += "\tif " + cond + ":\n";
 					result += "\t\tbreak";
 				}
 			}
@@ -223,20 +223,20 @@ class TestCompiler extends BaseCompiler {
 	}
 
 	function binopToTestScript(op: Binop, e1: TypedExpr, e2: TypedExpr): String {
-		final gdExpr1 = compileExpression(e1);
-		final gdExpr2 = compileExpression(e2);
+		final expr1 = compileExpression(e1);
+		final expr2 = compileExpression(e2);
 		final operatorStr = OperatorHelper.binopToString(op);
-		return gdExpr1 + " " + operatorStr + " " + gdExpr2;
+		return expr1 + " " + operatorStr + " " + expr2;
 	}
 
 	function unopToTestScript(op: Unop, e: TypedExpr, isPostfix: Bool): String {
-		final gdExpr = compileExpression(e);
+		final expr = compileExpression(e);
 		final operatorStr = OperatorHelper.unopToString(op);
-		return isPostfix ? (gdExpr + operatorStr) : (operatorStr + gdExpr);
+		return isPostfix ? (expr + operatorStr) : (operatorStr + expr);
 	}
 
 	function fieldAccessToTestScript(e: TypedExpr, fa: FieldAccess): String {
-		final gdExpr = compileExpression(e);
+		final expr = compileExpression(e);
 		final fieldName = switch(fa) {
 			case FInstance(_, _, classFieldRef): classFieldRef.get().name;
 			case FStatic(_, classFieldRef): classFieldRef.get().name;
@@ -245,7 +245,7 @@ class TestCompiler extends BaseCompiler {
 			case FClosure(_, classFieldRef): classFieldRef.get().name;
 			case FEnum(_, enumField): enumField.name;
 		}
-		return gdExpr + "." + fieldName;
+		return expr + "." + fieldName;
 	}
 
 	function moduleNameToTestScript(m: ModuleType): String {
