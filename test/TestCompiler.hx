@@ -17,36 +17,40 @@ class TestCompiler extends BaseCompiler {
 			requireDefine: "testoutput",
 			outputDirDefineName: "testoutput",
 			fileOutputType: FilePerModule,
-			ignoreBodilessFunctions: true
+			ignoreBodilessFunctions: true,
+			smartDCE: true
 		});
 	}
 
 	public function compileClass(classType: ClassType, varFields: ClassFieldVars, funcFields: ClassFieldFuncs): Null<String> {
-		var result = "";
+		var decl = "class " + classType.name + ":\n";
 
-		result += "class " + classType.name + ":\n";
-
+		var varString = "";
 		for(vf in varFields) {
 			final field = vf.field;
-			final variableDeclaration = "var " + field.name;
+			final variableDeclaration = (vf.isStatic ? "static " : "") + "var " + field.name;
 			final testScriptVal = if(field.expr() != null) {
 				" = " + compileClassVarExpr(field.expr());
 			} else {
 				"";
 			}
-			result += (variableDeclaration + testScriptVal).tab() + "\n";
+			varString += (variableDeclaration + testScriptVal).tab() + "\n";
 		}
 
-		result += "\n";
-
+		var funcString = "";
 		for(ff in funcFields) {
 			final field = ff.field;
 			final tfunc = ff.tfunc;
-			final funcHeader = "func " + field.name + "(" + tfunc.args.map(a -> a.v.name).join(", ") + "):\n";
-			result += (funcHeader + compileClassFuncExpr(tfunc.expr).tab()).tab() + "\n\n";
+			final funcHeader = (ff.isStatic ? "static " : "") + "func " + field.name + "(" + tfunc.args.map(a -> a.v.name).join(", ") + "):\n";
+			funcString += (funcHeader + compileClassFuncExpr(tfunc.expr).tab()).tab() + "\n\n";
 		}
 
-		return result;
+		final body = (varString.length > 0 ? varString + "\n" : "") + funcString;
+		return decl + (body.length > 0 ? body : "\tpass");
+	}
+
+	public function compileEnum(enumType: EnumType, constructs:Map<String, haxe.macro.EnumField>): Null<String> {
+		return null;
 	}
 
 	public function compileExpression(expr: TypedExpr): Null<String> {

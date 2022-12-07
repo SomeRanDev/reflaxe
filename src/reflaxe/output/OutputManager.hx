@@ -34,9 +34,6 @@ class OutputManager {
 	var options(get, never): BaseCompilerOptions;
 	function get_options(): BaseCompilerOptions return compiler.options;
 
-	var classes(get, never): Array<{ cls: ClassType, output: String }>;
-	function get_classes(): Array<{ cls: ClassType, output: String }> return compiler.classes;
-
 	// -------------------------------------------------------
 	// new
 	public function new(compiler: BaseCompiler) {
@@ -121,7 +118,7 @@ class OutputManager {
 			outputDir;
 		}
 		final outputs = [];
-		for(c in classes) {
+		for(c in compiler.classes) {
 			outputs.push(c.output);
 		}
 		saveFile(filePath, outputs.join("\n\n"));
@@ -131,7 +128,7 @@ class OutputManager {
 		ensureOutputDirExists();
 
 		final files: Map<String, Array<String>> = [];
-		for(c in classes) {
+		for(c in compiler.classes) {
 			final mid = c.cls.moduleId();
 			if(!files.exists(mid)) {
 				files[mid] = [];
@@ -147,7 +144,7 @@ class OutputManager {
 
 	function generateFilePerClass() {
 		ensureOutputDirExists();
-		for(c in classes) {
+		for(c in compiler.classes) {
 			saveFile(joinPaths(outputDir, getFileName(c.cls.globalName())), c.output);
 		}
 	}

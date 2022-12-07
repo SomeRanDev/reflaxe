@@ -11,9 +11,10 @@ package reflaxe;
 import haxe.macro.Context;
 import haxe.macro.Type;
 
-using reflaxe.helpers.SyntaxHelper;
-
 import reflaxe.BaseCompiler;
+import reflaxe.input.ModuleUsageTracker;
+
+using reflaxe.helpers.SyntaxHelper;
 
 class ReflectCompiler {
 	// =======================================================
@@ -94,21 +95,61 @@ class ReflectCompiler {
 		addClassesToCompiler(compiler);
 		generateFiles(compiler);
 	}
+ 
+	static function getAllModulesTypesForCompiler(compiler: BaseCompiler): Array<ModuleType> {
+		return if(compiler.options.smartDCE) {
+			final tracker = new ModuleUsageTracker(moduleTypes);
+			tracker.filteredTypes();
+		} else {
+			moduleTypes;
+		}
+	}
 
 	static function addClassesToCompiler(compiler: BaseCompiler) {
 		final classDecls: Array<Ref<ClassType>> = [];
-		for(mt in moduleTypes) {
+		final enumDecls: Array<Ref<EnumType>> = [];
+		final defDecls: Array<Ref<DefType>> = [];
+		final abstractDecls: Array<Ref<AbstractType>> = [];
+
+		for(mt in getAllModulesTypesForCompiler(compiler)) {
 			switch(mt) {
 				case TClassDecl(clsTypeRef): {
 					classDecls.push(clsTypeRef);
 				}
-				case _: {}
+				case TEnumDecl(enumTypeRef): {
+					enumDecls.push(enumTypeRef);
+				}
+				case TTypeDecl(defTypeRef): {
+					defDecls.push(defTypeRef);
+				}
+				case TAbstract(abstractRef): {
+					abstractDecls.push(abstractRef);
+				}
 			}
 		}
 
 		for(clsRef in classDecls) {
 			final cls = clsRef.get();
-			compiler.addClassOutput(cls, transpileClass(cls, compiler));
+			if(compiler.shouldGenerateClass(cls)) {
+				compiler.addClassOutput(cls, transpileClass(cls, compiler));
+			}
+		}
+
+		for(enumRef in enumDecls) {
+			final enm = enumRef.get();
+			if(compiler.shouldGenerateEnum(enm)) {
+				compiler.addEnumOutput(enm, compiler.compileEnum(enm, enm.constructs));
+			}
+		}
+
+		for(defRef in defDecls) {
+			final def = defRef.get();
+			compiler.addTypedefOutput(def, compiler.compileTypedef(def));
+		}
+
+		for(abstractRef in abstractDecls) {
+			final ab = abstractRef.get();
+			compiler.addAbstractOutput(ab, compiler.compileAbstract(ab));
 		}
 	}
 
@@ -120,19 +161,21 @@ class ReflectCompiler {
 	// * transpileClass
 	// =======================================================
 	static function transpileClass(cls: ClassType, compiler: BaseCompiler): Null<String> {
-		final fieldList = cls.fields.get();
 		final varFields: ClassFieldVars = [];
 		final funcFields: ClassFieldFuncs = [];
 
-		for(field in fieldList) {
-			if(compiler.options.ignoreExterns && field.isExtern) {
-				continue;
+		final ignoreExterns = compiler.options.ignoreExterns;
+
+		final addField = function(field: ClassField, isStatic: Bool) {
+			if(ignoreExterns && field.isExtern) {
+				return;
 			}
 
 			switch(field.kind) {
 				case FVar(readVarAccess, writeVarAccess): {
-					if(shouldGenerateVar(field, compiler, readVarAccess, writeVarAccess)) {
+					if(shouldGenerateVar(field, compiler, isStatic, readVarAccess, writeVarAccess)) {
 						varFields.push({
+							isStatic: isStatic,
 							read: readVarAccess,
 							write: writeVarAccess,
 							field: field
@@ -140,10 +183,11 @@ class ReflectCompiler {
 					}
 				}
 				case FMethod(methodKind): {
-					if(shouldGenerateFunc(field, compiler, methodKind)) {
+					if(shouldGenerateFunc(field, compiler, isStatic, methodKind)) {
 						final tfunc = findTFunc(field);
 						if(tfunc != null) {
 							funcFields.push({
+								isStatic: isStatic,
 								kind: methodKind,
 								tfunc: tfunc,
 								field: field
@@ -157,6 +201,14 @@ class ReflectCompiler {
 				}
 			}
 		}
+
+		for(field in cls.fields.get()) {
+			addField(field, false);
+		}
+
+		for(field in cls.statics.get()) {
+			addField(field, true);
+		}
 	
 		return compiler.compileClass(cls, varFields, funcFields);
 	}
@@ -165,7 +217,7 @@ class ReflectCompiler {
 	// * shouldGenerateVar
 	// * shouldGenerateFunc
 	// =======================================================
-	static function shouldGenerateVar(field: ClassField, compiler: BaseCompiler, read: VarAccess, write: VarAccess): Bool {
+	static function shouldGenerateVar(field: ClassField, compiler: BaseCompiler, isStatic: Bool, read: VarAccess, write: VarAccess): Bool {
 		if(!compiler.shouldGenerateClassField(field)) {
 			return false;
 		}
@@ -179,7 +231,7 @@ class ReflectCompiler {
 		}
 	}
 
-	static function shouldGenerateFunc(field: ClassField, compiler: BaseCompiler, kind: MethodKind): Bool {
+	static function shouldGenerateFunc(field: ClassField, compiler: BaseCompiler, isStatic: Bool, kind: MethodKind): Bool {
 		return compiler.shouldGenerateClassField(field);
 	}
 

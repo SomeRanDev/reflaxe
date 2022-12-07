@@ -10,6 +10,8 @@ import reflaxe.conversion.ExprOptimizer;
 import reflaxe.conversion.EverythingIsExprConversion;
 import reflaxe.output.OutputManager;
 
+import reflaxe.helpers.ModuleTypeHelper;
+
 using reflaxe.helpers.ClassTypeHelper;
 
 // =======================================================
@@ -115,8 +117,8 @@ class BaseCompilerOptions {
 // Typedefs used for storing ClassFields and their
 // unwrapped data.
 // =======================================================
-typedef ClassFieldVars = Array<{ read: VarAccess, write: VarAccess, field: ClassField }>;
-typedef ClassFieldFuncs = Array<{ kind: MethodKind, tfunc: TFunc, field: ClassField }>;
+typedef ClassFieldVars = Array<{ isStatic: Bool, read: VarAccess, write: VarAccess, field: ClassField }>;
+typedef ClassFieldFuncs = Array<{ isStatic: Bool, kind: MethodKind, tfunc: TFunc, field: ClassField }>;
 
 // =======================================================
 // * BaseCompiler
@@ -128,11 +130,35 @@ typedef ClassFieldFuncs = Array<{ kind: MethodKind, tfunc: TFunc, field: ClassFi
 abstract class BaseCompiler {
 	// =======================================================
 	// * abstract functions
+	//
+	// Override in custom compiler to control it
 	// =======================================================
 	public abstract function compileClass(classType: ClassType, varFields: ClassFieldVars, funcFields: ClassFieldFuncs): Null<String>;
+	public abstract function compileEnum(classType: EnumType, constructs: Map<String, EnumField>): Null<String>;
 	public abstract function compileExpression(expr: TypedExpr): Null<String>;
-	public function shouldGenerateClassField(cls: ClassField): Bool { return true; }
+
+	public function compileTypedef(classType: DefType): Null<String> { return null; }
+	public function compileAbstract(classType: AbstractType): Null<String> { return null; }
+
+	public function shouldGenerateClass(cls: ClassType): Bool {
+		if(cls.isTypeParameter()) {
+			return false;
+		}
+		return !cls.isExtern || !options.ignoreExterns;
+	}
+
+	public function shouldGenerateEnum(enumType: EnumType): Bool {
+		return !enumType.isExtern || !options.ignoreExterns;
+	}
+
+	public function shouldGenerateClassField(cls: ClassField): Bool {
+		return true;
+	}
+	
 	public function onClassAdded(cls: ClassType, output: Null<String>): Void {}
+	public function onEnumAdded(cls: EnumType, output: Null<String>): Void {}
+	public function onTypedefAdded(cls: DefType, output: Null<String>): Void {}
+	public function onAbstractAdded(cls: AbstractType, output: Null<String>): Void {}
 
 	// =======================================================
 	// * new
@@ -186,13 +212,43 @@ abstract class BaseCompiler {
 	// =======================================================
 	// * Class Management
 	// =======================================================
-	public var classes(default, null): Array<{ cls: ClassType, output: String }> = [];
+	public var classes(default, null): Array<{ cls: CommonModuleTypeData, output: String }> = [];
 
 	public function addClassOutput(cls: ClassType, output: Null<String>) {
 		onClassAdded(cls, output);
 		if(output != null) {
 			classes.push({
 				cls: cls,
+				output: output
+			});
+		}
+	}
+
+	public function addEnumOutput(en: EnumType, output: Null<String>) {
+		onEnumAdded(en, output);
+		if(output != null) {
+			classes.push({
+				cls: en,
+				output: output
+			});
+		}
+	}
+
+	public function addTypedefOutput(def: DefType, output: Null<String>) {
+		onTypedefAdded(def, output);
+		if(output != null) {
+			classes.push({
+				cls: def,
+				output: output
+			});
+		}
+	}
+
+	public function addAbstractOutput(abt: AbstractType, output: Null<String>) {
+		onAbstractAdded(abt, output);
+		if(output != null) {
+			classes.push({
+				cls: abt,
 				output: output
 			});
 		}

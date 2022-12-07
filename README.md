@@ -10,7 +10,7 @@ Here's what needs to be done:
 - [x] File Output Single-File
 - [x] File Output File Per Module
 - [x] File Output File Per Class
-- [ ] Smart DCE
+- [x] Smart DCE
 - [x] Smart Track and Delete Old Output Files
 - [x] Fix EverythingIsExprConversion
 - [ ] Better Tests
