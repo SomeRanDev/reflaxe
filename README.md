@@ -11,11 +11,11 @@ All you need to worry about is programming the conversion from Haxe's typed AST 
 | Topic | Description |
 | --- | --- |
 | [Installation](https://github.com/RobertBorghese/reflaxe#installation) | How to install into your library. |
-| [Compiler Code Sample](https://github.com/RobertBorghese/reflaxe/edit/main/README.md#compiler-code-sample) | How to code the compiler. |
-| [extraParams.hxml Sample](https://github.com/RobertBorghese/reflaxe/edit/main/README.md#extraparamshxml-sample) | How to configure your library. |
-| [compile.hxml Sample](https://github.com/RobertBorghese/reflaxe/edit/main/README.md#compilerhxml-sample) | How to use your library on other Haxe projects. |
-| [BaseCompiler Functions](https://github.com/RobertBorghese/reflaxe/edit/main/README.md#basecompiler-functions) | The functions used to configure your compiler's behavior and code output. |
-| [BaseCompiler Options](https://github.com/RobertBorghese/reflaxe/edit/main/README.md#basecompiler-options) | Various options passed to Reflaxe for controlling your compiler's input/output. |
+| [Compiler Code Sample](https://github.com/RobertBorghese/reflaxe/#compiler-code-sample) | How to code the compiler. |
+| [extraParams.hxml Sample](https://github.com/RobertBorghese/reflaxe/#extraparamshxml-sample) | How to configure your library. |
+| [compile.hxml Sample](https://github.com/RobertBorghese/reflaxe/#compilerhxml-sample) | How to use your library on other Haxe projects. |
+| [BaseCompiler Functions](https://github.com/RobertBorghese/reflaxe/#basecompiler-functions) | The functions used to configure your compiler's behavior and code output. |
+| [BaseCompiler Options](https://github.com/RobertBorghese/reflaxe/#basecompiler-options) | Various options passed to Reflaxe for controlling your compiler's input/output. |
 
 &nbsp;
 &nbsp;
