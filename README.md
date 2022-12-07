@@ -1,16 +1,237 @@
 # Reflaxe - Reflection Compiler for Haxe
 A framework for creating Haxe language compilation targets using macros.
 
-Here's what needs to be done:
-- [x] Everything Is Expr Conversion
-- [x] Expression optimizers/convert block expressions
-- [x] Create BaseCompiler that can be set in ReflectCompiler
-- [x] Output Extension/Folder Configuration
-- [x] Ignore Unnecessary Content (bodiless, externs, non-physical fields)
-- [x] File Output Single-File
-- [x] File Output File Per Module
-- [x] File Output File Per Class
-- [x] Smart DCE
-- [x] Smart Track and Delete Old Output Files
-- [x] Fix EverythingIsExprConversion
-- [ ] Better Tests
+All you need to worry about is programming the conversion from Haxe's typed AST to your desired programming language. Reflaxe handles organizing the input AST, reading user configuration, and generating the output file(s), while also providing various configuration options and helper functions for Haxe target developers.
+
+&nbsp;
+&nbsp;
+
+## Table of Contents
+
+| Topic | Description |
+| --- | --- |
+| [Installation](https://github.com/RobertBorghese/reflaxe#installation) | How to install into your library. |
+| [Compiler Code Sample](https://github.com/RobertBorghese/reflaxe/edit/main/README.md#compiler-code-sample) | How to code the compiler. |
+| [extraParams.hxml Sample](https://github.com/RobertBorghese/reflaxe/edit/main/README.md#extraparamshxml-sample) | How to configure your library. |
+| [compile.hxml Sample](https://github.com/RobertBorghese/reflaxe/edit/main/README.md#compilerhxml-sample) | How to use your library on other Haxe projects. |
+| [BaseCompiler Functions](https://github.com/RobertBorghese/reflaxe/edit/main/README.md#basecompiler-functions) | The functions used to configure your compiler's behavior and code output. |
+| [BaseCompiler Options](https://github.com/RobertBorghese/reflaxe/edit/main/README.md#basecompiler-options) | Various options passed to Reflaxe for controlling your compiler's input/output. |
+
+&nbsp;
+&nbsp;
+&nbsp;
+
+## Installation
+| # | What to do | What to write |
+| - | ------ | ------ |
+| 1 | Install via haxelib. | <pre>haxelib install reflaxe</pre> |
+| 2 | Add the lib to your `.hxml` file or compile command. | <pre lang="hxml">-lib reflaxe</pre> |
+| 3 | Extend your compiler class from `BaseCompiler`. | <pre lang="haxe">class MyLangCompiler extends reflaxe.BaseCompiler</pre> |
+
+&nbsp;
+&nbsp;
+&nbsp;
+
+## Compiler Code Sample
+Now fill out the abstract functions from `BaseCompiler` to define how Haxe AST is converted into a String representation of your target language.
+
+```haxe
+class MyLangCompiler extends reflaxe.BaseCompiler {
+
+   //---------
+   // call this from your library's hxml file using --macro
+   public static function Start() {
+      final options = {
+         fileOutputExtension: ".mylang",
+         requireDefine: "mylang_out",
+         outputDirDefineName: "mylang_out",
+         fileOutputType: FilePerClass
+      };
+
+      //---------
+      // pass an instance of your compiler w/ desired options
+      reflaxe.ReflectCompiler.AddCompiler(new MyLangCompiler(), options);
+   }
+
+   //---------
+   // fill out just these 3 functions and Reflaxe takes care of the rest
+   //---------
+
+   public function compileClass(classType: ClassType, varFields: ClassFieldVars, funcFields: ClassFieldFuncs): Null<String> {
+      // ...
+   }
+
+   public function compileEnum(enumType: EnumType, constructs: Map<String, haxe.macro.EnumField>): Null<String> {
+      // ...
+   }
+
+   public function compileExpression(expr: TypedExpr): Null<String> {
+      // ...
+   }
+}
+```
+
+&nbsp;
+&nbsp;
+&nbsp;
+
+## `extraParams.hxml` Sample
+This framework is expected to be used to create Haxe libraries that "add" an output target. These Haxe libraries are then added to other projects and used to compile Haxe code to the target.
+
+Your Haxe library using Reflaxe should include an `extraParams.hxml` file that runs an initialization macro similar to the `MyLangCompiler.Start` function shown above.
+```hxml
+--macro MyLangCompiler.Start()
+```
+
+&nbsp;
+&nbsp;
+&nbsp;
+
+## `compiler.hxml` Sample
+The Haxe project that uses your library must first add it to their `.hxml` file. Next the "requireDefine" from the "options" object (as seen above) should be defined to tell Reflaxe to export this project to your target. Finally, the "outputDirDefineName" must be defined to select the directory of filename of the output as would be done with any other Haxe target.
+
+If "requireDefine" and "outputDirDefineName" are the same (as seen in the example above), only the "outputDirDefineName" needs to be used.
+
+```hxml
+# your library
+-lib haxe-to-mylang
+
+# set the output directory to "outputDir"
+-D mylang_out=outputDir
+
+# make sure Haxe doesn't output to its normal targets
+--no-output
+```
+
+&nbsp;
+&nbsp;
+&nbsp;
+
+## `BaseCompiler` Functions
+Here is a list of the relevant `BaseCompiler` functions and typedefs.
+
+```haxe
+//---------
+// These are the typedefs passed to "compileClass"
+typedef ClassFieldVars = Array<{ isStatic: Bool, read: VarAccess, write: VarAccess, field: ClassField }>;
+typedef ClassFieldFuncs = Array<{ isStatic: Bool, kind: MethodKind, tfunc: TFunc, field: ClassField }>;
+
+//---------
+// BaseCompiler abstract class
+abstract class BaseCompiler {
+   //---------
+   // This function is given data about Haxe classes. It must either return a String of the source code this
+   // class generates, or `null` if the class should be ignored.
+   public abstract function compileClass(classType: ClassType, varFields: ClassFieldVars, funcFields: ClassFieldFuncs): Null<String>;
+   
+   //---------
+   // Similar to "compileClass", except used for Haxe enums.
+   public abstract function compileEnum(classType: EnumType, constructs: Map<String, EnumField>): Null<String>;
+   
+   //---------
+   // Given the `TypedExpr`, this function should return a String of the generated expression for the output language.
+   // Returning `null` causes the compiler to ignore this expression.
+   public abstract function compileExpression(expr: TypedExpr): Null<String>;
+
+   //---------
+   // Typedef and Abstract compiling functions are also included, but they are ignored by default.
+   // They can be overriden if desired.
+   public function compileTypedef(classType: DefType): Null<String> { return null; }
+   public function compileAbstract(classType: AbstractType): Null<String> { return null; }
+   
+   // ---
+   
+   //---------
+   // Normally this function is unused, however if "Manual" mode is selected for "fileOutputType", this function is called
+   // and Reflaxe does not generate any output itself. If you wish for more control over how files are generated with
+   // your custom Haxe target, this is the function for you.
+   public function generateFilesManually() {}
+   
+   // ---
+   
+   //---------
+   // These functions are created in Reflaxe and should not be overriden.
+   // They should be used in "compileClass" to compile the expressions from functions and variablesn as opposed to
+   // using "compileExpression" on them directly.
+   public function compileClassVarExpr(expr: TypedExpr): String { ... }
+   public function compileClassFuncExpr(expr: TypedExpr): String { ... }
+}
+```
+
+&nbsp;
+&nbsp;
+&nbsp;
+
+## `BaseCompiler` Options
+This is the list of options that can be passed to `ReflectCompiler.AddCompiler` to configure how your compiler works.
+
+While these all have default values, it is recommended `fileOutputExtension`, `requireDefine`, and `outputDirDefineName` should be defined for your language at the bare minimum.
+
+```haxe
+// -------------------------------------------------------
+// How the source code files are outputted.
+// There are four options: 
+//  * SingleFile - all output is combined into single file
+//  * FilePerModule - all module output is organized into files
+//  * FilePerClass - each Haxe class is output into its own file
+//  * Manual - nothing is generated and BaseCompiler.generateFilesManually is called
+public var fileOutputType: BaseCompilerFileOutputType = FilePerClass;
+
+// -------------------------------------------------------
+// This string is appended to the filename for each output file.
+public var fileOutputExtension: String = ".hxoutput";
+
+// -------------------------------------------------------
+// This is the define which must exist for this compiler to function.
+// If "null", no define is required, but this is not recommended.
+// Typically, the "output directory" define is used here.
+public var requireDefine: Null<String> = null;
+
+// -------------------------------------------------------
+// This is the define that decides where the output is placed.
+// For example, this define will place the output in the "out" directory.
+//
+// -D hxoutput=out
+//
+public var outputDirDefineName: String = "hxoutput";
+
+// -------------------------------------------------------
+// If "SingleFile" is selected for "fileOutputType", this is the
+// name of the file generated if a directory is provided to "outputDirDefineName".
+public var defaultOutputFilename: String = "output";
+
+// -------------------------------------------------------
+// Whether Haxe's "Everything is an Expression" is normalized.
+public var normalizeEIE: Bool = true;
+
+// -------------------------------------------------------
+// If "true", only the module containing the "main" function and 
+// any classes it references are compiled.
+// Otherwise, Haxe's less restrictive dce is used.
+public var smartDCE: Bool = false;
+
+// -------------------------------------------------------
+// If "true", any old output files that are not generated
+// in the most recent compilation will be deleted.
+// A text file containing all the current output files is
+// saved in the output directory to help keep track. 
+//
+// This feature is ignored when "fileOutputType" is SingleFile.
+public var deleteOldOutput: Bool = true;
+
+// -------------------------------------------------------
+// If "true", an error is thrown if a function without
+// a body is encountered. Typically this occurs when
+// an umimplemented Haxe API function is encountered.
+public var ignoreBodilessFunctions: Bool = false;
+
+// -------------------------------------------------------
+// If "true", extern classes and fields are not passed to BaseCompiler.
+public var ignoreExterns: Bool = true;
+
+// -------------------------------------------------------
+// If "true", properties that are not physical properties
+// are not passed to BaseCompiler. (i.e. both their
+// read and write rules are "get", "set", or "never").
+public var ignoreNonPhysicalFields: Bool = true;
+```
