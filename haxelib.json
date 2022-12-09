@@ -1,6 +1,6 @@
 {
 	"name": "reflaxe",
-	"version": "1.0.1",
+	"version": "1.0.2",
 	"description": "A framework for creating Haxe language compilation targets using macros.",
 	"url": "https://github.com/RobertBorghese/reflaxe",
 	"license": "MIT",
@@ -14,6 +14,6 @@
 		"extension"
 	],
 	"classPath": "src/",
-	"releasenote": "Fixed macro call in `extraParams.hxml`.",
+	"releasenote": "Added support for creating custom standard library for target.",
 	"contributors": ["RobertBorghese"]
 }

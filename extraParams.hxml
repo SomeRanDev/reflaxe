@@ -1,2 +1,2 @@
---macro reflaxe.ReflectCompiler.Start()
 --macro nullSafety("reflaxe")
+--macro reflaxe.ReflectCompiler.Start()
