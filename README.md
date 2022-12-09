@@ -95,9 +95,7 @@ Your Haxe library using Reflaxe should include an `extraParams.hxml` file that:
 &nbsp;
 
 ## `compiler.hxml` Sample
-The Haxe project that uses your library must first add it to their `.hxml` file. Next the "requireDefine" from the "options" object (as seen above) should be defined to tell Reflaxe to export this project to your target. Finally, the "outputDirDefineName" must be defined to select the directory of filename of the output as would be done with any other Haxe target.
-
-If "requireDefine" and "outputDirDefineName" are the same (as seen in the example above), only the "outputDirDefineName" needs to be used.
+The Haxe project that uses your library must first add it to their `.hxml` file. This will cause the Haxe project to use your custom compiler target. All that is left is to define the "outputDirDefineName" define to configure the directory or filename of the output for your compiler target.
 
 ```hxml
 # your target will be used when your lib is included
