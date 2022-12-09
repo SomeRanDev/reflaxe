@@ -43,7 +43,6 @@ class MyLangCompiler extends reflaxe.BaseCompiler {
    public static function Start() {
       final options = {
          fileOutputExtension: ".mylang",
-         requireDefine: "mylang_out",
          outputDirDefineName: "mylang_out",
          fileOutputType: FilePerClass
       };
@@ -78,8 +77,16 @@ class MyLangCompiler extends reflaxe.BaseCompiler {
 ## `extraParams.hxml` Sample
 This framework is expected to be used to create Haxe libraries that "add" an output target. These Haxe libraries are then added to other projects and used to compile Haxe code to the target.
 
-Your Haxe library using Reflaxe should include an `extraParams.hxml` file that runs an initialization macro similar to the `MyLangCompiler.Start` function shown above.
+Your Haxe library using Reflaxe should include an `extraParams.hxml` file that:
+* Includes class paths for your target's unique classes and Haxe standard lib overrides.
+* Defines unique definitions for your target for use in conditional compilation.
+* Runs an initialization macro similar to the `MyLangCompiler.Start` function shown above.
 ```hxml
+-cp std
+-cp std/mylang/_std
+
+-D mylang
+
 --macro MyLangCompiler.Start()
 ```
 
@@ -93,14 +100,11 @@ The Haxe project that uses your library must first add it to their `.hxml` file.
 If "requireDefine" and "outputDirDefineName" are the same (as seen in the example above), only the "outputDirDefineName" needs to be used.
 
 ```hxml
-# your library
+# your target will be used when your lib is included
 -lib haxe-to-mylang
 
 # set the output directory to "outputDir"
 -D mylang_out=outputDir
-
-# make sure Haxe doesn't output to its normal targets
---no-output
 ```
 
 &nbsp;

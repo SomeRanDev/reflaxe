@@ -56,12 +56,6 @@ class BaseCompilerOptions {
 	public var fileOutputExtension: String = ".hxoutput";
 
 	// -------------------------------------------------------
-	// This is the define which must exist for this compiler to function.
-	// If "null", no define is required, but this is not recommended.
-	// Typically, the "output directory" define is used here.
-	public var requireDefine: Null<String> = null;
-
-	// -------------------------------------------------------
 	// This is the define that decides where the output is placed.
 	// For example, this define will place the output in the "out" directory.
 	//

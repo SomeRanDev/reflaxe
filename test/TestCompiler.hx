@@ -14,7 +14,6 @@ class TestCompiler extends BaseCompiler {
 	public static function Start() {
 		ReflectCompiler.AddCompiler(new TestCompiler(), {
 			fileOutputExtension: ".testout",
-			requireDefine: "testoutput",
 			outputDirDefineName: "testoutput",
 			fileOutputType: FilePerModule,
 			ignoreBodilessFunctions: true,

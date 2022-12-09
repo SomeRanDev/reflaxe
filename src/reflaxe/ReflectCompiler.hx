@@ -8,6 +8,7 @@ package reflaxe;
 
 #if (macro || reflaxe_runtime)
 
+import haxe.macro.Compiler;
 import haxe.macro.Context;
 import haxe.macro.Type;
 
@@ -65,20 +66,16 @@ class ReflectCompiler {
 	static function findEnabledCompilers(): Array<BaseCompiler> {
 		final validCompilers = [];
 		for(compiler in Compilers) {
-			final reqDef = compiler.options.requireDefine;
-			if(reqDef == null || Context.defined(reqDef)) {
-				final outputDirDef = compiler.options.outputDirDefineName;
-				final outputDir = Context.definedValue(outputDirDef);
-				if(Context.defined(outputDirDef) && outputDir.length > 0) {
-					compiler.setOutputDir(outputDir);
-					validCompilers.push(compiler);
-				} else {
-					final compilerName = Type.getClassName(Type.getClass(compiler));
-					final pos = Context.currentPos();
-					final errorReason = reqDef != null ? ' because -D $reqDef is defined' : "";
-					final msg = 'The $compilerName compiler is enabled$errorReason; however, the output directory (-D $outputDirDef) is not defined.';
-					Context.error(msg, pos);
-				}
+			final outputDirDef = compiler.options.outputDirDefineName;
+			final outputDir = Context.definedValue(outputDirDef);
+			if(Context.defined(outputDirDef) && outputDir.length > 0) {
+				compiler.setOutputDir(outputDir);
+				validCompilers.push(compiler);
+			} else {
+				final compilerName = Type.getClassName(Type.getClass(compiler));
+				final pos = Context.currentPos();
+				final msg = 'The $compilerName compiler is enabled; however, the output directory (-D $outputDirDef) is not defined.';
+				Context.error(msg, pos);
 			}
 		}
 		return validCompilers;
