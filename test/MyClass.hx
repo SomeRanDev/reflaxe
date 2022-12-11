@@ -1,6 +1,8 @@
 package;
 
+@:native("MyNativeClass")
 class MyClass {
+	@:native("nativeMain")
 	public static function main() {
 		trace("Hello world.");
 

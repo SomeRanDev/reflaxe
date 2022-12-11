@@ -1,14 +1,17 @@
 package;
 
+#if macro
+
 import haxe.macro.Expr;
+import haxe.macro.Type;
 
 import reflaxe.ReflectCompiler;
 import reflaxe.BaseCompiler;
 
 import reflaxe.helpers.OperatorHelper;
 using reflaxe.helpers.SyntaxHelper;
-
-import haxe.macro.Type;
+using reflaxe.helpers.ModuleTypeHelper;
+using reflaxe.helpers.NameMetaHelper;
 
 class TestCompiler extends BaseCompiler {
 	public static function Start() {
@@ -23,12 +26,12 @@ class TestCompiler extends BaseCompiler {
 	}
 
 	public function compileClassImpl(classType: ClassType, varFields: ClassFieldVars, funcFields: ClassFieldFuncs): Null<String> {
-		var decl = "class " + classType.name + ":\n";
+		var decl = "class " + classType.getNameOrNative() + ":\n";
 
 		var varString = "";
 		for(vf in varFields) {
 			final field = vf.field;
-			final variableDeclaration = (vf.isStatic ? "static " : "") + "var " + field.name;
+			final variableDeclaration = (vf.isStatic ? "static " : "") + "var " + field.getNameOrNative();
 			final testScriptVal = if(field.expr() != null) {
 				" = " + compileClassVarExpr(field.expr());
 			} else {
@@ -41,7 +44,7 @@ class TestCompiler extends BaseCompiler {
 		for(ff in funcFields) {
 			final field = ff.field;
 			final tfunc = ff.tfunc;
-			final funcHeader = (ff.isStatic ? "static " : "") + "func " + field.name + "(" + tfunc.args.map(a -> a.v.name).join(", ") + "):\n";
+			final funcHeader = (ff.isStatic ? "static " : "") + "func " + field.getNameOrNative() + "(" + tfunc.args.map(a -> a.v.getNameOrNative()).join(", ") + "):\n";
 			funcString += (funcHeader + compileClassFuncExpr(tfunc.expr).tab()).tab() + "\n\n";
 		}
 
@@ -60,7 +63,7 @@ class TestCompiler extends BaseCompiler {
 				result = constantToTestScript(constant);
 			}
 			case TLocal(v): {
-				result = v.name;
+				result = v.getNameOrNative();
 			}
 			case TArray(e1, e2): {
 				result = compileExpression(e1) + "[" + compileExpression(e2) + "]";
@@ -92,18 +95,18 @@ class TestCompiler extends BaseCompiler {
 				result = compileExpression(e) + "(" + el.map(e -> compileExpression(e)).join(", ") + ")";
 			}
 			case TNew(classTypeRef, _, el): {
-				final className = classTypeRef.get().name;
+				final className = classTypeRef.get().getNameOrNative();
 				result = className + ".new(" + el.map(e -> compileExpression(e)).join(", ") + ")";
 			}
 			case TUnop(op, postFix, e): {
 				result = unopToTestScript(op, e, postFix);
 			}
 			case TFunction(tfunc): {
-				result = "func(" + tfunc.args.map(a -> a.v.name + (a.value != null ? compileExpression(a.value) : "")) + "):\n";
+				result = "func(" + tfunc.args.map(a -> a.v.getNameOrNative() + (a.value != null ? compileExpression(a.value) : "")) + "):\n";
 				result += toIndentedScope(tfunc.expr);
 			}
 			case TVar(tvar, expr): {
-				result = "var " + tvar.name;
+				result = "var " + tvar.getNameOrNative();
 				if(expr != null) {
 					result += " = " + compileExpression(expr);
 				}
@@ -121,7 +124,7 @@ class TestCompiler extends BaseCompiler {
 				}
 			}
 			case TFor(tvar, iterExpr, blockExpr): {
-				result = "for " + tvar.name + " in " + compileExpression(iterExpr) + ":\n";
+				result = "for " + tvar.getNameOrNative() + " in " + compileExpression(iterExpr) + ":\n";
 				result += toIndentedScope(blockExpr);
 			}
 			case TIf(econd, ifExpr, elseExpr): {
@@ -253,18 +256,7 @@ class TestCompiler extends BaseCompiler {
 	}
 
 	function moduleNameToTestScript(m: ModuleType): String {
-		return switch(m) {
-			case TClassDecl(classTypeRef): classTypeRef.get().name;
-			case TEnumDecl(enumTypeRef): enumTypeRef.get().name;
-			case TTypeDecl(defTypeRef): {
-				final realType = defTypeRef.get().type;
-				typeNameToTestScript(realType, defTypeRef.get().pos);
-			}
-			case TAbstract(abstractTypeRef): {
-				final realType = abstractTypeRef.get().type;
-				typeNameToTestScript(realType, abstractTypeRef.get().pos);
-			}
-		}
+		return m.getNameOrNative();
 	}
 
 	function typeNameToTestScript(t: Type, errorPos: Position): String {
@@ -287,3 +279,5 @@ class TestCompiler extends BaseCompiler {
 		return typeName;
 	}
 }
+
+#end

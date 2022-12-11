@@ -12,9 +12,12 @@ package reflaxe.helpers;
 import haxe.macro.Expr;
 import haxe.macro.Type;
 
+using reflaxe.helpers.NameMetaHelper;
+
 typedef CommonModuleTypeData = {
 	pack: Array<String>,
 	pos: Position,
+	meta: MetaAccess,
 	module: String,
 	name: String
 }
@@ -35,6 +38,10 @@ class ModuleTypeHelper {
 
 	public static function getModule(type: ModuleType): String {
 		return getCommonData(type).module;
+	}
+
+	public static function getNameOrNative(type: ModuleType): String {
+		return getCommonData(type).getNameOrNative();
 	}
 }
 
