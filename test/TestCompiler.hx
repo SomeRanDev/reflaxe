@@ -16,12 +16,13 @@ class TestCompiler extends BaseCompiler {
 			fileOutputExtension: ".testout",
 			outputDirDefineName: "testoutput",
 			fileOutputType: FilePerModule,
+			targetCodeInjectionName: "__testscript__",
 			ignoreBodilessFunctions: true,
 			smartDCE: true
 		});
 	}
 
-	public function compileClass(classType: ClassType, varFields: ClassFieldVars, funcFields: ClassFieldFuncs): Null<String> {
+	public function compileClassImpl(classType: ClassType, varFields: ClassFieldVars, funcFields: ClassFieldFuncs): Null<String> {
 		var decl = "class " + classType.name + ":\n";
 
 		var varString = "";
@@ -48,11 +49,11 @@ class TestCompiler extends BaseCompiler {
 		return decl + (body.length > 0 ? body : "\tpass");
 	}
 
-	public function compileEnum(enumType: EnumType, constructs:Map<String, haxe.macro.EnumField>): Null<String> {
+	public function compileEnumImpl(enumType: EnumType, constructs:Map<String, haxe.macro.EnumField>): Null<String> {
 		return null;
 	}
 
-	public function compileExpression(expr: TypedExpr): Null<String> {
+	public function compileExpressionImpl(expr: TypedExpr): Null<String> {
 		var result = "";
 		switch(expr.expr) {
 			case TConst(constant): {

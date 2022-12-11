@@ -6,10 +6,10 @@ import haxe.macro.Context;
 import haxe.macro.Expr;
 import haxe.macro.Type;
 
+import reflaxe.compiler.TargetCodeInjection;
 import reflaxe.conversion.ExprOptimizer;
 import reflaxe.conversion.EverythingIsExprConversion;
 import reflaxe.output.OutputManager;
-
 import reflaxe.helpers.ModuleTypeHelper;
 
 using reflaxe.helpers.ClassTypeHelper;
@@ -69,6 +69,17 @@ class BaseCompilerOptions {
 	public var defaultOutputFilename: String = "output";
 
 	// -------------------------------------------------------
+	// The name of the function used to inject code directly to the target.
+	// Set to `null` to disable this feature.
+	public var targetCodeInjectionName: Null<String> = null;
+
+	// -------------------------------------------------------
+	// If "true", null safety will be enforced for all the code
+	// compiled to the target. Useful for ensuring null is only
+	// used on types explicitly marked as nullable.
+	public var enforceNullSafety: Bool = true;
+
+	// -------------------------------------------------------
 	// Whether Haxe's "Everything is an Expression" is normalized.
 	public var normalizeEIE: Bool = true;
 
@@ -123,17 +134,19 @@ typedef ClassFieldFuncs = Array<{ isStatic: Bool, kind: MethodKind, tfunc: TFunc
 // =======================================================
 abstract class BaseCompiler {
 	// =======================================================
-	// * abstract functions
+	// * Abstract Functions
 	//
-	// Override in custom compiler to control it
+	// Override in custom compiler to control it.
 	// =======================================================
-	public abstract function compileClass(classType: ClassType, varFields: ClassFieldVars, funcFields: ClassFieldFuncs): Null<String>;
-	public abstract function compileEnum(classType: EnumType, constructs: Map<String, EnumField>): Null<String>;
-	public abstract function compileExpression(expr: TypedExpr): Null<String>;
+	public abstract function compileClassImpl(classType: ClassType, varFields: ClassFieldVars, funcFields: ClassFieldFuncs): Null<String>;
+	public abstract function compileEnumImpl(classType: EnumType, constructs: Map<String, EnumField>): Null<String>;
+	public abstract function compileExpressionImpl(expr: TypedExpr): Null<String>;
 
-	public function compileTypedef(classType: DefType): Null<String> { return null; }
-	public function compileAbstract(classType: AbstractType): Null<String> { return null; }
-
+	// =======================================================
+	// * Conditional Overridables
+	//
+	// Override these in custom compiler to filter types.
+	// =======================================================
 	public function shouldGenerateClass(cls: ClassType): Bool {
 		if(cls.isTypeParameter()) {
 			return false;
@@ -149,6 +162,11 @@ abstract class BaseCompiler {
 		return true;
 	}
 	
+	// =======================================================
+	// * Conditional Events
+	//
+	// Override these in custom compiler to handle certain events.
+	// =======================================================
 	public function onClassAdded(cls: ClassType, output: Null<String>): Void {}
 	public function onEnumAdded(cls: EnumType, output: Null<String>): Void {}
 	public function onTypedefAdded(cls: DefType, output: Null<String>): Void {}
@@ -246,6 +264,64 @@ abstract class BaseCompiler {
 				output: output
 			});
 		}
+	}
+
+	// =======================================================
+	// * compileClass
+	//
+	// Compiles the provided class.
+	// Override compileClassImpl to configure the behavior.
+	// =======================================================
+	public function compileClass(classType: ClassType, varFields: ClassFieldVars, funcFields: ClassFieldFuncs): Null<String> {
+		return compileClassImpl(classType, varFields, funcFields);
+	}
+
+	// =======================================================
+	// * compileEnum
+	//
+	// Compiles the provided enum.
+	// Override compileEnumImpl to configure the behavior.
+	// =======================================================
+	public function compileEnum(enumType: EnumType, constructs: Map<String, EnumField>): Null<String> {
+		return compileEnumImpl(enumType, constructs);
+	}
+
+	// =======================================================
+	// * compileTypedef
+	//
+	// Compiles the provided typedef.
+	// Ignores by default as Haxe redirects all types automatically.
+	// =======================================================
+	public function compileTypedef(classType: DefType): Null<String> {
+		return null;
+	}
+
+	// =======================================================
+	// * compileAbstract
+	//
+	// Compiles the provided abstract.
+	// Ignores by default as Haxe converts all abstracts
+	// to normal function calls automatically.
+	// =======================================================
+	public function compileAbstract(classType: AbstractType): Null<String> {
+		return null;
+	}
+
+	// =======================================================
+	// * compileExpression
+	//
+	// Compiles the provided expression.
+	// Override compileExpressionImpl to configure the behavior.
+	// =======================================================
+	public function compileExpression(expr: TypedExpr): Null<String> {
+		if(options.targetCodeInjectionName != null) {
+			final result = TargetCodeInjection.checkTargetCodeInjection(options.targetCodeInjectionName, expr, this);
+			if(result != null) {
+				return result;
+			}
+		}
+
+		return compileExpressionImpl(expr);
 	}
 
 	// =======================================================

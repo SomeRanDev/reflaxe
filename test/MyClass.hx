@@ -6,5 +6,7 @@ class MyClass {
 
 		var strLen = "string object".length;
 		trace(strLen);
+
+		untyped __testscript__("{} *** {}", 2 + 2, "Hello");
 	}
 }

@@ -122,30 +122,32 @@ typedef ClassFieldFuncs = Array<{ isStatic: Bool, kind: MethodKind, tfunc: TFunc
 // BaseCompiler abstract class
 abstract class BaseCompiler {
    //---------
-   // This function is given data about Haxe classes. It must either return a String of the source code this
-   // class generates, or `null` if the class should be ignored.
-   public abstract function compileClass(classType: ClassType, varFields: ClassFieldVars, funcFields: ClassFieldFuncs): Null<String>;
+   // This function is given data about Haxe classes. It must either return a String of
+   // the source code this class generates, or `null` if the class should be ignored.
+   public abstract function compileClassImpl(classType: ClassType, varFields: ClassFieldVars, funcFields: ClassFieldFuncs): Null<String>;
    
    //---------
    // Similar to "compileClass", except used for Haxe enums.
-   public abstract function compileEnum(classType: EnumType, constructs: Map<String, EnumField>): Null<String>;
+   public abstract function compileEnumImpl(classType: EnumType, constructs: Map<String, EnumField>): Null<String>;
    
    //---------
-   // Given the `TypedExpr`, this function should return a String of the generated expression for the output language.
+   // Given the `TypedExpr`, this function should return a String of the generated
+   // expression for the output language.
    // Returning `null` causes the compiler to ignore this expression.
-   public abstract function compileExpression(expr: TypedExpr): Null<String>;
+   public abstract function compileExpressionImpl(expr: TypedExpr): Null<String>;
 
    //---------
-   // Typedef and Abstract compiling functions are also included, but they are ignored by default.
-   // They can be overriden if desired.
-   public function compileTypedef(classType: DefType): Null<String> { return null; }
-   public function compileAbstract(classType: AbstractType): Null<String> { return null; }
+   // Typedef and Abstract compiling functions are also included, but they are ignored
+   // by default. They can be overriden if desired.
+   public function compileTypedefImpl(classType: DefType): Null<String> { return null; }
+   public function compileAbstractImpl(classType: AbstractType): Null<String> { return null; }
    
    // ---
    
    //---------
-   // Normally this function is unused, however if "Manual" mode is selected for "fileOutputType", this function is called
-   // and Reflaxe does not generate any output itself. If you wish for more control over how files are generated with
+   // Normally this function is unused, however if "Manual" mode is selected for
+   // "fileOutputType", this function is called and Reflaxe does not generate any
+   // output itself. If you wish for more control over how files are generated with
    // your custom Haxe target, this is the function for you.
    public function generateFilesManually() {}
    
@@ -153,8 +155,8 @@ abstract class BaseCompiler {
    
    //---------
    // These functions are created in Reflaxe and should not be overriden.
-   // They should be used in "compileClass" to compile the expressions from functions and variablesn as opposed to
-   // using "compileExpression" on them directly.
+   // They should be used in "compileClass" to compile the expressions from functions
+   // and variables as opposed to using "compileExpression" on them directly.
    public function compileClassVarExpr(expr: TypedExpr): String { ... }
    public function compileClassFuncExpr(expr: TypedExpr): String { ... }
 }
@@ -184,12 +186,6 @@ public var fileOutputType: BaseCompilerFileOutputType = FilePerClass;
 public var fileOutputExtension: String = ".hxoutput";
 
 // -------------------------------------------------------
-// This is the define which must exist for this compiler to function.
-// If "null", no define is required, but this is not recommended.
-// Typically, the "output directory" define is used here.
-public var requireDefine: Null<String> = null;
-
-// -------------------------------------------------------
 // This is the define that decides where the output is placed.
 // For example, this define will place the output in the "out" directory.
 //
@@ -201,6 +197,17 @@ public var outputDirDefineName: String = "hxoutput";
 // If "SingleFile" is selected for "fileOutputType", this is the
 // name of the file generated if a directory is provided to "outputDirDefineName".
 public var defaultOutputFilename: String = "output";
+
+// -------------------------------------------------------
+// The name of the function used to inject code directly to the target.
+// Set to `null` to disable this feature.
+public var targetCodeInjectionName: Null<String> = null;
+
+// -------------------------------------------------------
+// If "true", null safety will be enforced for all the code
+// compiled to the target. Useful for ensuring null is only
+// used on types explicitly marked as nullable.
+public var enforceNullSafety: Bool = true;
 
 // -------------------------------------------------------
 // Whether Haxe's "Everything is an Expression" is normalized.
