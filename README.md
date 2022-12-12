@@ -56,15 +56,15 @@ class MyLangCompiler extends reflaxe.BaseCompiler {
    // fill out just these 3 functions and Reflaxe takes care of the rest
    //---------
 
-   public function compileClass(classType: ClassType, varFields: ClassFieldVars, funcFields: ClassFieldFuncs): Null<String> {
+   public function compileClassImpl(classType: ClassType, varFields: ClassFieldVars, funcFields: ClassFieldFuncs): Null<String> {
       // ...
    }
 
-   public function compileEnum(enumType: EnumType, constructs: Map<String, haxe.macro.EnumField>): Null<String> {
+   public function compileEnumImpl(enumType: EnumType, constructs: Map<String, haxe.macro.EnumField>): Null<String> {
       // ...
    }
 
-   public function compileExpression(expr: TypedExpr): Null<String> {
+   public function compileExpressionImpl(expr: TypedExpr): Null<String> {
       // ...
    }
 }
@@ -159,6 +159,10 @@ abstract class BaseCompiler {
    // and variables as opposed to using "compileExpression" on them directly.
    public function compileClassVarExpr(expr: TypedExpr): String { ... }
    public function compileClassFuncExpr(expr: TypedExpr): String { ... }
+   
+   //---------
+   // Use this to compile sub-expressions in compileExpressionImpl
+   public function compileExpression(expr: TypedExpr): Null<String>;
 }
 ```
 
@@ -197,6 +201,15 @@ public var outputDirDefineName: String = "hxoutput";
 // If "SingleFile" is selected for "fileOutputType", this is the
 // name of the file generated if a directory is provided to "outputDirDefineName".
 public var defaultOutputFilename: String = "output";
+
+// -------------------------------------------------------
+// A list of type paths that will be ignored and not generated.
+// Useful in cases where you can optimize the generation of
+// certain Haxe classes to your target's native syntax.
+//
+// For example, ignoring `haxe.ArrayIterator` and generating
+// to the target's native for-loop.
+public var ignoreTypes: Array<String> = [];
 
 // -------------------------------------------------------
 // The name of the function used to inject code directly to the target.
