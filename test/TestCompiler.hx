@@ -13,6 +13,8 @@ using reflaxe.helpers.SyntaxHelper;
 using reflaxe.helpers.ModuleTypeHelper;
 using reflaxe.helpers.NameMetaHelper;
 
+import reflaxe.input.ClassModifier;
+
 class TestCompiler extends BaseCompiler {
 	public static function Start() {
 		ReflectCompiler.AddCompiler(new TestCompiler(), {
@@ -22,6 +24,10 @@ class TestCompiler extends BaseCompiler {
 			targetCodeInjectionName: "__testscript__",
 			ignoreBodilessFunctions: true,
 			smartDCE: true
+		});
+
+		ClassModifier.mod("MyClass", "testMod", macro {
+			return 9999;
 		});
 	}
 
