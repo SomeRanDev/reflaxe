@@ -24,9 +24,9 @@ typedef NameAndMeta = {
 };
 
 class NameMetaHelper {
-	public static function getNameOrNative(v: NameAndMeta): String {
-		if(v.meta != null && v.meta.has != null && v.meta.has(":native")) {
-			final metaList = v.meta.extract == null ? [] : v.meta.extract(":native");
+	public static function getNameOrMeta(v: NameAndMeta, metaName: String): String {
+		if(hasMeta(v, metaName)) {
+			final metaList = v.meta.extract == null ? [] : v.meta.extract(metaName);
 			for(m in metaList) {
 				if(m.params.length > 0) {
 					switch(m.params[0].expr) {
@@ -37,6 +37,18 @@ class NameMetaHelper {
 			}
 		}
 		return v.name;
+	}
+
+	public static function hasMeta(v: NameAndMeta, metaName: String) {
+		return v.meta != null && v.meta.has != null && v.meta.has(metaName);
+	}
+
+	public static function getNameOrNative(v: NameAndMeta): String {
+		return getNameOrMeta(v, ":native");
+	}
+
+	public static function getNameOrNativeName(v: NameAndMeta): String {
+		return getNameOrMeta(v, ":nativeName");
 	}
 }
 
