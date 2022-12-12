@@ -96,6 +96,9 @@ class EverythingIsExprConversion {
 			// block scope expression.
 			if(assigneeExpr != null && isLastExpression()) {
 				final old = topScopeArray[index];
+				if(old == null) {
+					throw "Unexpected null encountered.";
+				}
 				if(!isBlocklikeExpr(old)) {
 					topScopeArray[index] = {
 						expr: TBinop(OpAssign, assigneeExpr, old),
@@ -171,7 +174,7 @@ class EverythingIsExprConversion {
 				TFunction(newTFunc);
 			}
 			case TVar(tvar, expr): {
-				TVar(tvar, handleValueExpr(expr));
+				TVar(tvar, expr != null ? handleValueExpr(expr) : null);
 			}
 			case TBlock(exprs): {
 				handleNonValueBlock(expr).expr;

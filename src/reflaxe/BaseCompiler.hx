@@ -69,6 +69,15 @@ class BaseCompilerOptions {
 	public var defaultOutputFilename: String = "output";
 
 	// -------------------------------------------------------
+	// A list of type paths that will be ignored and not generated.
+	// Useful in cases where you can optimize the generation of
+	// certain Haxe classes to your target's native syntax.
+	//
+	// For example, ignoring `haxe.ArrayIterator` and generating
+	// to the target's native for-loop.
+	public var ignoreTypes: Array<String> = [];
+
+	// -------------------------------------------------------
 	// The name of the function used to inject code directly to the target.
 	// Set to `null` to disable this feature.
 	public var targetCodeInjectionName: Null<String> = null;

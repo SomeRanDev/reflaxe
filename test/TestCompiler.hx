@@ -21,6 +21,7 @@ class TestCompiler extends BaseCompiler {
 			fileOutputExtension: ".testout",
 			outputDirDefineName: "testoutput",
 			fileOutputType: FilePerModule,
+			ignoreTypes: [],
 			targetCodeInjectionName: "__testscript__",
 			ignoreBodilessFunctions: true,
 			smartDCE: true

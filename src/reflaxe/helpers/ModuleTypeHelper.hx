@@ -40,6 +40,15 @@ class ModuleTypeHelper {
 		return getCommonData(type).module;
 	}
 
+	public static function getPath(type: ModuleType): String {
+		final data = getCommonData(type);
+		return if(StringTools.endsWith(data.module, data.name)) {
+			data.module;
+		} else {
+			data.module + "." + data.name;
+		}
+	}
+
 	public static function getNameOrNative(type: ModuleType): String {
 		return getCommonData(type).getNameOrNative();
 	}

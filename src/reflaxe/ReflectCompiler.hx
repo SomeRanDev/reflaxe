@@ -16,6 +16,7 @@ import reflaxe.BaseCompiler;
 import reflaxe.input.ModuleUsageTracker;
 
 using reflaxe.helpers.SyntaxHelper;
+using reflaxe.helpers.ModuleTypeHelper;
 
 class ReflectCompiler {
 	// =======================================================
@@ -94,11 +95,20 @@ class ReflectCompiler {
 	}
  
 	static function getAllModulesTypesForCompiler(compiler: BaseCompiler): Array<ModuleType> {
-		return if(compiler.options.smartDCE) {
+		final result = if(compiler.options.smartDCE) {
 			final tracker = new ModuleUsageTracker(moduleTypes);
 			tracker.filteredTypes();
 		} else {
 			moduleTypes;
+		}
+
+		return if(compiler.options.ignoreTypes.length > 0) {
+			final ignoreTypes = compiler.options.ignoreTypes;
+			result.filter(function(moduleType) {
+				return !ignoreTypes.contains(moduleType.getPath());
+			});
+		} else {
+			result;
 		}
 	}
 
