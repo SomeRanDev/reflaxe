@@ -162,7 +162,7 @@ abstract class BaseCompiler {
    
    //---------
    // Use this to compile sub-expressions in compileExpressionImpl
-   public function compileExpression(expr: TypedExpr): Null<String>;
+   public function compileExpression(expr: TypedExpr): Null<String> { ... }
 }
 ```
 
