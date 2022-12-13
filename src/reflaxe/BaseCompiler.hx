@@ -89,6 +89,11 @@ class BaseCompilerOptions {
 	public var enforceNullSafety: Bool = true;
 
 	// -------------------------------------------------------
+	// If "true", typedefs will be converted to their internal
+	// type before being processed and generated.
+	public var unwrapTypedefs: Bool = true;
+
+	// -------------------------------------------------------
 	// Whether Haxe's "Everything is an Expression" is normalized.
 	public var normalizeEIE: Bool = true;
 
