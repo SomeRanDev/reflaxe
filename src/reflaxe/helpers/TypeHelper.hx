@@ -39,6 +39,21 @@ class TypeHelper {
 		}
 	}
 
+	public static function convertAnonToModuleType(t: Type): Null<ModuleType> {
+		return switch(t) {
+			case TAnonymous(anonTypeRef): {
+				final anonType = anonTypeRef.get();
+				switch(anonType.status) {
+					case AClassStatics(c): TClassDecl(c);
+					case AEnumStatics(e): TEnumDecl(e);
+					case AAbstractStatics(a): TAbstract(a);
+					case _: null;
+				}
+			}
+			case _: null;
+		}
+	}
+
 	static function extractParamTypes(params: Array<TypeParameter>): Array<Type> {
 		return params.map(tp -> tp.t);
 	}
