@@ -17,6 +17,7 @@ import reflaxe.input.ModuleUsageTracker;
 
 using reflaxe.helpers.SyntaxHelper;
 using reflaxe.helpers.ModuleTypeHelper;
+using reflaxe.helpers.TypeHelper;
 
 class ReflectCompiler {
 	// =======================================================
@@ -118,7 +119,14 @@ class ReflectCompiler {
 		final defDecls: Array<Ref<DefType>> = [];
 		final abstractDecls: Array<Ref<AbstractType>> = [];
 
-		for(mt in getAllModulesTypesForCompiler(compiler)) {
+		for(moduleType in getAllModulesTypesForCompiler(compiler)) {
+			var mt = switch(moduleType) {
+				case TTypeDecl(defTypeRef) if(compiler.options.unwrapTypedefs): {
+					unwrapTypedef(defTypeRef.get());
+				}
+				case _: moduleType;
+			}
+
 			switch(mt) {
 				case TClassDecl(clsTypeRef): {
 					classDecls.push(clsTypeRef);
@@ -157,6 +165,16 @@ class ReflectCompiler {
 		for(abstractRef in abstractDecls) {
 			final ab = abstractRef.get();
 			compiler.addAbstractOutput(ab, compiler.compileAbstract(ab));
+		}
+	}
+
+	static function unwrapTypedef(defType: DefType): Null<ModuleType> {
+		final type = defType.type;
+		final anonModuleType = type.convertAnonToModuleType();
+		return if(anonModuleType != null) {
+			anonModuleType;
+		} else {
+			type.toModuleType();
 		}
 	}
 
