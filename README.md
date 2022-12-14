@@ -1,5 +1,9 @@
-# Reflaxe - Reflection Compiler for Haxe
-A framework for creating Haxe language compilation targets using macros.
+<img src="https://i.imgur.com/oZkCZ2C.png" alt="I made a reflaxe logo thingy look at it LOOK AT IT" width="400"/>
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+<a href="https://discord.com/channels/162395145352904705/1052688097592225904"><img src="https://discordapp.com/api/guilds/162395145352904705/widget.png?style=shield" alt="Reflaxe Thread"/></a>
+
+*A framework for creating Haxe language compilation targets using macros.*
 
 All you need to worry about is programming the conversion from Haxe's typed AST to your desired programming language. Reflaxe handles organizing the input AST, reading user configuration, and generating the output file(s), while also providing various configuration options and helper functions for Haxe target developers.
 
