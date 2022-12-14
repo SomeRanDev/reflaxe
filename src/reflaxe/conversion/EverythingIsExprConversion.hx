@@ -215,7 +215,7 @@ class EverythingIsExprConversion {
 				TReturn(handleValueExpr(expr, "result"));
 			}
 			case TMeta(m, e): {
-				TMeta(m, handleValueExpr(e));
+				TMeta(m, expr.copy(processExpr(e)));
 			}
 			case TThrow(e): {
 				TThrow(handleValueExpr(e, "error"));
