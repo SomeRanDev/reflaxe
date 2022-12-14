@@ -339,6 +339,24 @@ abstract class BaseCompiler {
 	}
 
 	// =======================================================
+	// * compileExpressionOrError
+	//
+	// Compiles the provided expression.
+	// Generates an error using `Context.error` if unsuccessful.
+	// =======================================================
+	public function compileExpressionOrError(expr: TypedExpr): String {
+		final result = compileExpression(expr);
+		if(result == null) {
+			onExpressionUnsuccessful(expr.pos);
+		}
+		return result;
+	}
+
+	public function onExpressionUnsuccessful(pos: Position) {
+		err("Could not generate expression", pos);
+	}
+
+	// =======================================================
 	// * compileClassVarExpr
 	//
 	// Returns the result of calling "ExprOptimizer.optimizeAndUnwrap"

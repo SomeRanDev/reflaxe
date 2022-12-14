@@ -50,6 +50,17 @@ class NameMetaHelper {
 	public static function getNameOrNativeName(v: NameAndMeta): String {
 		return getNameOrMeta(v, ":nativeName");
 	}
+
+	public static function getFieldAccessNameMeta(fa: FieldAccess): NameAndMeta {
+		return switch(fa) {
+			case FInstance(_, _, classFieldRef): classFieldRef.get();
+			case FStatic(_, classFieldRef): classFieldRef.get();
+			case FAnon(classFieldRef): classFieldRef.get();
+			case FClosure(_, classFieldRef): classFieldRef.get();
+			case FEnum(_, enumField): enumField;
+			case FDynamic(s): { name: s, meta: null };
+		}
+	}
 }
 
 #end
