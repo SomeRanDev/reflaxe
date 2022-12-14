@@ -20,7 +20,9 @@ using reflaxe.helpers.TypedExprHelper;
 
 class ExprOptimizer {
 	public static function optimizeAndUnwrap(expr: TypedExpr): Array<TypedExpr> {
-		return unwrapBlock(optimizeBlocks(expr));
+		var el = unwrapBlock(optimizeBlocks(expr));
+		el = UnnecessaryBlockRemover.optimize(el);
+		return el;
 	}
 
 	public static function unwrapBlock(expr: TypedExpr): Array<TypedExpr> {
