@@ -173,7 +173,7 @@ abstract class BaseCompiler {
 ## `BaseCompiler` Options
 This is the list of options that can be passed to `ReflectCompiler.AddCompiler` to configure how your compiler works.
 
-While these all have default values, it is recommended `fileOutputExtension`, `requireDefine`, and `outputDirDefineName` should be defined for your language at the bare minimum.
+While these all have default values, it is recommended `fileOutputExtension` and `outputDirDefineName` are defined for your language at the bare minimum.
 
 ```haxe
 // -------------------------------------------------------
