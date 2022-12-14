@@ -21,11 +21,11 @@ class TypedExprHelper {
 		}
 	}
 
-	public static function getDeclarationMeta(e: TypedExpr): Null<MetaAccess> {
+	public static function getDeclarationMeta(e: TypedExpr): Null<{ thisExpr: TypedExpr, meta: Null<MetaAccess> }> {
 		return switch(e.expr) {
-			case TField(_, fa): fa.getFieldAccessNameMeta().meta;
-			case TVar(tvar, _): tvar.meta;
-			case TEnumParameter(_, ef, _): ef.meta;
+			case TField(ethis, fa): { thisExpr: ethis, meta: fa.getFieldAccessNameMeta().meta };
+			case TVar(tvar, _): { thisExpr: e, meta: tvar.meta };
+			case TEnumParameter(_, ef, _): { thisExpr: e, meta: ef.meta };
 			case TMeta(_, e1): getDeclarationMeta(e1);
 			case TParenthesis(e1): getDeclarationMeta(e1);
 			case _: null;

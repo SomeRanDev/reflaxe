@@ -19,7 +19,8 @@ using reflaxe.helpers.TypedExprHelper;
 
 class BaseCompilerHelper {
 	public static function compileNativeFunctionCodeMeta(compiler: BaseCompiler, callExpr: TypedExpr, arguments: Array<TypedExpr>): Null<String> {
-		final meta = callExpr.getDeclarationMeta();
+		final declaration = callExpr.getDeclarationMeta();
+		final meta = declaration.meta;
 		if(meta.has(":nativeFunctionCode")) {
 			final entry = meta.extract(":nativeFunctionCode")[0];
 			if(entry.params == null || entry.params.length == 0) {
@@ -31,14 +32,14 @@ class BaseCompilerHelper {
 				case _: Context.error("One string argument expected.", entry.pos);
 			}
 
-			final thisExpr = compiler.compileExpression(callExpr);
+			final thisExpr = compiler.compileExpression(declaration.thisExpr);
 			final argExprs = arguments.map(compiler.compileExpression);
 
 			var result = code;
 
 			if(code.contains("{this}")) {
 				if(thisExpr == null) {
-					compiler.onExpressionUnsuccessful(callExpr.pos);
+					compiler.onExpressionUnsuccessful(declaration.thisExpr.pos);
 				} else {
 					result = result.replace("{this}", thisExpr);
 				}
