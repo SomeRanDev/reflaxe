@@ -8,11 +8,11 @@
 // (but also look like they were written by a human), this class
 // is used to construct and manage the variable names.
 //
-// It is used exclusively in "conversion/EverythingIsExprConversion.hx"
+// It is used exclusively in "optimization/EverythingIsExprConversion.hx"
 // So check out that file for more information.
 // =======================================================
 
-package reflaxe.conversion;
+package reflaxe.optimization;
 
 #if (macro || reflaxe_runtime)
 

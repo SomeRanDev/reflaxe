@@ -1,10 +1,11 @@
 // =======================================================
 // * UnnecessaryBlockRemover
 //
-// 
+// Removes unnecessary blocks that do not introduce
+// conflicting variable declarations.
 // =======================================================
 
-package reflaxe.conversion;
+package reflaxe.optimization;
 
 #if (macro || reflaxe_runtime)
 
@@ -75,7 +76,6 @@ class UnnecessaryBlockRemover {
 			case TTypeExpr(m): addRequiredName(m.getNameOrNative());
 			case TVar(v, _): {
 				final n = v.getNameOrNative();
-				//addRequiredName(n);
 				addDeclaredVars(n);
 			}
 			case TEnumParameter(_, ef, _): addRequiredName(ef.getNameOrNative());

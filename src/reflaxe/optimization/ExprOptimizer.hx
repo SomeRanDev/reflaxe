@@ -10,7 +10,7 @@
 // most non-Haxe languages handle function content.
 // =======================================================
 
-package reflaxe.conversion;
+package reflaxe.optimization;
 
 #if (macro || reflaxe_runtime)
 

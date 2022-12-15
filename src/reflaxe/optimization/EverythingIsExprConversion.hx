@@ -9,7 +9,7 @@
 // https://code.haxe.org/category/principles/everything-is-an-expression.html
 // =======================================================
 
-package reflaxe.conversion;
+package reflaxe.optimization;
 
 #if (macro || reflaxe_runtime)
 

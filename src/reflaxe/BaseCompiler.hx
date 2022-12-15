@@ -7,8 +7,8 @@ import haxe.macro.Expr;
 import haxe.macro.Type;
 
 import reflaxe.compiler.TargetCodeInjection;
-import reflaxe.conversion.ExprOptimizer;
-import reflaxe.conversion.EverythingIsExprConversion;
+import reflaxe.optimization.ExprOptimizer;
+import reflaxe.optimization.EverythingIsExprConversion;
 import reflaxe.output.OutputManager;
 import reflaxe.helpers.ModuleTypeHelper;
 
