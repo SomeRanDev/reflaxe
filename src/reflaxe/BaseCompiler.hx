@@ -7,10 +7,11 @@ import haxe.macro.Expr;
 import haxe.macro.Type;
 
 import reflaxe.compiler.TargetCodeInjection;
-import reflaxe.optimization.ExprOptimizer;
 import reflaxe.compiler.EverythingIsExprSanitizer;
-import reflaxe.output.OutputManager;
 import reflaxe.helpers.ModuleTypeHelper;
+import reflaxe.optimization.ExprOptimizer;
+import reflaxe.output.OutputManager;
+import reflaxe.output.OutputPath;
 
 using reflaxe.helpers.ClassTypeHelper;
 
@@ -233,6 +234,24 @@ abstract class BaseCompiler {
 	// override this function in child class and set
 	// options.fileOutputType to "Manual".
 	public function generateFilesManually() {
+	}
+
+	// =======================================================
+	// * Extra Files
+	// =======================================================
+	public var extraFiles(default, null): Map<String, String> = [];
+
+	function setExtraFile(path: OutputPath, content: String = "") {
+		extraFiles.set(path.toString(), content);
+	}
+
+	function appendToExtraFile(path: OutputPath, content: String) {
+		final pathString = path.toString();
+		if(!extraFiles.exists(pathString)) {
+			extraFiles.set(pathString, "");
+		}
+		final current = extraFiles.get(pathString);
+		extraFiles.set(pathString, current + content);
 	}
 
 	// =======================================================
