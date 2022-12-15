@@ -231,6 +231,11 @@ class ReflectCompiler {
 			}
 		}
 
+		if(cls.constructor != null) {
+			final field = cls.constructor.get();
+			addField(field, false);
+		}
+
 		for(field in cls.fields.get()) {
 			addField(field, false);
 		}
