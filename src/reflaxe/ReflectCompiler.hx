@@ -122,7 +122,8 @@ class ReflectCompiler {
 		for(moduleType in getAllModulesTypesForCompiler(compiler)) {
 			var mt = switch(moduleType) {
 				case TTypeDecl(defTypeRef) if(compiler.options.unwrapTypedefs): {
-					unwrapTypedef(defTypeRef.get());
+					final result = unwrapTypedef(defTypeRef.get());
+					result != null ? result : moduleType;
 				}
 				case _: moduleType;
 			}

@@ -90,7 +90,7 @@ class BaseCompilerOptions {
 
 	// -------------------------------------------------------
 	// If "true", typedefs will be converted to their internal
-	// type before being processed and generated.
+	// class or enum type before being processed and generated.
 	public var unwrapTypedefs: Bool = true;
 
 	// -------------------------------------------------------
