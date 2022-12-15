@@ -234,6 +234,8 @@ abstract class BaseCompiler {
 	// If you wish to code how files are generated yourself,
 	// override this function in child class and set
 	// options.fileOutputType to "Manual".
+	//
+	// Files should be saved using `output.saveFile(path, content)`
 	public function generateFilesManually() {
 	}
 

@@ -100,6 +100,11 @@ class OutputManager {
 				generateFilePerClass();
 			}
 		}
+
+		for(path => content in compiler.extraFiles) {
+			saveFile(path, content);
+		}
+
 		if(shouldDeleteOldOutput()) {
 			deleteOldOutputFiles();
 			recordAllOutputFiles();
@@ -155,7 +160,7 @@ class OutputManager {
 
 	// -------------------------------------------------------
 	// saveFile
-	function saveFile(path: String, content: String) {
+	public function saveFile(path: String, content: String) {
 		sys.io.File.saveContent(path, content);
 		if(shouldDeleteOldOutput()) {
 			recordOutputFile(path);
