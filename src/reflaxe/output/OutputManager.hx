@@ -126,7 +126,7 @@ class OutputManager {
 		for(c in compiler.classes) {
 			outputs.push(c.output);
 		}
-		saveFile(filePath, outputs.join("\n\n"));
+		saveFileImpl(filePath, outputs.join("\n\n"));
 	}
 
 	function generateFilePerModule() {
@@ -143,14 +143,14 @@ class OutputManager {
 
 		for(moduleId => outputList in files) {
 			final filename = getFileName(moduleId);
-			saveFile(joinPaths(outputDir, filename), outputList.join("\n\n"));
+			saveFile(filename, outputList.join("\n\n"));
 		}
 	}
 
 	function generateFilePerClass() {
 		ensureOutputDirExists();
 		for(c in compiler.classes) {
-			saveFile(joinPaths(outputDir, getFileName(c.cls.globalName())), c.output);
+			saveFile(getFileName(c.cls.globalName()), c.output);
 		}
 	}
 
@@ -161,6 +161,11 @@ class OutputManager {
 	// -------------------------------------------------------
 	// saveFile
 	public function saveFile(path: String, content: String) {
+		final p = outputDir != null ? joinPaths(outputDir, path) : path;
+		saveFileImpl(p, content);
+	}
+
+	function saveFileImpl(path: String, content: String) {
 		sys.io.File.saveContent(path, content);
 		if(shouldDeleteOldOutput()) {
 			recordOutputFile(path);
