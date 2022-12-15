@@ -93,7 +93,9 @@ class ReflectCompiler {
 	static function useCompiler(compiler: BaseCompiler) {
 		compiler.onCompileStart();
 		addClassesToCompiler(compiler);
+		compiler.onCompileEnd();
 		generateFiles(compiler);
+		compiler.onOutputComplete();
 	}
  
 	static function getAllModulesTypesForCompiler(compiler: BaseCompiler): Array<ModuleType> {

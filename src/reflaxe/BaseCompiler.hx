@@ -183,6 +183,8 @@ abstract class BaseCompiler {
 	// Override these in custom compiler to handle certain events.
 	// =======================================================
 	public function onCompileStart() {}
+	public function onCompileEnd() {}
+	public function onOutputComplete() {}
 	public function onClassAdded(cls: ClassType, output: Null<String>): Void {}
 	public function onEnumAdded(cls: EnumType, output: Null<String>): Void {}
 	public function onTypedefAdded(cls: DefType, output: Null<String>): Void {}
