@@ -91,6 +91,7 @@ class ReflectCompiler {
 	}
 
 	static function useCompiler(compiler: BaseCompiler) {
+		compiler.onCompileStart();
 		addClassesToCompiler(compiler);
 		generateFiles(compiler);
 	}
