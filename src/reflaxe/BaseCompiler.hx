@@ -8,7 +8,7 @@ import haxe.macro.Type;
 
 import reflaxe.compiler.TargetCodeInjection;
 import reflaxe.optimization.ExprOptimizer;
-import reflaxe.optimization.EverythingIsExprConversion;
+import reflaxe.compiler.EverythingIsExprSanitizer;
 import reflaxe.output.OutputManager;
 import reflaxe.helpers.ModuleTypeHelper;
 
@@ -371,13 +371,13 @@ abstract class BaseCompiler {
 	// * compileClassFuncExpr
 	//
 	// Same as "compileClassVarExpr", but also uses 
-	// EverythingIsExprConversion if required.
+	// EverythingIsExprSanitizer if required.
 	// =======================================================
 	public function compileClassFuncExpr(expr: TypedExpr): String {
 		if(!options.normalizeEIE) {
 			return compileClassVarExpr(expr);
 		}
-		final eiec = new EverythingIsExprConversion(expr, null);
+		final eiec = new EverythingIsExprSanitizer(expr, null);
 		final convertedExpr = eiec.convertedExpr();
 		return compileClassVarExpr(convertedExpr);
 	}

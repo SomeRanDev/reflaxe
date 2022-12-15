@@ -1,5 +1,5 @@
 // =======================================================
-// * TempVariableNameGenerator
+// * TempVarNameGenerator
 //
 // When converting from "Everything is an Expression" syntax,
 // new variables need to be introduced. 
@@ -8,17 +8,17 @@
 // (but also look like they were written by a human), this class
 // is used to construct and manage the variable names.
 //
-// It is used exclusively in "optimization/EverythingIsExprConversion.hx"
+// It is used exclusively in "compiler/EverythingIsExprSanitizer.hx"
 // So check out that file for more information.
 // =======================================================
 
-package reflaxe.optimization;
+package reflaxe.compiler;
 
 #if (macro || reflaxe_runtime)
 
 import haxe.macro.Type;
 
-class TempVariableNameGenerator {
+class TempVarNameGenerator {
 	// -------------------------------------------------------
 	// Count how many times a variable name is used so if it's
 	// used again we can append a "2", "3", etc. to keep it unique.

@@ -1,5 +1,5 @@
 // =======================================================
-// * EverythingIsExprConversion
+// * EverythingIsExprSanitizer
 //
 // Converts block-like expressions that return a value into
 // an equivalent expression that does not rely on Haxe's
@@ -9,7 +9,7 @@
 // https://code.haxe.org/category/principles/everything-is-an-expression.html
 // =======================================================
 
-package reflaxe.optimization;
+package reflaxe.compiler;
 
 #if (macro || reflaxe_runtime)
 
@@ -17,7 +17,7 @@ using reflaxe.helpers.TypedExprHelper;
 
 import haxe.macro.Type;
 
-class EverythingIsExprConversion {
+class EverythingIsExprSanitizer {
 	// -------------------------------------------------------
 	// Stores the original, provided expression
 	public var haxeExpr: TypedExpr;
@@ -38,17 +38,17 @@ class EverythingIsExprConversion {
 	public var assigneeExpr: Null<TypedExpr>;
 
 	// -------------------------------------------------------
-	// If this "EverythingIsExprConversion" was created from another
-	// "EverythingIsExprConversion", this is a reference to that
+	// If this "EverythingIsExprSanitizer" was created from another
+	// "EverythingIsExprSanitizer", this is a reference to that
 	// original object.
 	//
 	// This is so we have one consistent object to manage the 
 	// new temporary variables names that are being created.
-	public var parent: Null<EverythingIsExprConversion> = null;
+	public var parent: Null<EverythingIsExprSanitizer> = null;
 
 	// -------------------------------------------------------
 	// TODO, write overly eloborate comment here
-	public var nameGenerator: TempVariableNameGenerator;
+	public var nameGenerator: TempVarNameGenerator;
 
 	static var variableId = 0;
 
@@ -66,7 +66,7 @@ class EverythingIsExprConversion {
 			assigneeExpr = null;
 		}
 
-		nameGenerator = new TempVariableNameGenerator();
+		nameGenerator = new TempVarNameGenerator();
 	}
 
 	public function convertedExpr(): TypedExpr {
@@ -270,10 +270,10 @@ class EverythingIsExprConversion {
 	// -------------------------------------------------------
 	// If a top-level, "block-like" expression is encountered
 	// that is not expected to provide a value, we can simply
-	// recursively use our "EverythingIsExprConversion" class
+	// recursively use our "EverythingIsExprSanitizer" class
 	// to tranverse it and handle its sub-expressions.
 	function handleNonValueBlock(e: TypedExpr): TypedExpr {
-		final eiec = new EverythingIsExprConversion(e, isLastExpression() ? assigneeExpr : null);
+		final eiec = new EverythingIsExprSanitizer(e, isLastExpression() ? assigneeExpr : null);
 		return eiec.convertedExpr();
 	}
 
@@ -312,7 +312,7 @@ class EverythingIsExprConversion {
 			t: e.t
 		};
 
-		final eiec = new EverythingIsExprConversion(e, idExpr);
+		final eiec = new EverythingIsExprSanitizer(e, idExpr);
 		
 		final varExpr = {
 			expr: TVar(tvar, varAssignExpr),
