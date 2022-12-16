@@ -84,17 +84,21 @@ class RepeatVariableFixer {
 						result.push(expr);
 					}
 				}
+				case TBlock(_): {
+					result.push(handleBlock(expr));
+					continue;
+				}
 				case _: {
 					var f = null;
 					f = function(subExpr: TypedExpr) {
 						switch(subExpr.expr) {
-							case TBlock(el): {
-								final rvf = new RepeatVariableFixer(subExpr, this);
-								return rvf.fixRepeatVariables();
+							case TBlock(_): {
+								return handleBlock(subExpr);
 							}
 							case TLocal(tvar): {
-								if(varReplacements.exists(tvar.id)) {
-									return subExpr.copy(TLocal(varReplacements.get(tvar.id)));
+								final replacement = varReplacement(tvar.id);
+								if(replacement != null) {
+									return subExpr.copy(TLocal(replacement));
 								}
 							}
 							case _:
@@ -112,6 +116,11 @@ class RepeatVariableFixer {
 		return expr.copy(TBlock(result));
 	}
 
+	function handleBlock(subExpr: TypedExpr): TypedExpr {
+		final rvf = new RepeatVariableFixer(subExpr, this);
+		return rvf.fixRepeatVariables();
+	}
+
 	function varExists(name: String) {
 		return if(varNames.exists(name)) {
 			true;
@@ -119,6 +128,16 @@ class RepeatVariableFixer {
 			parent.varExists(name);
 		} else {
 			false;
+		}
+	}
+
+	function varReplacement(id: Int): Null<TVar> {
+		return if(varReplacements.exists(id)) {
+			varReplacements.get(id);
+		} else if(parent != null) {
+			parent.varReplacement(id);
+		} else {
+			null;
 		}
 	}
 }
