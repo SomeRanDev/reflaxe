@@ -62,7 +62,7 @@ class TypeHelper {
 		return switch(t) {
 			case TInst(clsTypeRef, []): {
 				final clsType = clsTypeRef.get();
-				clsType.module.length == 0 && clsType.name == "String";
+				clsType.module == clsType.name && clsType.name == "String";
 			}
 			case _: false;
 		}
@@ -72,7 +72,7 @@ class TypeHelper {
 		return switch(t) {
 			case TAbstract(abTypeRef, []): {
 				final abType = abTypeRef.get();
-				abType.module.length == 0 && (abType.name == "Int" || abType.name == "Float" || abType.name == "Bool");
+				abType.module == "StdTypes" && (abType.name == "Int" || abType.name == "Float" || abType.name == "Bool");
 			}
 			case _: false;
 		}
