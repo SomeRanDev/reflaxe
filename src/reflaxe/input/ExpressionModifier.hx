@@ -22,7 +22,7 @@ class ExpressionModifier {
 
 	public static function mod(exprFunc: (Expr) -> Null<Expr>): Void {
 		if(modifications.length == 0) {
-			Compiler.addGlobalMetadata("", "@:build(ExpressionModifier.applyMods())");
+			Compiler.addGlobalMetadata("", "@:build(reflaxe.input.ExpressionModifier.applyMods())");
 		}
 
 		modifications.push(exprFunc);
@@ -35,7 +35,9 @@ class ExpressionModifier {
 			final f = fields[i];
 			switch(f.kind) {
 				case FFun(fun): {
-					fun.expr = applyModsToExpr(fun.expr);
+					if(fun.expr != null) {
+						fun.expr = applyModsToExpr(fun.expr);
+					}
 				}
 				case _:
 			}
@@ -45,6 +47,7 @@ class ExpressionModifier {
 	}
 
 	static function applyModsToExpr(e: Expr): Expr {
+
 		var currentExpr = e;
 		for(mod in modifications) {
 			final result = mod(e);
