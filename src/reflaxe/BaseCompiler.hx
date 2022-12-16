@@ -7,7 +7,6 @@ import haxe.macro.Expr;
 import haxe.macro.Type;
 
 import reflaxe.compiler.TargetCodeInjection;
-import reflaxe.compiler.EverythingIsExprSanitizer;
 import reflaxe.helpers.ModuleTypeHelper;
 import reflaxe.optimization.ExprOptimizer;
 import reflaxe.output.OutputManager;
@@ -97,6 +96,11 @@ class BaseCompilerOptions {
 	// -------------------------------------------------------
 	// Whether Haxe's "Everything is an Expression" is normalized.
 	public var normalizeEIE: Bool = true;
+
+	// -------------------------------------------------------
+	// Whether variables of the same name are allowed to be
+	// redeclarated in the same scope or a subscope.
+	public var preventRepeatVars: Bool = true;
 
 	// -------------------------------------------------------
 	// If "true", only the module containing the "main" function and 
@@ -398,12 +402,7 @@ abstract class BaseCompiler {
 	// EverythingIsExprSanitizer if required.
 	// =======================================================
 	public function compileClassFuncExpr(expr: TypedExpr): String {
-		if(!options.normalizeEIE) {
-			return compileClassVarExpr(expr);
-		}
-		final eiec = new EverythingIsExprSanitizer(expr, null);
-		final convertedExpr = eiec.convertedExpr();
-		return compileClassVarExpr(convertedExpr);
+		return compileClassVarExpr(expr);
 	}
 
 	// =======================================================

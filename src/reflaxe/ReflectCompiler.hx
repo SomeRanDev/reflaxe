@@ -13,6 +13,8 @@ import haxe.macro.Context;
 import haxe.macro.Type;
 
 import reflaxe.BaseCompiler;
+import reflaxe.compiler.EverythingIsExprSanitizer;
+import reflaxe.compiler.RepeatVariableFixer;
 import reflaxe.input.ModuleUsageTracker;
 
 using reflaxe.helpers.SyntaxHelper;
@@ -218,7 +220,7 @@ class ReflectCompiler {
 							funcFields.push({
 								isStatic: isStatic,
 								kind: methodKind,
-								tfunc: tfunc,
+								tfunc: preprocessFunction(compiler, field, tfunc),
 								field: field
 							});
 						} else {
@@ -245,6 +247,18 @@ class ReflectCompiler {
 		}
 	
 		return compiler.compileClass(cls, varFields, funcFields);
+	}
+
+	static function preprocessFunction(compiler: BaseCompiler, field: ClassField, tfunc: TFunc): TFunc {
+		if(compiler.options.normalizeEIE) {
+			final eiec = new EverythingIsExprSanitizer(tfunc.expr, null);
+			tfunc.expr = eiec.convertedExpr();
+		}
+		if(compiler.options.preventRepeatVars) {
+			final rvf = new RepeatVariableFixer(tfunc.expr, null, tfunc.args.map(a -> a.v.name));
+			tfunc.expr = rvf.fixRepeatVariables();
+		}
+		return tfunc;
 	}
 
 	// =======================================================
