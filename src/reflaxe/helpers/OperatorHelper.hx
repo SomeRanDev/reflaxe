@@ -60,6 +60,20 @@ class OperatorHelper {
 			case _: false;
 		}
 	}
+
+	public static function isEquals(op: Binop) {
+		return switch(op) {
+			case OpEq: true;
+			case _: false;
+		}
+	}
+
+	public static function isNotEquals(op: Binop) {
+		return switch(op) {
+			case OpNotEq: true;
+			case _: false;
+		}
+	}
 }
 
 #end
