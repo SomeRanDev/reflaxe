@@ -89,8 +89,7 @@ class RepeatVariableFixer {
 					continue;
 				}
 				case _: {
-					var f = null;
-					f = function(subExpr: TypedExpr) {
+					function mapSubExprs(subExpr: TypedExpr) {
 						switch(subExpr.expr) {
 							case TBlock(_): {
 								return handleBlock(subExpr);
@@ -103,10 +102,10 @@ class RepeatVariableFixer {
 							}
 							case _:
 						}
-						return haxe.macro.TypedExprTools.map(subExpr, f);
+						return haxe.macro.TypedExprTools.map(subExpr, mapSubExprs);
 					}
 
-					expr = haxe.macro.TypedExprTools.map(expr, f);
+					expr = haxe.macro.TypedExprTools.map(expr, mapSubExprs);
 
 					result.push(expr);
 				}
