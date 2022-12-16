@@ -78,6 +78,12 @@ class BaseCompilerOptions {
 	public var ignoreTypes: Array<String> = [];
 
 	// -------------------------------------------------------
+	// A list of variable names that cannot be used in the
+	// generated output. If these are used in the Haxe source,
+	// they will have an underscore appended to them.
+	public var reservedVarNames: Array<String> = [];
+
+	// -------------------------------------------------------
 	// The name of the function used to inject code directly to the target.
 	// Set to `null` to disable this feature.
 	public var targetCodeInjectionName: Null<String> = null;
@@ -364,6 +370,19 @@ abstract class BaseCompiler {
 		}
 
 		return compileExpressionImpl(expr);
+	}
+
+	// =======================================================
+	// * compileVarName
+	//
+	// Compiles the provided variable name.
+	// Ensures it does not match any of the reserved variable names.
+	// =======================================================
+	public function compileVarName(name: String, expr: TypedExpr): String {
+		while(options.reservedVarNames.contains(name)) {
+			name = "_" + name;
+		}
+		return name;
 	}
 
 	// =======================================================
