@@ -166,7 +166,10 @@ class OutputManager {
 	}
 
 	function saveFileImpl(path: String, content: String) {
-		sys.io.File.saveContent(path, content);
+		// Do not save anything if the file already exists and has same content
+		if(!sys.FileSystem.exists(path) || sys.io.File.getContent(path) != content) {
+			sys.io.File.saveContent(path, content);
+		}
 		if(shouldDeleteOldOutput()) {
 			recordOutputFile(path);
 		}
