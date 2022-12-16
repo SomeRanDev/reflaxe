@@ -54,21 +54,28 @@ class OperatorHelper {
 		}
 	}
 
-	public static function isAddition(op: Binop) {
+	public static function isAddition(op: Binop): Bool {
 		return switch(op) {
 			case OpAdd: true;
 			case _: false;
 		}
 	}
 
-	public static function isEquals(op: Binop) {
+	public static function isEqualityCheck(op: Binop): Bool {
+		return switch(op) {
+			case OpEq | OpNotEq: true;
+			case _: false;
+		}
+	}
+
+	public static function isEquals(op: Binop): Bool {
 		return switch(op) {
 			case OpEq: true;
 			case _: false;
 		}
 	}
 
-	public static function isNotEquals(op: Binop) {
+	public static function isNotEquals(op: Binop): Bool {
 		return switch(op) {
 			case OpNotEq: true;
 			case _: false;
