@@ -53,6 +53,13 @@ class OperatorHelper {
 			case OpSpread: "...";
 		}
 	}
+
+	public static function isAddition(op: Binop) {
+		return switch(op) {
+			case OpAdd: true;
+			case _: false;
+		}
+	}
 }
 
 #end
