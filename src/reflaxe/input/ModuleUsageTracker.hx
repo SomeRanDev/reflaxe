@@ -28,12 +28,14 @@ typedef CommonModuleTypeData = {
 
 class ModuleUsageTracker {
 	var allModuleTypes: Array<ModuleType>;
+	var compiler: BaseCompiler;
 
 	var outputTypes: Array<ModuleType>;
 	var outputTypeMap: Map<String, Bool>;
 
-	public function new(types: Array<ModuleType>) {
+	public function new(types: Array<ModuleType>, compiler: BaseCompiler) {
 		allModuleTypes = types;
+		this.compiler = compiler;
 
 		outputTypes = [];
 		outputTypeMap = [];
@@ -75,7 +77,23 @@ class ModuleUsageTracker {
 					}
 				}
 			}
+			case TTypeDecl(defTypeRef) if(compiler.options.unwrapTypedefs): {
+				final result = unwrapTypedef(defTypeRef.get());
+				if(result != null) {
+					addUsedModuleType(result);
+				}
+			}
 			case _:
+		}
+	}
+
+	function unwrapTypedef(defType: DefType): Null<ModuleType> {
+		final type = defType.type;
+		final anonModuleType = type.convertAnonToModuleType();
+		return if(anonModuleType != null) {
+			anonModuleType;
+		} else {
+			type.toModuleType();
 		}
 	}
 

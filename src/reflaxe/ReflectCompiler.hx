@@ -102,7 +102,7 @@ class ReflectCompiler {
  
 	static function getAllModulesTypesForCompiler(compiler: BaseCompiler): Array<ModuleType> {
 		final result = if(compiler.options.smartDCE) {
-			final tracker = new ModuleUsageTracker(moduleTypes);
+			final tracker = new ModuleUsageTracker(moduleTypes, compiler);
 			tracker.filteredTypes();
 		} else {
 			moduleTypes;
@@ -125,15 +125,7 @@ class ReflectCompiler {
 		final abstractDecls: Array<Ref<AbstractType>> = [];
 
 		for(moduleType in getAllModulesTypesForCompiler(compiler)) {
-			var mt = switch(moduleType) {
-				case TTypeDecl(defTypeRef) if(compiler.options.unwrapTypedefs): {
-					final result = unwrapTypedef(defTypeRef.get());
-					result != null ? result : moduleType;
-				}
-				case _: moduleType;
-			}
-
-			switch(mt) {
+			switch(moduleType) {
 				case TClassDecl(clsTypeRef): {
 					classDecls.push(clsTypeRef);
 				}
@@ -171,16 +163,6 @@ class ReflectCompiler {
 		for(abstractRef in abstractDecls) {
 			final ab = abstractRef.get();
 			compiler.addAbstractOutput(ab, compiler.compileAbstract(ab));
-		}
-	}
-
-	static function unwrapTypedef(defType: DefType): Null<ModuleType> {
-		final type = defType.type;
-		final anonModuleType = type.convertAnonToModuleType();
-		return if(anonModuleType != null) {
-			anonModuleType;
-		} else {
-			type.toModuleType();
 		}
 	}
 

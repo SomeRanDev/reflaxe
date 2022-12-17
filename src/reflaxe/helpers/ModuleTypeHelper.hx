@@ -12,6 +12,7 @@ package reflaxe.helpers;
 import haxe.macro.Expr;
 import haxe.macro.Type;
 
+using reflaxe.helpers.ClassTypeHelper;
 using reflaxe.helpers.NameMetaHelper;
 
 typedef CommonModuleTypeData = {
@@ -51,6 +52,17 @@ class ModuleTypeHelper {
 
 	public static function getNameOrNative(type: ModuleType): String {
 		return getCommonData(type).getNameOrNative();
+	}
+
+	public static function getUniqueId(type: ModuleType): String {
+		final prefix = switch(type) {
+			case TClassDecl(_): "C";
+			case TEnumDecl(_): "E";
+			case TTypeDecl(_): "T";
+			case TAbstract(_): "A";
+		}
+
+		return prefix + "|" + getCommonData(type).globalName();
 	}
 }
 
