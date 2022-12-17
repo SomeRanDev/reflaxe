@@ -378,7 +378,7 @@ abstract class BaseCompiler {
 	// Compiles the provided variable name.
 	// Ensures it does not match any of the reserved variable names.
 	// =======================================================
-	public function compileVarName(name: String, expr: TypedExpr): String {
+	public function compileVarName(name: String, expr: Null<TypedExpr> = null, field: Null<ClassField> = null): String {
 		while(options.reservedVarNames.contains(name)) {
 			name = "_" + name;
 		}
