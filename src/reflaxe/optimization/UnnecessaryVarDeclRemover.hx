@@ -27,10 +27,12 @@ class UnnecessaryVarDeclRemover {
 		exprList = list;
 	}
 
+	// Returns a modified version of the input expressions with the optimization applied.
 	public function removeUnnecessaryVarDecls(): Array<TypedExpr> {
 		final result = [];
 
 		var removableVars: Array<{tvar: TVar, index: Int}> = [];
+		var indexesToRemove = [];
 		var i = 0;
 
 		while(i < exprList.length) {
@@ -42,6 +44,12 @@ class UnnecessaryVarDeclRemover {
 					}
 				}
 				case TBinop(OpAssign, { expr: TLocal(tvar) }, e): {
+					// Ensure assignment expression does not reference the variable
+					// being assigned or any other variables being tracked.
+					removableVars = filterRemovableVars(e, removableVars);
+
+					// Check assignment to see if a previously unused,
+					// but declared variable is being assigned.
 					var successful = false;
 					for(v in removableVars) {
 						if(v.tvar.id == tvar.id) {
@@ -51,12 +59,7 @@ class UnnecessaryVarDeclRemover {
 							result.push(copyExpr);
 
 							// remove original declaration
-							result.splice(v.index , 1);
-							for(_v in removableVars) {
-								if(_v.index > v.index) {
-									_v.index--;
-								}
-							}
+							indexesToRemove.push(v.index);
 
 							successful = true;
 							break;
@@ -72,25 +75,41 @@ class UnnecessaryVarDeclRemover {
 					result.push(copyExpr);
 				}
 				case _: {
-					haxe.macro.TypedExprTools.iter(expr, function(e: TypedExpr) {
-						switch(e.expr) {
-							case TLocal(tvar): {
-								final len = result.length;
-								removableVars = removableVars.filter(function(v) {
-									return v.tvar.id == tvar.id;
-								});
-							}
-							case _:
-						}
-					});
+					filterRemovableVars(expr, removableVars);
 				}
 			}
 			result.push(expr);
 		}
 
-		return result;
+		return {
+			final filteredResult = [];
+			for(i in 0...result.length) {
+				if(!indexesToRemove.contains(i)) {
+					filteredResult.push(result[i]);
+				}
+			}
+			filteredResult;
+		}
 	}
 
+	// Check the provided expression for any usage of the supplied list of declared variables.
+	// If any are found, remove them from the list.
+	function filterRemovableVars(expr: TypedExpr, removableVars: Array<{tvar: TVar, index: Int}>) {
+		haxe.macro.TypedExprTools.iter(expr, function(e: TypedExpr) {
+			switch(e.expr) {
+				case TLocal(tvar): {
+					removableVars = removableVars.filter(function(v) {
+						return v.tvar.id != tvar.id;
+					});
+				}
+				case _:
+			}
+		});
+		return removableVars;
+	}
+
+	// Check if the expression has any possible effects.
+	// If not, it should be safe to remove.
 	function isModifyingExpr(e: Null<TypedExpr>): Bool {
 		if(e == null) {
 			return false;
