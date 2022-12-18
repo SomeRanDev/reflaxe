@@ -53,9 +53,13 @@ class TempVarNameGenerator {
 	// -------------------------------------------------------
 	// Generate name from the base and number of uses
 	public function makeName(baseName: String, count: Int) {
-		final base = baseName.substring(0, 1).toUpperCase() + baseName.substring(1).toLowerCase();
+		final base = capatalize(baseName);
 		final suffix = (count > 0 ? Std.string(count) : "");
 		return "temp" + base + suffix;
+	}
+
+	function capatalize(s: String) {
+		return s.substring(0, 1).toUpperCase() + s.substring(1);
 	}
 
 	// -------------------------------------------------------
@@ -97,10 +101,17 @@ class TempVarNameGenerator {
 			case TLazy(lazyFunc): {
 				generateName(lazyFunc());
 			}
-			case TAbstract(abstractTypeRef, _): {
+			case TAbstract(abstractTypeRef, params): {
 				switch(abstractTypeRef.get().name) {
 					case "Int" | "Float": "number";
 					case "String": "string";
+					case "Null": {
+						if(params.length > 0) {
+							"Maybe" + capatalize(generateBaseName(params[0]));
+						} else {
+							"Nullable";
+						}
+					}
 					case s: s;
 				}
 			}
