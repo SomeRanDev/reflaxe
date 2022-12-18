@@ -216,6 +216,12 @@ public var defaultOutputFilename: String = "output";
 public var ignoreTypes: Array<String> = [];
 
 // -------------------------------------------------------
+// A list of variable names that cannot be used in the
+// generated output. If these are used in the Haxe source,
+// they will have an underscore appended to them.
+public var reservedVarNames: Array<String> = [];
+
+// -------------------------------------------------------
 // The name of the function used to inject code directly to the target.
 // Set to `null` to disable this feature.
 public var targetCodeInjectionName: Null<String> = null;
@@ -227,8 +233,24 @@ public var targetCodeInjectionName: Null<String> = null;
 public var enforceNullSafety: Bool = true;
 
 // -------------------------------------------------------
+// If "true", typedefs will be converted to their internal
+// class or enum type before being processed and generated.
+public var unwrapTypedefs: Bool = true;
+
+// -------------------------------------------------------
 // Whether Haxe's "Everything is an Expression" is normalized.
 public var normalizeEIE: Bool = true;
+
+// -------------------------------------------------------
+// Whether variables of the same name are allowed to be
+// redeclarated in the same scope or a subscope.
+public var preventRepeatVars: Bool = true;
+
+// -------------------------------------------------------
+// Whether variables captured by lambdas are wrapped in
+// an Array. Useful as certain targets can't capture and
+// modify a value unless stored by reference.
+public var wrapLambdaCaptureVarsInArray: Bool = false;
 
 // -------------------------------------------------------
 // If "true", only the module containing the "main" function and 
