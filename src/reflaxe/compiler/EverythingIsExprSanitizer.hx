@@ -295,12 +295,13 @@ class EverythingIsExprSanitizer {
 	// If the expression is a type of syntax that is typically
 	// not an expression in other languages, but instead an
 	// "expression holder", this returns true.
-	function isBlocklikeExpr(e: TypedExpr, recursive: Bool = false) {
+	public static function isBlocklikeExpr(e: TypedExpr) {
 		return switch(e.expr) {
 			case TBlock(_): true;
 			case TIf(_, _, _): true;
 			case TSwitch(_, _, _): true;
 			case TTry(_, _): true;
+			case TParenthesis(e1) | TMeta(_, e1): isBlocklikeExpr(e1);
 			case _: false;
 		}
 	}
@@ -400,6 +401,7 @@ class EverythingIsExprSanitizer {
 			case TBinop(OpAssign, _, _): true;
 			case TBinop(OpAssignOp(_), _, _): true;
 			case TUnop(OpIncrement | OpDecrement, _, _): true;
+			case TParenthesis(e1) | TMeta(_, e1): isDisallowedInWhile(e1);
 			case _: {
 				var result = false;
 				haxe.macro.TypedExprTools.iter(e, function(e) {
