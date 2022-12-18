@@ -73,6 +73,7 @@ class UnnecessaryVarDeclRemover {
 					final copyExpr = expr.copy();
 					copyExpr.expr = TBlock(optimize(el));
 					result.push(copyExpr);
+					continue;
 				}
 				case _: {
 					removableVars = filterRemovableVars(expr, removableVars);
