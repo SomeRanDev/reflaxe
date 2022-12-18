@@ -75,7 +75,7 @@ class UnnecessaryVarDeclRemover {
 					result.push(copyExpr);
 				}
 				case _: {
-					filterRemovableVars(expr, removableVars);
+					removableVars = filterRemovableVars(expr, removableVars);
 				}
 			}
 			result.push(expr);
@@ -95,7 +95,7 @@ class UnnecessaryVarDeclRemover {
 	// Check the provided expression for any usage of the supplied list of declared variables.
 	// If any are found, remove them from the list.
 	function filterRemovableVars(expr: TypedExpr, removableVars: Array<{tvar: TVar, index: Int}>) {
-		haxe.macro.TypedExprTools.iter(expr, function(e: TypedExpr) {
+		function exprIter(e: TypedExpr) {
 			switch(e.expr) {
 				case TLocal(tvar): {
 					removableVars = removableVars.filter(function(v) {
@@ -104,7 +104,9 @@ class UnnecessaryVarDeclRemover {
 				}
 				case _:
 			}
-		});
+			haxe.macro.TypedExprTools.iter(e, exprIter);
+		}
+		exprIter(expr);
 		return removableVars;
 	}
 
