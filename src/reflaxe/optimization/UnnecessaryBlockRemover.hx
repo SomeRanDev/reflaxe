@@ -19,7 +19,8 @@ class UnnecessaryBlockRemover {
 	var exprList: Array<TypedExpr>;
 
 	var requiredNames: Array<String>;
-	var declaredVars: Array<String>;
+	var declaredVars: Array<String>; 
+	var multiUseVarNames: Array<String>;
 
 	public static function optimize(list: Array<TypedExpr>): Array<TypedExpr> {
 		final ubr = new UnnecessaryBlockRemover(list);
@@ -33,44 +34,16 @@ class UnnecessaryBlockRemover {
 	}
 
 	public function removeUnnecessaryBlocks(): Array<TypedExpr> {
-		final multiUseVarNames = findMultiUseVarNames();
+		multiUseVarNames = findMultiUseVarNames();
 
 		for(e in exprList) {
 			trackExpr(e);
 		}
 
-		final result = [];
-		for(i in 0...exprList.length) {
-			final e = exprList[i];
-			switch(e.expr) {
-				case TBlock(el): {
-					final ubr = new UnnecessaryBlockRemover(el);
-					final newExprList = ubr.removeUnnecessaryBlocks();
-					var shouldMerge = true;
-					for(name in ubr.declaredVars) {
-						if(multiUseVarNames.contains(name) || requiredNames.contains(name)) {
-							shouldMerge = false;
-							break;
-						}
-					}
-
-					if(shouldMerge) {
-						for(expr in newExprList) {
-							result.push(expr.copy());
-						}
-					} else {
-						result.push(e);
-					}
-				}
-				case _: {
-					result.push(e);
-				}
-			}
-		}
-
-		return result;
+		return handleBlockList(exprList);
 	}
 
+	// Track all variable declarations and uses for future use
 	function trackExpr(e: TypedExpr) {
 		switch(e.expr) {
 			case TBlock(_): return;
@@ -87,15 +60,75 @@ class UnnecessaryBlockRemover {
 		haxe.macro.TypedExprTools.iter(e, trackExpr);
 	}
 
+	// Add variable name that is used in this block.
 	function addRequiredName(n: String) {
 		if(!requiredNames.contains(n)) {
 			requiredNames.push(n);
 		}
 	}
 
+	// Add variable name that is declared in this block.
 	function addDeclaredVars(n: String) {
 		if(!declaredVars.contains(n)) {
 			declaredVars.push(n);
+		}
+	}
+
+	// Take a list of expressions and merge any possible blocks.
+	function handleBlockList(exprList: Array<TypedExpr>): Array<TypedExpr> {
+		final result = [];
+		for(i in 0...exprList.length) {
+			final expr = exprList[i];
+			switch(expr.expr) {
+				case TBlock(el): {
+					// Merge the possible sub-expression blocks for this sub-block.
+					final ubr = new UnnecessaryBlockRemover(el);
+					final newExprList = ubr.removeUnnecessaryBlocks();
+
+					// Check if merge should occur
+					var shouldMerge = true;
+					for(name in ubr.declaredVars) {
+						// If a variable is used in multiple blocks, or this this
+						// variable name is required elsewhere, we do not merge.
+						if(multiUseVarNames.contains(name) || requiredNames.contains(name)) {
+							shouldMerge = false;
+							break;
+						}
+					}
+
+					if(shouldMerge) {
+						// "Merge" the expressions of this block into
+						// the main-block's new list of expressions.
+						for(expr in newExprList) {
+							result.push(expr.copy());
+						}
+					} else {
+						result.push(expr);
+					}
+				}
+				case _: {
+					result.push(findNewBlock(expr));
+				}
+			}
+		}
+
+		return result;
+	}
+
+	// If the expression isn't a block, iterate
+	// through the sub-expressions to find one.
+	function findNewBlock(e: TypedExpr): TypedExpr {
+		return switch(e.expr) {
+			// Find a new block to act as our "base".
+			// Only blocks inside a block need to be merged.
+			case TBlock(el): {
+				return {
+					expr: TBlock(handleBlockList(el)),
+					pos: e.pos,
+					t: e.t
+				};
+			}
+			case _: haxe.macro.TypedExprTools.map(e, findNewBlock);
 		}
 	}
 
