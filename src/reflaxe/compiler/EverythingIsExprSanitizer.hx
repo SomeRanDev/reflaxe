@@ -69,7 +69,15 @@ class EverythingIsExprSanitizer {
 		nameGenerator = new TempVarNameGenerator();
 	}
 
+	function preprocessExpr() {
+		for(i in 0...topScopeArray.length) {
+			topScopeArray[i] = fixWhile(topScopeArray[i]);
+		}
+	}
+
 	public function convertedExpr(): TypedExpr {
+		preprocessExpr();
+
 		index = 0;
 		while(index < topScopeArray.length) {
 			// -------------------------------------------------------
@@ -281,13 +289,23 @@ class EverythingIsExprSanitizer {
 	// If the expression is a type of syntax that is typically
 	// not an expression in other languages, but instead an
 	// "expression holder", this returns true.
-	function isBlocklikeExpr(e: TypedExpr) {
+	function isBlocklikeExpr(e: TypedExpr, recursive: Bool = false) {
 		return switch(e.expr) {
 			case TBlock(_): true;
 			case TIf(_, _, _): true;
 			case TSwitch(_, _, _): true;
 			case TTry(_, _): true;
 			case _: false;
+			/*case TFunction(_): false;
+			case _: if(recursive) {
+				var result = false;
+				haxe.macro.TypedExprTools.iter(e, function(e) {
+					if(isBlocklikeExpr(e)) {
+						result = true;
+					}
+				});
+				result;
+			}*/
 		}
 	}
 
@@ -324,6 +342,69 @@ class EverythingIsExprSanitizer {
 		topScopeArray.insert(index + 1, eiec.convertedExpr());
 
 		return e.copy(tvarExprDef);
+	}
+
+	// =======================================================
+	// * Preprocessing while
+	// The conditional expression within a while is executed
+	// multiple times, so it must be placed within the while.
+	//
+	// This collection of preprocessing functions helps fix
+	// this issue.
+	// =======================================================
+
+	function fixWhile(e: TypedExpr): TypedExpr {
+		switch(e.expr) {
+			case TWhile(econd, e, normalWhile): {
+				if(isDisallowedInWhile(econd)) {
+					final newCond = makeTExpr(TConst(TBool(true)), econd.pos, econd.t);
+					final ifExpr = makeTExpr(TIf(makeTExpr(TUnop(OpNot, false, econd)), makeTExpr(TBreak), null));
+					final newBlockExpr = makeTExpr(TBlock(normalWhile ? [ifExpr, e] : [e, ifExpr]));
+					return {
+						expr: TWhile(newCond, newBlockExpr, normalWhile),
+						pos: e.pos,
+						t: e.t
+					};
+				}
+			}
+			case _:
+		}
+		return haxe.macro.TypedExprTools.map(e, fixWhile);
+	}
+
+	function isDisallowedInWhile(e: TypedExpr) {
+		return switch(e.expr) {
+			case TBlock(_): true;
+			case TIf(_, _, _): true;
+			case TSwitch(_, _, _): true;
+			case TTry(_, _): true;
+			case TBinop(OpAssign, _, _): true;
+			case TBinop(OpAssignOp(_), _, _): true;
+			case TUnop(OpIncrement | OpDecrement, _, _): true;
+			case _: {
+				var result = false;
+				haxe.macro.TypedExprTools.iter(e, function(e) {
+					if(isDisallowedInWhile(e)) {
+						result = true;
+					}
+				});
+				result;
+			};
+		}
+	}
+
+	function makeTExpr(def: TypedExprDef, pos: Null<haxe.macro.Expr.Position> = null, t: Null<haxe.macro.Type> = null) {
+		if(pos == null) {
+			pos = haxe.macro.Context.makePosition({ min: 0, max: 0, file: "" });
+		}
+		if(t == null) {
+			t = TDynamic(null);
+		}
+		return {
+			expr: def,
+			pos: pos,
+			t: t
+		}
 	}
 }
 
