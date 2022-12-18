@@ -35,14 +35,18 @@ class BaseCompilerHelper {
 				case _: Context.error("One string argument expected.", entry.pos);
 			}
 
-			final thisExpr = compiler.compileExpression(declaration.thisExpr);
+			final thisExpr = declaration.thisExpr != null ? compiler.compileExpression(declaration.thisExpr) : null;
 			final argExprs = arguments.map(compiler.compileExpression);
 
 			var result = code;
 
 			if(code.contains("{this}")) {
 				if(thisExpr == null) {
-					compiler.onExpressionUnsuccessful(declaration.thisExpr.pos);
+					if(declaration.thisExpr == null) {
+						Context.error("Cannot use {this} on @:nativeFunctionCode meta for constructors.", entry.pos);
+					} else {
+						compiler.onExpressionUnsuccessful(callExpr.pos);
+					}
 				} else {
 					result = result.replace("{this}", thisExpr);
 				}
