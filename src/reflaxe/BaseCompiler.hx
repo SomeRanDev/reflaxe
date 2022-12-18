@@ -109,6 +109,12 @@ class BaseCompilerOptions {
 	public var preventRepeatVars: Bool = true;
 
 	// -------------------------------------------------------
+	// Whether variables captured by lambdas are wrapped in
+	// an Array. Useful as certain targets can't capture and
+	// modify a value unless stored by reference.
+	public var wrapLambdaCaptureVarsInArray: Bool = false;
+
+	// -------------------------------------------------------
 	// If "true", only the module containing the "main" function and 
 	// any classes it references are compiled.
 	// Otherwise, Haxe's less restrictive dce is used.

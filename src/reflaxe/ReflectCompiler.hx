@@ -15,6 +15,7 @@ import haxe.macro.Type;
 import reflaxe.BaseCompiler;
 import reflaxe.compiler.EverythingIsExprSanitizer;
 import reflaxe.compiler.RepeatVariableFixer;
+import reflaxe.compiler.CaptureVariableFixer;
 import reflaxe.input.ModuleUsageTracker;
 
 using reflaxe.helpers.SyntaxHelper;
@@ -239,6 +240,10 @@ class ReflectCompiler {
 		if(compiler.options.preventRepeatVars) {
 			final rvf = new RepeatVariableFixer(tfunc.expr, null, tfunc.args.map(a -> a.v.name));
 			tfunc.expr = rvf.fixRepeatVariables();
+		}
+		if(compiler.options.wrapLambdaCaptureVarsInArray) {
+			final cfv = new CaptureVariableFixer(tfunc.expr);
+			tfunc.expr = cfv.fixCaptures();
 		}
 		return tfunc;
 	}
