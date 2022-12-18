@@ -89,30 +89,32 @@ class RepeatVariableFixer {
 					continue;
 				}
 				case _: {
-					function mapSubExprs(subExpr: TypedExpr) {
-						switch(subExpr.expr) {
-							case TBlock(_): {
-								return handleBlock(subExpr);
-							}
-							case TLocal(tvar): {
-								final replacement = varReplacement(tvar.id);
-								if(replacement != null) {
-									return subExpr.copy(TLocal(replacement));
-								}
-							}
-							case _:
-						}
-						return haxe.macro.TypedExprTools.map(subExpr, mapSubExprs);
-					}
-
-					expr = haxe.macro.TypedExprTools.map(expr, mapSubExprs);
-
-					result.push(expr);
+					result.push(handleExpression(expr));
 				}
 			}
 		}
 
 		return expr.copy(TBlock(result));
+	}
+
+	function handleExpression(expr: TypedExpr): TypedExpr {
+		function mapSubExprs(subExpr: TypedExpr) {
+			switch(subExpr.expr) {
+				case TBlock(_): {
+					return handleBlock(subExpr);
+				}
+				case TLocal(tvar): {
+					final replacement = varReplacement(tvar.id);
+					if(replacement != null) {
+						return subExpr.copy(TLocal(replacement));
+					}
+				}
+				case _:
+			}
+			return haxe.macro.TypedExprTools.map(subExpr, mapSubExprs);
+		}
+
+		return haxe.macro.TypedExprTools.map(expr, mapSubExprs);
 	}
 
 	function handleBlock(subExpr: TypedExpr): TypedExpr {
