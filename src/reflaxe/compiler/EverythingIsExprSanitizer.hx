@@ -50,6 +50,14 @@ class EverythingIsExprSanitizer {
 	// TODO, write overly eloborate comment here
 	public var nameGenerator: TempVarNameGenerator;
 
+	// -------------------------------------------------------
+	// Expression stack.
+	var expressionStack: Array<TypedExpr>;
+
+	// -------------------------------------------------------
+	// Meta stack.
+	var metaStack: Array<String>;
+
 	static var variableId = 0;
 
 	public function new(expr: TypedExpr, assignee: Null<TypedExpr> = null) {
@@ -67,6 +75,9 @@ class EverythingIsExprSanitizer {
 		}
 
 		nameGenerator = new TempVarNameGenerator();
+
+		expressionStack = [];
+		metaStack = [];
 	}
 
 	function preprocessExpr() {
@@ -134,7 +145,15 @@ class EverythingIsExprSanitizer {
 	// An infinite while loop is used to locally replicate
 	// a recursive-like system when necessary.
 	function processExpr(expr: TypedExpr): Null<TypedExprDef> {
-		return switch(expr.expr) {
+		final pushed = switch(expr.expr) {
+			case TParenthesis(_) | TMeta(_, _): false;
+			case _: {
+				expressionStack.push(expr);
+				true;
+			}
+		}
+
+		final result = switch(expr.expr) {
 			case TArray(e1, e2): {
 				TArray(
 					handleValueExpr(e1, "array"),
@@ -223,7 +242,10 @@ class EverythingIsExprSanitizer {
 				TReturn(handleValueExpr(expr, "result"));
 			}
 			case TMeta(m, e): {
-				TMeta(m, expr.copy(processExpr(e)));
+				metaStack.push(m.name);
+				final result = expr.copy(processExpr(e));
+				metaStack.pop();
+				TMeta(m, result);
 			}
 			case TThrow(e): {
 				TThrow(handleValueExpr(e, "error"));
@@ -239,6 +261,12 @@ class EverythingIsExprSanitizer {
 				null;
 			}
 		}
+
+		if(pushed) {
+			expressionStack.pop();
+		}
+
+		return result;
 	}
 
 	// -------------------------------------------------------
@@ -260,6 +288,11 @@ class EverythingIsExprSanitizer {
 			final newExpr = standardizeSubscopeValue(e, index, varNameOverride);
 			if(newExpr != null) {
 				index += 2;
+				return newExpr;
+			}
+		} else if(isFunctionRef(e)) {
+			final newExpr = standardizeFunctionValue(e);
+			if(newExpr != null) {
 				return newExpr;
 			}
 		} else {
@@ -342,8 +375,10 @@ class EverythingIsExprSanitizer {
 	}
 
 	// -------------------------------------------------------
-	// If the expression is a type of syntax that is typically
-	function isAssignExpr(e: TypedExpr, recursive: Bool = false) {
+	// If the expression is an assignment, it is transformed
+	// into two separate statements. The assignment is placed
+	// outside and the assigned expression is used afterward.
+	function isAssignExpr(e: TypedExpr) {
 		return switch(e.expr) {
 			case TBinop(OpAssign | OpAssignOp(_), _, _): true;
 			case _: false;
@@ -362,6 +397,94 @@ class EverythingIsExprSanitizer {
 		}
 
 		return left.copy();
+	}
+
+	// -------------------------------------------------------
+	// Functions that are extern or use syntax injecting 
+	// metadata like @:native or @:nativeFunctionCode cannot
+	// be referenced at runtime. To help fix this, uncalled
+	// function values are wrapped in a lambda to enable
+	// complete support.
+	function isFunctionRef(e: TypedExpr) {
+		final lastExpr = expressionStack[expressionStack.length - 1];
+		if(lastExpr != null) {
+			switch(lastExpr.expr) {
+				case TCall(_, _): return false;
+				case _:
+			}
+		}
+		if(metaStack.contains(":wrappedInLambda")) {
+			return false;
+		}
+		return switch(e.t) {
+			case TFun(args, ret): switch(e.expr) {
+				case TField(_, _): true;
+				case _: false;
+			}
+			case _: return false;
+		}
+	}
+
+	function standardizeFunctionValue(e: TypedExpr): Null<TypedExpr> {
+		final pos = makeEmptyPos();
+		final t = TDynamic(null);
+
+		final args = [];
+		final createArgs = [];
+		var retType = null;
+		switch(e.t) {
+			case TFun(tfunArgs, tfunRet): {
+				for(a in tfunArgs) {
+					args.push({
+						expr: TIdent(a.name),
+						pos: pos,
+						t: t
+					});
+					createArgs.push({
+						t: t,
+						name: a.name,
+						meta: cast [],
+						id: 9000000 + (variableId++),
+						extra: null,
+						capture: false
+					});
+					retType = tfunRet;
+				}
+			}
+			case _: false;
+		}
+
+		final result = {
+			expr: TFunction({
+				t: retType,
+				expr: {
+					expr: TReturn({
+						expr: TCall({
+							expr: TMeta({ name: ":wrappedInLambda", pos: pos }, e),
+							pos: pos,
+							t: t
+						}, args),
+						pos: pos,
+						t: t
+					}),
+					pos: pos,
+					t: t
+				},
+				args: createArgs.map(a -> { value: null, v: a })
+			}),
+			pos: e.pos,
+			t: e.t
+		};
+
+		final eiec = new EverythingIsExprSanitizer(result, null);
+		return unwrapBlock(eiec.convertedExpr());
+	}
+
+	function unwrapBlock(e: TypedExpr): TypedExpr {
+		return switch(e.expr) {
+			case TBlock(el) if(el.length == 1): el[0];
+			case _: e;
+		}
 	}
 
 	// =======================================================
@@ -416,7 +539,7 @@ class EverythingIsExprSanitizer {
 
 	function makeTExpr(def: TypedExprDef, pos: Null<haxe.macro.Expr.Position> = null, t: Null<haxe.macro.Type> = null) {
 		if(pos == null) {
-			pos = haxe.macro.Context.makePosition({ min: 0, max: 0, file: "" });
+			pos = makeEmptyPos();
 		}
 		if(t == null) {
 			t = TDynamic(null);
@@ -426,6 +549,10 @@ class EverythingIsExprSanitizer {
 			pos: pos,
 			t: t
 		}
+	}
+
+	function makeEmptyPos(): haxe.macro.Expr.Position {
+		return haxe.macro.Context.makePosition({ min: 0, max: 0, file: "" });
 	}
 }
 
