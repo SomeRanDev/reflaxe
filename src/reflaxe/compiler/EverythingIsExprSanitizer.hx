@@ -250,7 +250,13 @@ class EverythingIsExprSanitizer {
 	// into a variable declaraion and scoped block that
 	// modifies the aforementioned variable.
 	function handleValueExpr(e: TypedExpr, varNameOverride: Null<String> = null): TypedExpr {
-		if(isBlocklikeExpr(e)) {
+		if(isAssignExpr(e)) {
+			final newExpr = standardizeAssignValue(e, index, varNameOverride);
+			if(newExpr != null) {
+				index += 1;
+				return newExpr;
+			}
+		} else if(isBlocklikeExpr(e)) {
 			final newExpr = standardizeSubscopeValue(e, index, varNameOverride);
 			if(newExpr != null) {
 				index += 2;
@@ -296,16 +302,6 @@ class EverythingIsExprSanitizer {
 			case TSwitch(_, _, _): true;
 			case TTry(_, _): true;
 			case _: false;
-			/*case TFunction(_): false;
-			case _: if(recursive) {
-				var result = false;
-				haxe.macro.TypedExprTools.iter(e, function(e) {
-					if(isBlocklikeExpr(e)) {
-						result = true;
-					}
-				});
-				result;
-			}*/
 		}
 	}
 
@@ -342,6 +338,29 @@ class EverythingIsExprSanitizer {
 		topScopeArray.insert(index + 1, eiec.convertedExpr());
 
 		return e.copy(tvarExprDef);
+	}
+
+	// -------------------------------------------------------
+	// If the expression is a type of syntax that is typically
+	function isAssignExpr(e: TypedExpr, recursive: Bool = false) {
+		return switch(e.expr) {
+			case TBinop(OpAssign | OpAssignOp(_), _, _): true;
+			case _: false;
+		}
+	}
+
+	function standardizeAssignValue(e: TypedExpr, index: Int, varNameOverride: Null<String> = null): Null<TypedExpr> {
+		final eiec = new EverythingIsExprSanitizer(e, null);
+		topScopeArray.insert(index, eiec.convertedExpr());
+
+		final left = switch(e.expr) {
+			case TBinop(OpAssign | OpAssignOp(_), left, _): {
+				left;
+			}
+			case _: null;
+		}
+
+		return left.copy();
 	}
 
 	// =======================================================
