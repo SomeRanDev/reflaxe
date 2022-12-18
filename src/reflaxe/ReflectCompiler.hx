@@ -20,6 +20,7 @@ import reflaxe.input.ModuleUsageTracker;
 
 using reflaxe.helpers.SyntaxHelper;
 using reflaxe.helpers.ModuleTypeHelper;
+using reflaxe.helpers.NullableMetaAccessHelper;
 using reflaxe.helpers.TypeHelper;
 
 class ReflectCompiler {
@@ -256,7 +257,7 @@ class ReflectCompiler {
 		if(!compiler.shouldGenerateClassField(field)) {
 			return false;
 		}
-		return if(field.meta.has(":isVar")) {
+		return if(field.meta.maybeHas(":isVar")) {
 			true;
 		} else {
 			switch([read, write]) {

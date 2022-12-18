@@ -18,6 +18,8 @@ package reflaxe.helpers;
 import haxe.macro.Expr;
 import haxe.macro.Type;
 
+using reflaxe.helpers.NullableMetaAccessHelper;
+
 typedef NameAndMeta = {
 	var name(default, never): String;
 	var meta(default, never): Null<MetaAccess>;
@@ -26,7 +28,7 @@ typedef NameAndMeta = {
 class NameMetaHelper {
 	public static function getNameOrMeta(v: NameAndMeta, metaName: String): String {
 		if(hasMeta(v, metaName)) {
-			final metaList = v.meta.extract == null ? [] : v.meta.extract(metaName);
+			final metaList = v.meta.maybeExtract(metaName);
 			for(m in metaList) {
 				if(m.params.length > 0) {
 					switch(m.params[0].expr) {
