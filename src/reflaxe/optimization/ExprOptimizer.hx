@@ -20,7 +20,7 @@ using reflaxe.helpers.TypedExprHelper;
 
 class ExprOptimizer {
 	public static function optimizeAndUnwrap(expr: TypedExpr): Array<TypedExpr> {
-		var el = unwrapBlock(optimizeBlocks(expr));
+		var el = unwrapBlock(flattenSingleExprBlocks(expr));
 		el = UnnecessaryBlockRemover.optimize(el);
 		el = UnnecessaryVarDeclRemover.optimize(el);
 		return el;
@@ -33,24 +33,19 @@ class ExprOptimizer {
 		}
 	}
 
-	public static function optimizeBlocks(expr: TypedExpr): TypedExpr {
-		return switch(expr.expr) {
+	public static function flattenSingleExprBlocks(expr: TypedExpr): TypedExpr {
+		var result = expr;
+
+		switch(expr.expr) {
 			case TBlock(exprList): {
 				if(exprList.length == 1) {
-					return exprList[0];
-				} else {
-					for(i in 0...exprList.length) {
-						exprList[i] = optimizeBlocks(exprList[i]);
-					}
-					return {
-						expr: TBlock(exprList),
-						pos: expr.pos,
-						t: expr.t
-					};
+					result = exprList[0];
 				}
 			}
-			case _: expr.copy();
+			case _: 
 		}
+
+		return haxe.macro.TypedExprTools.map(result, flattenSingleExprBlocks);
 	}
 }
 
