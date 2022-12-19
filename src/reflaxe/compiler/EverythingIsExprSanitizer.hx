@@ -13,6 +13,7 @@ package reflaxe.compiler;
 
 #if (macro || reflaxe_runtime)
 
+using reflaxe.helpers.NullableMetaAccessHelper;
 using reflaxe.helpers.TypedExprHelper;
 
 import haxe.macro.Type;
@@ -278,6 +279,13 @@ class EverythingIsExprSanitizer {
 	// into a variable declaraion and scoped block that
 	// modifies the aforementioned variable.
 	function handleValueExpr(e: TypedExpr, varNameOverride: Null<String> = null): TypedExpr {
+		if(isFunctionRef(e)) {
+			final newExpr = standardizeFunctionValue(e);
+			if(newExpr != null) {
+				e = newExpr;
+			}
+		}
+
 		if(isAssignExpr(e)) {
 			final newExpr = standardizeAssignValue(e, index, varNameOverride);
 			if(newExpr != null) {
@@ -288,11 +296,6 @@ class EverythingIsExprSanitizer {
 			final newExpr = standardizeSubscopeValue(e, index, varNameOverride);
 			if(newExpr != null) {
 				index += 2;
-				return newExpr;
-			}
-		} else if(isFunctionRef(e)) {
-			final newExpr = standardizeFunctionValue(e);
-			if(newExpr != null) {
 				return newExpr;
 			}
 		} else {
@@ -418,7 +421,24 @@ class EverythingIsExprSanitizer {
 		}
 		return switch(e.t) {
 			case TFun(args, ret): switch(e.expr) {
-				case TField(_, _): true;
+				case TField(_, fa): {
+					switch(fa) {
+						case FInstance(clsTypeRef, _, cfRef) | FStatic(clsTypeRef, cfRef): {
+							// TODO, add option to decide whether
+							// extern functions should be wrapped
+							// if(clsTypeRef.get().isExtern || cfRef.get().isExtern) {
+							// 	true;
+							// }
+							final m = cfRef.get().meta;
+							m.maybeHas(":native") || m.maybeHas(":nativeFunctionCode");
+						}
+						case FAnon(cfRef) | FClosure(_, cfRef): {
+							final m = cfRef.get().meta;
+							m.maybeHas(":native") || m.maybeHas(":nativeFunctionCode");
+						}
+						case _: false;
+					}
+				}
 				case _: false;
 			}
 			case _: return false;
@@ -455,25 +475,29 @@ class EverythingIsExprSanitizer {
 		}
 
 		final result = {
-			expr: TFunction({
-				t: retType,
-				expr: {
-					expr: TReturn({
-						expr: TCall({
-							expr: TMeta({ name: ":wrappedInLambda", pos: pos }, e),
+			expr: TBlock([{
+				expr: TFunction({
+					t: retType,
+					expr: {
+						expr: TReturn({
+							expr: TCall({
+								expr: TMeta({ name: ":wrappedInLambda", pos: pos }, e),
+								pos: pos,
+								t: t
+							}, args),
 							pos: pos,
 							t: t
-						}, args),
+						}),
 						pos: pos,
 						t: t
-					}),
-					pos: pos,
-					t: t
-				},
-				args: createArgs.map(a -> { value: null, v: a })
-			}),
-			pos: e.pos,
-			t: e.t
+					},
+					args: createArgs.map(a -> { value: null, v: a })
+				}),
+				pos: e.pos,
+				t: e.t
+			}]),
+			pos: pos,
+			t: t
 		};
 
 		final eiec = new EverythingIsExprSanitizer(result, null);
