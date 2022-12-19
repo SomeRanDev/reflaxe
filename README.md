@@ -190,7 +190,7 @@ While these all have default values, it is recommended `fileOutputExtension` and
 public var fileOutputType: BaseCompilerFileOutputType = FilePerClass;
 
 // -------------------------------------------------------
-// This string is appended to the filename for each output file.
+// This String is appended to the filename for each output file.
 public var fileOutputExtension: String = ".hxoutput";
 
 // -------------------------------------------------------
@@ -202,8 +202,8 @@ public var fileOutputExtension: String = ".hxoutput";
 public var outputDirDefineName: String = "hxoutput";
 
 // -------------------------------------------------------
-// If "SingleFile" is selected for "fileOutputType", this is the
-// name of the file generated if a directory is provided to "outputDirDefineName".
+// If "fileOutputType" is SingleFile, this is the name of
+// the file generated if a directory is provided.
 public var defaultOutputFilename: String = "output";
 
 // -------------------------------------------------------
@@ -211,19 +211,19 @@ public var defaultOutputFilename: String = "output";
 // Useful in cases where you can optimize the generation of
 // certain Haxe classes to your target's native syntax.
 //
-// For example, ignoring `haxe.ArrayIterator` and generating
-// to the target's native for-loop.
+// For example, ignoring `haxe.iterators.ArrayIterator` and
+// generating to the target's native for-loop.
 public var ignoreTypes: Array<String> = [];
 
 // -------------------------------------------------------
 // A list of variable names that cannot be used in the
 // generated output. If these are used in the Haxe source,
-// they will have an underscore appended to them.
+// an underscore is appended to the name in the output.
 public var reservedVarNames: Array<String> = [];
 
 // -------------------------------------------------------
-// The name of the function used to inject code directly to the target.
-// Set to `null` to disable this feature.
+// The name of the function used to inject code directly
+// to the target. Set to `null` to disable this feature.
 public var targetCodeInjectionName: Null<String> = null;
 
 // -------------------------------------------------------
@@ -253,9 +253,9 @@ public var preventRepeatVars: Bool = true;
 public var wrapLambdaCaptureVarsInArray: Bool = false;
 
 // -------------------------------------------------------
-// If "true", only the module containing the "main" function and 
-// any classes it references are compiled.
-// Otherwise, Haxe's less restrictive dce is used.
+// If "true", only the module containing the "main"
+// function and any classes it references are compiled.
+// Otherwise, Haxe's less restrictive output type list is used.
 public var smartDCE: Bool = false;
 
 // -------------------------------------------------------
@@ -268,7 +268,7 @@ public var smartDCE: Bool = false;
 public var deleteOldOutput: Bool = true;
 
 // -------------------------------------------------------
-// If "true", an error is thrown if a function without
+// If "false", an error is thrown if a function without
 // a body is encountered. Typically this occurs when
 // an umimplemented Haxe API function is encountered.
 public var ignoreBodilessFunctions: Bool = false;
