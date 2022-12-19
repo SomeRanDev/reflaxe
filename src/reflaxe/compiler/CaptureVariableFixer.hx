@@ -8,10 +8,13 @@ package reflaxe.compiler;
 
 #if (macro || reflaxe_runtime)
 
+import haxe.macro.Expr;
 import haxe.macro.Type;
 
+using reflaxe.helpers.NullableMetaAccessHelper;
 using reflaxe.helpers.TVarHelper;
 using reflaxe.helpers.TypedExprHelper;
+using reflaxe.helpers.TypeHelper;
 
 class CaptureVariableFixer {
 	// The original expression passed
@@ -29,6 +32,9 @@ class CaptureVariableFixer {
 	// The list of TVar IDs to add @:arrayWrap to
 	var arrayWrapVarIds: Array<Int>;
 
+	// Placeholder Position
+	var tempPos: Position;
+
 	// Constructor
 	public function new(expr: TypedExpr, parent: Null<RepeatVariableFixer> = null, initVarNames: Null<Array<String>> = null) {
 		this.expr = expr;
@@ -40,6 +46,8 @@ class CaptureVariableFixer {
 
 		nonLambdaVars = [];
 		arrayWrapVarIds = [];
+
+		tempPos = haxe.macro.Context.makePosition({ min: 0, max: 0, file: "" });
 	}
 
 	// Applies the changes to the supplied expression.
@@ -85,14 +93,19 @@ class CaptureVariableFixer {
 
 	// Add @:arrayWrap meta to all instances of "arrayWrapVarIds" TVars.
 	function addMetaToLocals(e: TypedExpr) {
-		switch(e.expr) {
-			case TVar(tvar, _) | TLocal(tvar): {
-				if(arrayWrapVarIds.contains(tvar.id)) {
-					tvar.meta.add(":arrayWrap", [], haxe.macro.Context.makePosition({ min: 0, max: 0, file: "" }));
-				}
-			}
-			case _:
+		final typeAndTVar = switch(e.expr) {
+			case TLocal(tvar): { type: e.t, tvar: tvar };
+			case TVar(tvar, _): { type: tvar.t, tvar: tvar };
+			case _: null;
 		}
+		if(typeAndTVar != null) {
+			final t = typeAndTVar.type;
+			final tvar = typeAndTVar.tvar;
+			if(t != null && t.isPrimitive() && arrayWrapVarIds.contains(tvar.id)) {
+				tvar.meta.maybeAdd(":arrayWrap", [], tempPos);
+			}
+		}
+		
 		haxe.macro.TypedExprTools.iter(e, addMetaToLocals);
 	}
 }
