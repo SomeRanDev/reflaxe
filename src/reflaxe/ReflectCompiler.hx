@@ -235,7 +235,7 @@ class ReflectCompiler {
 
 	static function preprocessFunction(compiler: BaseCompiler, field: ClassField, tfunc: TFunc): TFunc {
 		if(compiler.options.normalizeEIE) {
-			final eiec = new EverythingIsExprSanitizer(tfunc.expr, null);
+			final eiec = new EverythingIsExprSanitizer(tfunc.expr, compiler, null);
 			tfunc.expr = eiec.convertedExpr();
 		}
 		if(compiler.options.preventRepeatVars) {

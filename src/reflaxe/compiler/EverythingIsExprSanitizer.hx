@@ -13,10 +13,11 @@ package reflaxe.compiler;
 
 #if (macro || reflaxe_runtime)
 
+import haxe.macro.Expr;
+import haxe.macro.Type;
+
 using reflaxe.helpers.NullableMetaAccessHelper;
 using reflaxe.helpers.TypedExprHelper;
-
-import haxe.macro.Type;
 
 class EverythingIsExprSanitizer {
 	// -------------------------------------------------------
@@ -28,6 +29,10 @@ class EverythingIsExprSanitizer {
 	// Otherwise, is an array of length one containing "haxeExpr"
 	public var topScopeArray: Array<TypedExpr>;
 	var index: Int = 0;
+
+	// -------------------------------------------------------
+	// Reference to the BaseCompiler that using this sanitizer.
+	public var compiler(default, null): BaseCompiler;
 
 	// -------------------------------------------------------
 	// If this expression is not null, the final expression of
@@ -61,8 +66,9 @@ class EverythingIsExprSanitizer {
 
 	static var variableId = 0;
 
-	public function new(expr: TypedExpr, assignee: Null<TypedExpr> = null) {
+	public function new(expr: TypedExpr, compiler: BaseCompiler, assignee: Null<TypedExpr> = null) {
 		haxeExpr = expr.copy();
+		this.compiler = compiler;
 
 		topScopeArray = switch(haxeExpr.expr) {
 			case TBlock(exprs): exprs.map(e -> e.copy());
@@ -184,9 +190,9 @@ class EverythingIsExprSanitizer {
 			case TArrayDecl(el): {
 				TArrayDecl(handleValueExprList(el));
 			}
-			case TCall(expr, el): {
+			case TCall(e, el): {
 				TCall(
-					handleValueExpr(expr),
+					handleValueExpr(e),
 					handleValueExprList(el)
 				);
 			}
@@ -258,7 +264,16 @@ class EverythingIsExprSanitizer {
 				}
 				TTry(handleNonValueBlock(e), newCatches);
 			}
-			case _: {
+			case TCast(e, m): {
+				TCast(handleValueExpr(e), m);
+			}
+			case TEnumIndex(e): {
+				TEnumIndex(handleValueExpr(e));
+			}
+			case TEnumParameter(e, ef, index): {
+				TEnumParameter(handleValueExpr(e), ef, index);
+			}
+			case TBreak | TConst(_) | TContinue | TIdent(_) | TLocal(_) | TTypeExpr(_): {
 				null;
 			}
 		}
@@ -270,7 +285,29 @@ class EverythingIsExprSanitizer {
 		return result;
 	}
 
-	// -------------------------------------------------------
+	// =======================================================
+	// * Handle Non-Value Expression
+	//
+	// If a top-level, "block-like" expression is encountered
+	// that is not expected to provide a value, we can simply
+	// recursively use our "EverythingIsExprSanitizer" class
+	// to tranverse it and handle its sub-expressions.
+	// =======================================================
+	function handleNonValueBlock(e: TypedExpr): TypedExpr {
+		if(compiler.options.convertUnopIncrement && isUnopExpr(e)) {
+			final newExpr = standardizeUnopValue(e, false);
+			if(newExpr != null) {
+				e = newExpr;
+			}
+		}
+
+		final eiec = new EverythingIsExprSanitizer(e, compiler, isLastExpression() ? assigneeExpr : null);
+		return eiec.convertedExpr();
+	}
+
+	// =======================================================
+	// * Handle Value Expression
+	//
 	// Private function that is called on expressions that
 	// are expected to return a value no matter what.
 	//
@@ -278,7 +315,26 @@ class EverythingIsExprSanitizer {
 	// we call "standardizeSubscopeValue" to transform it
 	// into a variable declaraion and scoped block that
 	// modifies the aforementioned variable.
+	//
+	// There are also various transformations we need to
+	// look out for when an expression is used as a value.
+	//
+	// [isUnopExpr/standardizeUnopValue]
+	// Converts (a++) => (a += 1)
+	//
+	// [isFunctionRef/standardizeFunctionValue]
+	// Wraps functions passed as a variable in a lambda.
+	//
+	// [isAssignExpr/standardizeAssignValue]
+	// Converts (a = b = 1) => (b = 1; a = b)
+	// =======================================================
 	function handleValueExpr(e: TypedExpr, varNameOverride: Null<String> = null): TypedExpr {
+		if(compiler.options.convertUnopIncrement && isUnopExpr(e)) {
+			final newExpr = standardizeUnopValue(e, true);
+			if(newExpr != null) {
+				e = newExpr;
+			}
+		}
 		if(isFunctionRef(e)) {
 			final newExpr = standardizeFunctionValue(e);
 			if(newExpr != null) {
@@ -317,20 +373,45 @@ class EverythingIsExprSanitizer {
 		return newExprs;
 	}
 
-	// -------------------------------------------------------
-	// If a top-level, "block-like" expression is encountered
-	// that is not expected to provide a value, we can simply
-	// recursively use our "EverythingIsExprSanitizer" class
-	// to tranverse it and handle its sub-expressions.
-	function handleNonValueBlock(e: TypedExpr): TypedExpr {
-		final eiec = new EverythingIsExprSanitizer(e, isLastExpression() ? assigneeExpr : null);
-		return eiec.convertedExpr();
+	// =======================================================
+	// * Assignment Expression Value
+	//
+	// If the expression is an assignment, it is transformed
+	// into two separate statements. The assignment is placed
+	// outside and the assigned expression is used afterward.
+	// =======================================================
+	function isAssignExpr(e: TypedExpr) {
+		return switch(e.expr) {
+			case TBinop(OpAssign | OpAssignOp(_), _, _): true;
+			case _: false;
+		}
 	}
 
-	// -------------------------------------------------------
+	function standardizeAssignValue(e: TypedExpr, index: Int, varNameOverride: Null<String> = null): Null<TypedExpr> {
+		final eiec = new EverythingIsExprSanitizer(e, compiler, null);
+		topScopeArray.insert(index, eiec.convertedExpr());
+
+		final left = switch(e.expr) {
+			case TBinop(OpAssign | OpAssignOp(_), left, _): {
+				left;
+			}
+			case _: null;
+		}
+
+		return left.copy();
+	}
+
+	// =======================================================
+	// * Block-Like Values
+	//
 	// If the expression is a type of syntax that is typically
 	// not an expression in other languages, but instead an
 	// "expression holder", this returns true.
+	//
+	// The following couple of functions convert these
+	// block-like expressions into a standardized syntax
+	// if they're being treated like values.
+	// =======================================================
 	public static function isBlocklikeExpr(e: TypedExpr) {
 		return switch(e.expr) {
 			case TBlock(_): true;
@@ -363,7 +444,7 @@ class EverythingIsExprSanitizer {
 			t: e.t
 		};
 
-		final eiec = new EverythingIsExprSanitizer(e, idExpr);
+		final eiec = new EverythingIsExprSanitizer(e, compiler, idExpr);
 		
 		final varExpr = {
 			expr: TVar(tvar, varAssignExpr),
@@ -377,37 +458,60 @@ class EverythingIsExprSanitizer {
 		return e.copy(tvarExprDef);
 	}
 
-	// -------------------------------------------------------
-	// If the expression is an assignment, it is transformed
-	// into two separate statements. The assignment is placed
-	// outside and the assigned expression is used afterward.
-	function isAssignExpr(e: TypedExpr) {
+	// =======================================================
+	// * Prefix/Postfix Increment/Decrement Rewrite
+	//
+	// Certain targets don't support a++ or ++a.
+	// This converts the syntax into an assignment or
+	// block expression that is subsequently converted
+	// with later transformations.
+	// =======================================================
+	function isUnopExpr(e: TypedExpr) {
 		return switch(e.expr) {
-			case TBinop(OpAssign | OpAssignOp(_), _, _): true;
+			case TUnop(OpIncrement | OpDecrement, _, _): true;
 			case _: false;
 		}
 	}
 
-	function standardizeAssignValue(e: TypedExpr, index: Int, varNameOverride: Null<String> = null): Null<TypedExpr> {
-		final eiec = new EverythingIsExprSanitizer(e, null);
-		topScopeArray.insert(index, eiec.convertedExpr());
-
-		final left = switch(e.expr) {
-			case TBinop(OpAssign | OpAssignOp(_), left, _): {
-				left;
-			}
+	function standardizeUnopValue(e: TypedExpr, expectValue: Bool): Null<TypedExpr> {
+		final opInfo = switch(e.expr) {
+			case TUnop(op, postfix, internalExpr): { op: op, postfix: postfix, e: internalExpr };
 			case _: null;
 		}
 
-		return left.copy();
+		if(opInfo == null) return null;
+
+		final pos = makeEmptyPos();
+		final t = TDynamic(null);
+
+		function getAddSubOp(isAdd: Bool) return isAdd ? Binop.OpAdd : Binop.OpSub;
+
+		final oneExpr = { expr: TConst(TInt(1)), pos: pos, t: t };
+		final isInc = opInfo.op == OpIncrement;
+		final opExpr = { expr: TBinop(OpAssignOp(getAddSubOp(isInc)), opInfo.e, oneExpr), pos: pos, t: t };
+
+		return if(expectValue) {
+			final secondExpr = if(opInfo.postfix) {
+				{ expr: TBinop(getAddSubOp(!isInc), opInfo.e, oneExpr), pos: pos, t: t };
+			} else {
+				opInfo.e;
+			}
+
+			{ expr: TBlock([opExpr, secondExpr]), pos: pos, t: t };
+		} else {
+			opExpr;
+		}
 	}
 
-	// -------------------------------------------------------
+	// =======================================================
+	// * Inline Function Wrapping
+	//
 	// Functions that are extern or use syntax injecting 
 	// metadata like @:native or @:nativeFunctionCode cannot
 	// be referenced at runtime. To help fix this, uncalled
 	// function values are wrapped in a lambda to enable
 	// complete support.
+	// =======================================================
 	function isFunctionRef(e: TypedExpr) {
 		final lastExpr = expressionStack[expressionStack.length - 1];
 		if(lastExpr != null) {
@@ -426,6 +530,7 @@ class EverythingIsExprSanitizer {
 						case FInstance(clsTypeRef, _, cfRef) | FStatic(clsTypeRef, cfRef): {
 							// TODO, add option to decide whether
 							// extern functions should be wrapped
+							// OR maybe all functions should be wrapped?
 							// if(clsTypeRef.get().isExtern || cfRef.get().isExtern) {
 							// 	true;
 							// }
@@ -500,7 +605,7 @@ class EverythingIsExprSanitizer {
 			t: t
 		};
 
-		final eiec = new EverythingIsExprSanitizer(result, null);
+		final eiec = new EverythingIsExprSanitizer(result, compiler, null);
 		return unwrapBlock(eiec.convertedExpr());
 	}
 
