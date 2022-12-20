@@ -14,6 +14,6 @@
 		"extension"
 	],
 	"classPath": "src/",
-	"releasenote": "@:nativeFunctionCode, \"Extra File\" methods, EIE Sanitizer Improvements, 5 New BaseCompiler Options, BaseCompiler Events, Repeat Variable Fixer, Redundant Var Decl. Remover, ExpressionModifier/ClassModifier, Bug Fixes",
+	"releasenote": "17 new features + bug fixes. https://github.com/RobertBorghese/reflaxe/releases/tag/v2.0.0",
 	"contributors": ["RobertBorghese"]
 }
