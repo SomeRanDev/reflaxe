@@ -253,6 +253,15 @@ public var preventRepeatVars: Bool = true;
 public var wrapLambdaCaptureVarsInArray: Bool = false;
 
 // -------------------------------------------------------
+// If "true", during the EIE normalization phase, all
+// instances of prefix/postfix increment and decrement
+// are converted to a Binop form.
+//
+// Helpful on Python-like targets that do not support
+// the `++` or `--` operators.
+public var convertUnopIncrement: Bool = false;
+
+// -------------------------------------------------------
 // If "true", only the module containing the "main"
 // function and any classes it references are compiled.
 // Otherwise, Haxe's less restrictive output type list is used.

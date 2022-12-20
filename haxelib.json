@@ -1,6 +1,6 @@
 {
 	"name": "reflaxe",
-	"version": "1.0.3",
+	"version": "2.0.0",
 	"description": "A framework for creating Haxe language compilation targets using macros.",
 	"url": "https://github.com/RobertBorghese/reflaxe",
 	"license": "MIT",
@@ -14,6 +14,6 @@
 		"extension"
 	],
 	"classPath": "src/",
-	"releasenote": "Added support for target injection functions and @:native meta implementation.",
+	"releasenote": "@:nativeFunctionCode, \"Extra File\" methods, EIE Sanitizer Improvements, 5 New BaseCompiler Options, BaseCompiler Events, Repeat Variable Fixer, Redundant Var Decl. Remover, ExpressionModifier/ClassModifier, Bug Fixes",
 	"contributors": ["RobertBorghese"]
 }
