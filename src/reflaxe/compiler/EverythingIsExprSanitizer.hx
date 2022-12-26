@@ -242,7 +242,7 @@ class EverythingIsExprSanitizer {
 				TSwitch(
 					handleValueExpr(expr),
 					newCases,
-					handleNonValueBlock(edef)
+					edef != null ? handleNonValueBlock(edef) : null
 				);
 			}
 			case TReturn(expr): {
