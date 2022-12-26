@@ -319,6 +319,9 @@ class EverythingIsExprSanitizer {
 	// There are also various transformations we need to
 	// look out for when an expression is used as a value.
 	//
+	// [isNullCoalExpr/standardizeNullCoalValue]
+	// Converts (a ?? b) => (a != null ? a : b)
+	//
 	// [isUnopExpr/standardizeUnopValue]
 	// Converts (a++) => (a += 1)
 	//
@@ -329,6 +332,14 @@ class EverythingIsExprSanitizer {
 	// Converts (a = b = 1) => (b = 1; a = b)
 	// =======================================================
 	function handleValueExpr(e: TypedExpr, varNameOverride: Null<String> = null): TypedExpr {
+		#if (haxe_ver >= "4.3.0")
+		if(compiler.options.convertNullCoal && isNullCoalExpr(e)) {
+			final newExpr = standardizeNullCoalValue(e);
+			if(newExpr != null) {
+				e = newExpr;
+			}
+		}
+		#end
 		if(compiler.options.convertUnopIncrement && isUnopExpr(e)) {
 			final newExpr = standardizeUnopValue(e, true);
 			if(newExpr != null) {
@@ -457,6 +468,57 @@ class EverythingIsExprSanitizer {
 
 		return e.copy(tvarExprDef);
 	}
+
+	#if (haxe_ver >= "4.3.0")
+	// =======================================================
+	// * Null Coalesce Rewrite
+	//
+	// Converts `a ?? b` to `{ var _a = a; _a != null ? _a : b; }`
+	// =======================================================
+	function isNullCoalExpr(e: TypedExpr) {
+		return switch(e.expr) {
+			case TBinop(OpNullCoal, _, _): true;
+			case _: false;
+		}
+	}
+
+	function standardizeNullCoalValue(e: TypedExpr): Null<TypedExpr> {
+		return switch(e.expr) {
+			case TBinop(OpNullCoal, e1, e2): {
+				final pos = makeEmptyPos();
+				final t = TDynamic(null);
+				final newName = nameGenerator.generateName(e.t, "maybeNull");
+				{
+					expr: TBlock([
+					{
+						expr: TVar({
+							t: e1.t,
+							name: newName,
+							meta: cast [],
+							id: 9000000 + (variableId++),
+							extra: { params: [], expr: e1 },
+							capture: false
+						}),
+						pos: e1.pos,
+						t: t
+					},
+					{
+						expr: TIf({
+							expr: TBinop(OpNotEq, TIdent(newName), e2),
+							t: t,
+							pos: pos
+						}),
+						t: e1.t,
+						pos: pos
+					}
+				]),
+				t: e1.t,
+				pos: e.pos
+			}
+			case _: null;
+		}
+	}
+	#end
 
 	// =======================================================
 	// * Prefix/Postfix Increment/Decrement Rewrite

@@ -116,6 +116,12 @@ class BaseCompilerOptions {
 
 	// -------------------------------------------------------
 	// If "true", during the EIE normalization phase, all
+	// instances of null coalescence are converted to a
+	// null-check if statement.
+	public var convertNullCoal: Bool = false;
+
+	// -------------------------------------------------------
+	// If "true", during the EIE normalization phase, all
 	// instances of prefix/postfix increment and decrement
 	// are converted to a Binop form.
 	//
