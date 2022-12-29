@@ -254,6 +254,12 @@ public var wrapLambdaCaptureVarsInArray: Bool = false;
 
 // -------------------------------------------------------
 // If "true", during the EIE normalization phase, all
+// instances of null coalescence are converted to a
+// null-check if statement.
+public var convertNullCoal: Bool = false;
+
+// -------------------------------------------------------
+// If "true", during the EIE normalization phase, all
 // instances of prefix/postfix increment and decrement
 // are converted to a Binop form.
 //
@@ -291,4 +297,47 @@ public var ignoreExterns: Bool = true;
 // are not passed to BaseCompiler. (i.e. both their
 // read and write rules are "get", "set", or "never").
 public var ignoreNonPhysicalFields: Bool = true;
+
+// -------------------------------------------------------
+// If "true", the @:meta will be automatically handled
+// for classes, enums, and class fields. This meta works
+// like it does for Haxe/C#, allowing users to define
+// metadata/annotations/attributes in the target output.
+//
+// @:meta(my_meta) var field = 123;
+//
+// For example, the above Haxe code converts to the below
+// output code. Use "autoNativeMetaFormat" to configure
+// how the native metadata is formatted.
+//
+// [my_meta]
+// let field = 123;
+public var allowMetaMetadata: Bool = true;
+
+// -------------------------------------------------------
+// If "allowMetaMetadata" is enabled, this configures
+// how the metadata is generated for the output.
+// Use "{}" to represent the metadata content.
+//
+// autoNativeMetaFormat: "[[@{}]]"
+//
+// For example, setting this option to the String above
+// would cause Haxe @:meta to be converted like below:
+//
+// @:meta(my_meta)   -->   [[@my_meta]]
+public var autoNativeMetaFormat: Null<String> = null;
+
+// -------------------------------------------------------
+// A list of metadata unique for the target.
+//
+// It's not necessary to fill this out as metadata can
+// just be read directly from the AST. However, supplying
+// it here allows Reflaxe to validate the meta automatically,
+// ensuring the correct number/type of arguments are used.
+public var metadataTemplates: Array<{
+   meta: #if (haxe_ver >= "4.3.0") MetadataDescription #else Dynamic #end,
+   disallowMultiple: Bool,
+   paramTypes: Null<Array<MetaArgumentType>>,
+   compileFunc: Null<(MetadataEntry, Array<String>) -> Null<String>>
+}> = [];
 ```
