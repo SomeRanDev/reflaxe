@@ -8,8 +8,12 @@ package reflaxe;
 
 #if (macro || reflaxe_runtime)
 
+import haxe.display.Display.MetadataTarget;
+import haxe.display.Display.Platform;
+
 import haxe.macro.Compiler;
 import haxe.macro.Context;
+import haxe.macro.Expr;
 import haxe.macro.Type;
 
 import reflaxe.BaseCompiler;
@@ -41,6 +45,33 @@ class ReflectCompiler {
 		if(options != null) {
 			compiler.setOptions(options);
 		}
+	}
+
+	public static function MetaTemplate(name: String, doc: String, disallowMultiple: Bool = false, paramTypes: Null<Array<MetaArgumentType>> = null, targets: Null<Array<MetadataTarget>> = null, compileFunc: Null<(MetadataEntry, Array<String>) -> Null<String>> = null) {
+		final params = if(paramTypes != null && paramTypes.length > 0) {
+			paramTypes.map(function(p): String return p);
+		} else {
+			[];
+		}
+
+		final metaDesc = {
+			name: name,
+			doc: doc,
+			params: params,
+			platforms: [Cross],
+			targets: targets
+		};
+
+		#if (haxe_ver >= "4.3.0")
+		haxe.macro.Compiler.registerCustomMetadata(metaDesc);
+		#end
+
+		return {
+			meta: metaDesc,
+			disallowMultiple: disallowMultiple,
+			paramTypes: paramTypes,
+			compileFunc: compileFunc
+		};
 	}
 
 	// =======================================================

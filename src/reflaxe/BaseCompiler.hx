@@ -7,12 +7,14 @@ import haxe.macro.Expr;
 import haxe.macro.Type;
 
 import reflaxe.compiler.TargetCodeInjection;
+import reflaxe.compiler.MetadataCompiler;
 import reflaxe.helpers.ModuleTypeHelper;
 import reflaxe.optimization.ExprOptimizer;
 import reflaxe.output.OutputManager;
 import reflaxe.output.OutputPath;
 
 using reflaxe.helpers.ClassTypeHelper;
+using reflaxe.helpers.NullableMetaAccessHelper;
 
 // =======================================================
 // * BaseCompilerFileOutputType
@@ -159,6 +161,65 @@ class BaseCompilerOptions {
 	// are not passed to BaseCompiler. (i.e. both their
 	// read and write rules are "get", "set", or "never").
 	public var ignoreNonPhysicalFields: Bool = true;
+
+	// -------------------------------------------------------
+	// If "true", the @:meta will be automatically handled
+	// for classes, enums, and class fields. This meta works
+	// like it does for Haxe/C#, allowing users to define
+	// metadata/annotations/attributes in the target output.
+	//
+	// @:meta(my_meta) var field = 123;
+	//
+	// For example, the above Haxe code converts to the below
+	// output code. Use "autoNativeMetaFormat" to configure
+	// how the native metadata is formatted.
+	//
+	// [my_meta]
+	// let field = 123;
+	public var allowMetaMetadata: Bool = true;
+
+	// -------------------------------------------------------
+	// If "allowMetaMetadata" is enabled, this configures
+	// how the metadata is generated for the output.
+	// Use "{}" to represent the metadata content.
+	//
+	// autoNativeMetaFormat: "[[@{}]]"
+	//
+	// For example, setting this option to the String above
+	// would cause Haxe @:meta to be converted like below:
+	//
+	// @:meta(my_meta)   -->   [[@my_meta]]
+	public var autoNativeMetaFormat: Null<String> = null;
+
+	// -------------------------------------------------------
+	// A list of metadata unique for the target.
+	//
+	// It's not necessary to fill this out as metadata can
+	// just be read directly from the AST. However, supplying
+	// it here allows Reflaxe to validate the meta automatically,
+	// ensuring the correct number/type of arguments are used.
+	public var metadataTemplates: Array<{
+		meta: #if (haxe_ver >= "4.3.0") MetadataDescription #else Dynamic #end,
+		disallowMultiple: Bool,
+		paramTypes: Null<Array<MetaArgumentType>>,
+		compileFunc: Null<(MetadataEntry, Array<String>) -> Null<String>>
+	}> = [];
+}
+
+// =======================================================
+// * MetaArgumentType
+//
+// The metadata argument type that can be configured
+// in "metadataTemplates" for BaseCompilerOptions.
+// =======================================================
+enum abstract MetaArgumentType(String) to String {
+	var Bool = "bool";
+	var Number = "number";
+	var String = "string";
+	var Identifier = "ident";
+	var Array = "array";
+	var Anything = "any";
+	var Optional = "any?";
 }
 
 // =======================================================
@@ -464,6 +525,18 @@ abstract class BaseCompiler {
 			lines.push(compileExpression(e));
 		}
 		return lines.join("\n");
+	}
+
+	// =======================================================
+	// * compileMetadata
+	//
+	// Compiles the Haxe metadata to the target's equivalent.
+	// This function will always return `null` unless 
+	// "allowMetaMetadata" is true or "metadataTemplates"
+	// contains at least one entry.
+	// =======================================================
+	function compileMetadata(metaAccess: Null<MetaAccess>, target: haxe.display.Display.MetadataTarget): Null<String> {
+		return MetadataCompiler.compileMetadata(options, metaAccess, target);
 	}
 
 	// =======================================================
