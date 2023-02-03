@@ -544,9 +544,21 @@ abstract class BaseCompiler {
 				if(currentType != -1) lines.push("");
 				currentType = newType;
 			}
-			lines.push(compileExpression(e));
+			lines.push(formatExpressionLine(compileExpression(e)));
 		}
 		return lines.join("\n");
+	}
+
+	// =======================================================
+	// * formatExpressionLine
+	//
+	// Called for each line generated in the above function
+	// "compileExpressionsIntoLines". Useful for adding
+	// required termination characters for expressions that
+	// are not treated as values (i.e: semicolons).
+	// =======================================================
+	function formatExpressionLine(expr: String): String {
+		return expr;
 	}
 
 	// =======================================================
