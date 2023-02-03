@@ -20,6 +20,7 @@ import reflaxe.BaseCompiler;
 import reflaxe.compiler.EverythingIsExprSanitizer;
 import reflaxe.compiler.RepeatVariableFixer;
 import reflaxe.compiler.CaptureVariableFixer;
+import reflaxe.compiler.TypeUsageTracker;
 import reflaxe.input.ModuleUsageTracker;
 
 using reflaxe.helpers.SyntaxHelper;
@@ -177,14 +178,16 @@ class ReflectCompiler {
 		for(clsRef in classDecls) {
 			final cls = clsRef.get();
 			if(compiler.shouldGenerateClass(cls)) {
-				compiler.addClassOutput(cls, transpileClass(cls, compiler));
+				final requiredTypes = compiler.options.trackUsedTypes ? TypeUsageTracker.trackTypesInModuleType(TClassDecl(clsRef)) : null;
+				compiler.addClassOutput(cls, transpileClass(cls, compiler, requiredTypes));
 			}
 		}
 
 		for(enumRef in enumDecls) {
 			final enm = enumRef.get();
 			if(compiler.shouldGenerateEnum(enm)) {
-				compiler.addEnumOutput(enm, compiler.compileEnum(enm, enm.constructs));
+				final requiredTypes = compiler.options.trackUsedTypes ? TypeUsageTracker.trackTypesInModuleType(TEnumDecl(enumRef)) : null;
+				compiler.addEnumOutput(enm, compiler.compileEnum(enm, enm.constructs, requiredTypes));
 			}
 		}
 
@@ -206,7 +209,7 @@ class ReflectCompiler {
 	// =======================================================
 	// * transpileClass
 	// =======================================================
-	static function transpileClass(cls: ClassType, compiler: BaseCompiler): Null<String> {
+	static function transpileClass(cls: ClassType, compiler: BaseCompiler, typeUsage: TypeUsageMap): Null<String> {
 		final varFields: ClassFieldVars = [];
 		final funcFields: ClassFieldFuncs = [];
 
@@ -261,7 +264,7 @@ class ReflectCompiler {
 			addField(field, true);
 		}
 	
-		return compiler.compileClass(cls, varFields, funcFields);
+		return compiler.compileClass(cls, varFields, funcFields, typeUsage);
 	}
 
 	static function preprocessFunction(compiler: BaseCompiler, field: ClassField, tfunc: TFunc): TFunc {

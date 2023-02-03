@@ -8,6 +8,7 @@ import haxe.macro.Type;
 
 import reflaxe.compiler.TargetCodeInjection;
 import reflaxe.compiler.MetadataCompiler;
+import reflaxe.compiler.TypeUsageTracker;
 import reflaxe.helpers.ModuleTypeHelper;
 import reflaxe.optimization.ExprOptimizer;
 import reflaxe.output.OutputManager;
@@ -136,6 +137,13 @@ class BaseCompilerOptions {
 	// function and any classes it references are compiled.
 	// Otherwise, Haxe's less restrictive output type list is used.
 	public var smartDCE: Bool = false;
+
+	// -------------------------------------------------------
+	// If "true", a map of all the ModuleTypes mapped by their
+	// relevence to the implementation are provided to
+	// BaseCompiler's compileClass and compileEnum.
+	// Useful for generating "import-like" content.
+	public var trackUsedTypes: Bool = false;
 
 	// -------------------------------------------------------
 	// If "true", any old output files that are not generated
@@ -402,7 +410,7 @@ abstract class BaseCompiler {
 	// Compiles the provided class.
 	// Override compileClassImpl to configure the behavior.
 	// =======================================================
-	public function compileClass(classType: ClassType, varFields: ClassFieldVars, funcFields: ClassFieldFuncs): Null<String> {
+	public function compileClass(classType: ClassType, varFields: ClassFieldVars, funcFields: ClassFieldFuncs, typeUsage: Null<TypeUsageMap>): Null<String> {
 		return compileClassImpl(classType, varFields, funcFields);
 	}
 
@@ -412,7 +420,7 @@ abstract class BaseCompiler {
 	// Compiles the provided enum.
 	// Override compileEnumImpl to configure the behavior.
 	// =======================================================
-	public function compileEnum(enumType: EnumType, constructs: Map<String, EnumField>): Null<String> {
+	public function compileEnum(enumType: EnumType, constructs: Map<String, EnumField>, typeUsage: Null<TypeUsageMap>): Null<String> {
 		return compileEnumImpl(enumType, constructs);
 	}
 
