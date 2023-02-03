@@ -405,12 +405,25 @@ abstract class BaseCompiler {
 	}
 
 	// =======================================================
+	// * typeUsage
+	// 
+	// Store and reference the typeUsage Map for the current
+	// class or enum being compiled.
+	// =======================================================
+	var typeUsage: Null<TypeUsageMap> = null;
+
+	function getTypeUsage(): Null<TypeUsageMap> {
+		return typeUsage;
+	}
+
+	// =======================================================
 	// * compileClass
 	//
 	// Compiles the provided class.
 	// Override compileClassImpl to configure the behavior.
 	// =======================================================
 	public function compileClass(classType: ClassType, varFields: ClassFieldVars, funcFields: ClassFieldFuncs, typeUsage: Null<TypeUsageMap>): Null<String> {
+		this.typeUsage = typeUsage;
 		return compileClassImpl(classType, varFields, funcFields);
 	}
 
@@ -421,6 +434,7 @@ abstract class BaseCompiler {
 	// Override compileEnumImpl to configure the behavior.
 	// =======================================================
 	public function compileEnum(enumType: EnumType, constructs: Map<String, EnumField>, typeUsage: Null<TypeUsageMap>): Null<String> {
+		this.typeUsage = typeUsage;
 		return compileEnumImpl(enumType, constructs);
 	}
 
