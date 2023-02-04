@@ -67,6 +67,9 @@ class ModuleUsageTracker {
 		switch(moduleType) {
 			case TClassDecl(clsRef): {
 				final cls = clsRef.get();
+				if(cls.superClass != null) {
+					addUsedModuleType(TClassDecl(cls.superClass.t));
+				}
 				final fields = cls.fields.get().concat(cls.statics.get());
 				for(f in fields) {
 					addUsedType(f.type);
@@ -75,6 +78,12 @@ class ModuleUsageTracker {
 					if(te != null) {
 						addUsedExpr(te);
 					}
+				}
+			}
+			case TEnumDecl(enumRef): {
+				final enm = enumRef.get();
+				for(_ => f in enm.constructs) {
+					addUsedType(f.type);
 				}
 			}
 			case TTypeDecl(defTypeRef) if(compiler.options.unwrapTypedefs): {
