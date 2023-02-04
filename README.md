@@ -81,14 +81,12 @@ class MyLangCompiler extends reflaxe.BaseCompiler {
 ## `extraParams.hxml` Sample
 This framework is expected to be used to create Haxe libraries that "add" an output target. These Haxe libraries are then added to other projects and used to compile Haxe code to the target.
 
+As haxelib only supports one class path per library, combine your class files for the compiler macro classes, target-specific classes, and Haxe standard lib overrides into a single folder.
+
 Your Haxe library using Reflaxe should include an `extraParams.hxml` file that:
-* Includes class paths for your target's unique classes and Haxe standard lib overrides.
 * Defines unique definitions for your target for use in conditional compilation.
 * Runs an initialization macro similar to the `MyLangCompiler.Start` function shown above.
 ```hxml
--cp std
--cp std/mylang/_std
-
 -D mylang
 
 --macro MyLangCompiler.Start()
