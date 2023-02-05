@@ -161,7 +161,16 @@ class OutputManager {
 	// -------------------------------------------------------
 	// saveFile
 	public function saveFile(path: String, content: String) {
+		// Get full path
 		final p = outputDir != null ? joinPaths(outputDir, path) : path;
+
+		// Ensure directories exist
+		final dir = haxe.io.Path.directory(p);
+		if(!sys.FileSystem.exists(dir)) {
+			sys.FileSystem.createDirectory(dir);
+		}
+
+		// Save file
 		saveFileImpl(p, content);
 	}
 
