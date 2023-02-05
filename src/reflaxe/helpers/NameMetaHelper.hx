@@ -26,23 +26,16 @@ typedef NameAndMeta = {
 };
 
 class NameMetaHelper {
-	public static function getNameOrMeta(v: NameAndMeta, metaName: String): String {
-		if(hasMeta(v, metaName)) {
-			final metaList = v.meta.maybeExtract(metaName);
-			for(m in metaList) {
-				if(m.params.length > 0) {
-					switch(m.params[0].expr) {
-						case EConst(CString(s, _)): return s;
-						case _:
-					}
-				}
-			}
-		}
-		return v.name;
-	}
-
 	public static function hasMeta(v: NameAndMeta, metaName: String) {
 		return v.meta != null && v.meta.has != null && v.meta.has(metaName);
+	}
+
+	public static function getNameOrMeta(v: NameAndMeta, metaName: String): String {
+		if(hasMeta(v, metaName)) {
+			final result = v.meta.extractStringFromFirstMeta(metaName);
+			if(result != null) return result;
+		}
+		return v.name;
 	}
 
 	public static function getNameOrNative(v: NameAndMeta): String {

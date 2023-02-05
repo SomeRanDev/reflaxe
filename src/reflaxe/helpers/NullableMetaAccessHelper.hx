@@ -52,6 +52,84 @@ class NullableMetaAccessHelper {
 		}
 		return result;
 	}
+
+	// ------------------------
+	// String paramter extractors
+	// ------------------------
+
+	public static function extractStringFromFirstMeta(metaAccess: Null<MetaAccess>, metaName: String, index: Int = 0): Null<String> {
+		final result = extractPrimtiveFromFirstMeta(metaAccess, metaName, index);
+		return if(result != null && Std.isOfType(result, String)) result;
+		else null;
+	}
+
+	public static function extractPrimtiveFromFirstMeta(metaAccess: Null<MetaAccess>, metaName: String, index: Int = 0): Null<Dynamic> {
+		if(metaAccess == null) return null;
+		final metaList = maybeExtract(metaAccess, metaName);
+		for(m in metaList) {
+			final result = extractPrimitiveFromEntry(m, index);
+			if(result != null) return result;
+		}
+		return null;
+	}
+
+	public static function extractPrimtiveFromAllMeta(metaAccess: Null<MetaAccess>, metaName: String, index: Int = 0): Array<Dynamic> {
+		if(metaAccess == null) return [];
+		final result = [];
+		final metaList = maybeExtract(metaAccess, metaName);
+		for(m in metaList) {
+			final prim = extractPrimitiveFromEntry(m, index);
+			if(result != null) result.push(prim);
+		}
+		return result;
+	}
+
+	public static function extractParamsFromFirstMeta(metaAccess: Null<MetaAccess>, metaName: String): Null<Array<Dynamic>> {
+		if(metaAccess == null) return null;
+		final metaList = maybeExtract(metaAccess, metaName);
+		if(metaList.length > 0) {
+			final result = [];
+			final m = metaList[0];
+			for(i in 0...m.params.length) {
+				result.push(extractPrimitiveFromEntry(m, i));
+			}
+			return result;
+		}
+		return null;
+	}
+
+	public static function extractParamsFromAllMeta(metaAccess: Null<MetaAccess>, metaName: String): Array<Array<Dynamic>> {
+		if(metaAccess == null) return null;
+		final metaList = maybeExtract(metaAccess, metaName);
+		final result = [];
+		for(m in metaList) {
+			final params = [];
+			for(i in 0...m.params.length) {
+				params.push(extractPrimitiveFromEntry(m, i));
+			}
+			result.push(params);
+		}
+		return result;
+	}
+
+	private static function extractPrimitiveFromEntry(entry: MetadataEntry, index: Int = 0): Null<Dynamic> {
+		return if(entry.params.length > index) {
+			switch(entry.params[index].expr) {
+				case EConst(CInt(v)): Std.string(v);
+				case EConst(CFloat(f)): Std.string(f);
+				case EConst(CString(s, _)): s;
+				case EConst(CIdent(s)): {
+					if(s == "true") true;
+					else if(s == "false") false;
+					else s;
+				}
+				case EConst(CRegexp(r, opt)): "/" + r + "/" + opt;
+				case _: null;
+			}
+		} else {
+			null;
+		}
+	}
 }
 
 #end
