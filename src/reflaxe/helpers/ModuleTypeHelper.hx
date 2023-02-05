@@ -20,7 +20,9 @@ typedef CommonModuleTypeData = {
 	pos: Position,
 	meta: MetaAccess,
 	module: String,
-	name: String
+	name: String,
+	isExtern: Bool,
+	isPrivate: Bool
 }
 
 class ModuleTypeHelper {
