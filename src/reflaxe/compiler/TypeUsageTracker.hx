@@ -31,6 +31,11 @@ enum abstract TypeUsageLevel(Int) from Int to Int {
 
 	// This type is extended or implemented from.
 	var ExtendedFrom = 32;
+
+	@:op(A>B) function gt(o:TypeUsageLevel): Bool;
+	@:op(A<B) function lt(o:TypeUsageLevel): Bool;
+	@:op(A>=B) function gte(o:TypeUsageLevel): Bool;
+	@:op(A<=B) function lte(o:TypeUsageLevel): Bool;
 }
 
 class TypeUsageTracker {
@@ -180,13 +185,14 @@ class TypeUsageTracker {
 
 		// Format the final result.
 		final result: TypeUsageMap = [];
+		for(i in 0...5) {
+			final level = Std.int(Math.pow(2, i));
+			result.set(cast level, []);
+		}
 		for(id => moduleData in modules) {
 			for(i in 0...5) {
-				final level: TypeUsageLevel = cast Math.pow(2, i);
+				final level = Std.int(Math.pow(2, i));
 				if((moduleData.level & level) != 0) {
-					if(!result.exists(level)) {
-						result.set(level, []);
-					}
 					result[level].push(moduleData.m);
 				}
 			}
