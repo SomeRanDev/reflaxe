@@ -417,13 +417,35 @@ abstract class BaseCompiler {
 	}
 
 	// =======================================================
+	// * currentModule
+	// 
+	// Stores a reference to the ModuleType currently being
+	// compiled.
+	// =======================================================
+	var currentModule: Null<ModuleType> = null;
+
+	function getCurrentModule(): Null<ModuleType> {
+		return currentModule;
+	}
+
+	// =======================================================
+	// * setupModule
+	// 
+	// Called before compileClass, compileEnum, etc. to
+	// setup fields to be referenced.
+	// =======================================================
+	public function setupModule(mt: Null<ModuleType>) {
+		currentModule = mt;
+		typeUsage = (mt != null && options.trackUsedTypes) ? TypeUsageTracker.trackTypesInModuleType(mt) : null;
+	}
+
+	// =======================================================
 	// * compileClass
 	//
 	// Compiles the provided class.
 	// Override compileClassImpl to configure the behavior.
 	// =======================================================
-	public function compileClass(classType: ClassType, varFields: ClassFieldVars, funcFields: ClassFieldFuncs, typeUsage: Null<TypeUsageMap>): Null<String> {
-		this.typeUsage = typeUsage;
+	public function compileClass(classType: ClassType, varFields: ClassFieldVars, funcFields: ClassFieldFuncs): Null<String> {
 		return compileClassImpl(classType, varFields, funcFields);
 	}
 
@@ -433,8 +455,7 @@ abstract class BaseCompiler {
 	// Compiles the provided enum.
 	// Override compileEnumImpl to configure the behavior.
 	// =======================================================
-	public function compileEnum(enumType: EnumType, constructs: Map<String, EnumField>, typeUsage: Null<TypeUsageMap>): Null<String> {
-		this.typeUsage = typeUsage;
+	public function compileEnum(enumType: EnumType, constructs: Map<String, EnumField>): Null<String> {
 		return compileEnumImpl(enumType, constructs);
 	}
 

@@ -177,29 +177,33 @@ class ReflectCompiler {
 
 		for(clsRef in classDecls) {
 			final cls = clsRef.get();
+			compiler.setupModule(TClassDecl(clsRef));
 			if(compiler.shouldGenerateClass(cls)) {
-				final requiredTypes = compiler.options.trackUsedTypes ? TypeUsageTracker.trackTypesInModuleType(TClassDecl(clsRef)) : null;
-				compiler.addClassOutput(cls, transpileClass(cls, compiler, requiredTypes));
+				compiler.addClassOutput(cls, transpileClass(cls, compiler));
 			}
 		}
 
 		for(enumRef in enumDecls) {
 			final enm = enumRef.get();
+			compiler.setupModule(TEnumDecl(enumRef));
 			if(compiler.shouldGenerateEnum(enm)) {
-				final requiredTypes = compiler.options.trackUsedTypes ? TypeUsageTracker.trackTypesInModuleType(TEnumDecl(enumRef)) : null;
-				compiler.addEnumOutput(enm, compiler.compileEnum(enm, enm.constructs, requiredTypes));
+				compiler.addEnumOutput(enm, compiler.compileEnum(enm, enm.constructs));
 			}
 		}
 
 		for(defRef in defDecls) {
 			final def = defRef.get();
+			compiler.setupModule(TTypeDecl(defRef));
 			compiler.addTypedefOutput(def, compiler.compileTypedef(def));
 		}
 
 		for(abstractRef in abstractDecls) {
 			final ab = abstractRef.get();
+			compiler.setupModule(TAbstract(abstractRef));
 			compiler.addAbstractOutput(ab, compiler.compileAbstract(ab));
 		}
+
+		compiler.setupModule(null);
 	}
 
 	static function generateFiles(compiler: BaseCompiler) {
@@ -209,7 +213,7 @@ class ReflectCompiler {
 	// =======================================================
 	// * transpileClass
 	// =======================================================
-	static function transpileClass(cls: ClassType, compiler: BaseCompiler, typeUsage: TypeUsageMap): Null<String> {
+	static function transpileClass(cls: ClassType, compiler: BaseCompiler): Null<String> {
 		final varFields: ClassFieldVars = [];
 		final funcFields: ClassFieldFuncs = [];
 
@@ -264,7 +268,7 @@ class ReflectCompiler {
 			addField(field, true);
 		}
 	
-		return compiler.compileClass(cls, varFields, funcFields, typeUsage);
+		return compiler.compileClass(cls, varFields, funcFields);
 	}
 
 	static function preprocessFunction(compiler: BaseCompiler, field: ClassField, tfunc: TFunc): TFunc {
