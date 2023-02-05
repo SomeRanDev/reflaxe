@@ -92,6 +92,9 @@ class ModuleUsageTracker {
 					addUsedModuleType(result);
 				}
 			}
+			case TAbstract(abRef): {
+				addUsedType(abRef.get().type);
+			}
 			case _:
 		}
 	}
@@ -107,6 +110,13 @@ class ModuleUsageTracker {
 	}
 
 	function addUsedType(type: Type) {
+		final params = type.getParams();
+		if(params != null) {
+			for(p in params) {
+				addUsedType(p);
+			}
+		}
+		
 		switch(type) {
 			case TFun(args, ret): {
 				for(a in args) addUsedType(a.t);

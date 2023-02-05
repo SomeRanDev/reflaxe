@@ -67,19 +67,39 @@ class TypeUsageTracker {
 	public static function trackTypesInModuleType(moduleType: ModuleType): TypeUsageMap {
 		final modules: Map<String, { m: ModuleType, level: Int }> = [];
 
+		var addType: Null<(Null<Type>, TypeUsageLevel) -> Void> = null;
+
 		// Helper function for tracking ModuleType.
-		function addModuleType(mt: ModuleType, level: TypeUsageLevel) {
+		function addModuleType(mt: Null<ModuleType>, level: TypeUsageLevel) {
+			if(mt == null) return;
 			final id = mt.getUniqueId();
+			var newType = true;
+
 			if(!modules.exists(id)) {
 				modules.set(id, { m: mt, level: level });
-			} else {
+			} else if((modules.get(id).level & level) == 0) {
 				modules.get(id).level |= level;
+			} else {
+				newType = false;
+			}
+
+			if(newType) {
+				switch(mt) {
+					case TAbstract(a): {
+						addType(Context.followWithAbstracts(TAbstract(a, [])), level);
+					}
+					case _:
+				}
 			}
 		}
 
 		// Helper function for tracking Type.
-		function addType(t: Type, level: TypeUsageLevel) {
-			addModuleType(t.toModuleType(), level);
+		addType = function(t: Null<Type>, level: TypeUsageLevel) {
+			if(t == null) return;
+			final typeMt = t.toModuleType();
+			if(typeMt != null) {
+				addModuleType(typeMt, level);
+			}
 
 			switch(t) {
 				// If the type is a function, we must extract the declaration types and add those.
@@ -91,17 +111,15 @@ class TypeUsageTracker {
 					addType(functionType, level);
 				}
 
-				// If there are any type parameters in use, be sure to include them as well.
-				case TEnum(_, params) |
-					TInst(_, params) |
-					TType(_, params) |
-					TAbstract(_, params): {
-					for(p in params) {
-						addType(p, level);
-					}
-				}
-
 				case _: {}
+			}
+
+			// If there are any type parameters in use, be sure to include them as well.
+			final params = t.getParams();
+			if(params != null) {
+				for(p in params) {
+					addType(p, level);
+				}
 			}
 		}
 
