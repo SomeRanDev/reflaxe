@@ -59,7 +59,7 @@ class NullableMetaAccessHelper {
 
 	public static function extractStringFromFirstMeta(metaAccess: Null<MetaAccess>, metaName: String, index: Int = 0): Null<String> {
 		final result = extractPrimtiveFromFirstMeta(metaAccess, metaName, index);
-		return if(result != null && Std.isOfType(result, String)) result;
+		return if(result != null && Type.getClassName(result) == "String") result;
 		else null;
 	}
 
