@@ -64,7 +64,7 @@ class MyLangCompiler extends reflaxe.BaseCompiler {
       // ...
    }
 
-   public function compileEnumImpl(enumType: EnumType, constructs: Map<String, haxe.macro.EnumField>): Null<String> {
+   public function compileEnumImpl(enumType: EnumType, options: EnumOptions): Null<String> {
       // ...
    }
 
@@ -121,6 +121,10 @@ typedef ClassFieldVars = Array<{ isStatic: Bool, read: VarAccess, write: VarAcce
 typedef ClassFieldFuncs = Array<{ isStatic: Bool, kind: MethodKind, tfunc: TFunc, field: ClassField }>;
 
 //---------
+// This is the typedef passed to "compileEnum"
+typedef EnumOptions = Array<{ name: String, field: EnumField, args: Array<{t:Type, opt:Bool, name:String}> }>;
+
+//---------
 // BaseCompiler abstract class
 abstract class BaseCompiler {
    //---------
@@ -130,7 +134,7 @@ abstract class BaseCompiler {
    
    //---------
    // Similar to "compileClass", except used for Haxe enums.
-   public abstract function compileEnumImpl(classType: EnumType, constructs: Map<String, EnumField>): Null<String>;
+   public abstract function compileEnumImpl(classType: EnumType, options: EnumOptions): Null<String>;
    
    //---------
    // Given the `TypedExpr`, this function should return a String of the generated
