@@ -17,12 +17,13 @@ import reflaxe.helpers.ModuleTypeHelper;
 import haxe.macro.Type;
 
 class ClassTypeHelper {
-	static final IMPL_PREFIX = "_Impl_";
+	static final IMPL_SUFFIX = "_Impl_";
+	static final FIELDS_SUFFIX = "_Fields_";
 
 	public static function namespaces(cls: CommonModuleTypeData): Array<String> {
 		final moduleMembers = cls.module.split(".");
 		final moduleName = moduleMembers[moduleMembers.length - 1];
-		if(moduleName != cls.name && (moduleName + IMPL_PREFIX) != cls.name) {
+		if(moduleName != cls.name && (moduleName + IMPL_SUFFIX) != cls.name && (moduleName + FIELDS_SUFFIX) != cls.name) {
 			return moduleMembers;
 		}
 		return moduleMembers.slice(0, moduleMembers.length - 2);
@@ -30,7 +31,13 @@ class ClassTypeHelper {
 
 	public static function globalName(cls: CommonModuleTypeData): String {
 		final prefix = namespaces(cls).join("_");
-		final name = StringTools.endsWith(cls.name, IMPL_PREFIX) ? cls.name.substring(0, cls.name.length - IMPL_PREFIX.length) : cls.name;
+		var name = cls.name;
+		if(StringTools.endsWith(cls.name, IMPL_SUFFIX)) {
+			name = name.substring(0, name.length - IMPL_SUFFIX.length);
+		}
+		if(StringTools.endsWith(cls.name, FIELDS_SUFFIX)) {
+			name = name.substring(0, name.length - FIELDS_SUFFIX.length);
+		}
 		return (prefix.length > 0 ? (prefix + "_") : "") + name;
 	}
 
