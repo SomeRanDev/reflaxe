@@ -66,6 +66,34 @@ class ModuleTypeHelper {
 
 		return prefix + "|" + getCommonData(type).globalName();
 	}
+
+	public static function isClass(type: ModuleType): Bool {
+		return switch(type) {
+			case TClassDecl(_): true;
+			case _: false;
+		}
+	}
+
+	public static function isEnum(type: ModuleType): Bool {
+		return switch(type) {
+			case TEnumDecl(_): true;
+			case _: false;
+		}
+	}
+
+	public static function isTypedef(type: ModuleType): Bool {
+		return switch(type) {
+			case TTypeDecl(_): true;
+			case _: false;
+		}
+	}
+
+	public static function isAbstract(type: ModuleType): Bool {
+		return switch(type) {
+			case TAbstract(_): true;
+			case _: false;
+		}
+	}
 }
 
 #end
