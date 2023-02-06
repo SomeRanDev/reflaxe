@@ -344,19 +344,40 @@ abstract class BaseCompiler {
 	// =======================================================
 	// * Extra Files
 	// =======================================================
-	public var extraFiles(default, null): Map<String, String> = [];
+	public var extraFiles(default, null): Map<String, Array<String>> = [];
 
+	// Set all the content for a file.
 	function setExtraFile(path: OutputPath, content: String = "") {
-		extraFiles.set(path.toString(), content);
+		extraFiles.set(path.toString(), [content]);
 	}
 
-	function appendToExtraFile(path: OutputPath, content: String) {
+	// Check if the file exists.
+	function extraFileExists(path: OutputPath): Bool {
+		final pathString = path.toString();
+		return extraFiles.exists(pathString);
+	}
+
+	// Set all the content for a file if it doesn't exist yet.
+	function setExtraFileIfEmpty(path: OutputPath, content: String = "") {
+		if(!extraFileExists(path)) {
+			setExtraFile(path, content);
+		}
+	}
+
+	// Set the content or append it if it already exists.
+	// The "priority" allows for content to be appended
+	// at different places within the file. 
+	function appendToExtraFile(path: OutputPath, content: String, priority: Int = 0) {
 		final pathString = path.toString();
 		if(!extraFiles.exists(pathString)) {
-			extraFiles.set(pathString, "");
+			extraFiles.set(pathString, []);
 		}
 		final current = extraFiles.get(pathString);
-		extraFiles.set(pathString, current + content);
+		while(current.length <= priority) {
+			current.push("");
+		}
+		current[priority] += content;
+		extraFiles.set(pathString, current);
 	}
 
 	// =======================================================

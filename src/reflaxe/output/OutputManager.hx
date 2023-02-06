@@ -102,7 +102,7 @@ class OutputManager {
 		}
 
 		for(path => content in compiler.extraFiles) {
-			saveFile(path, content);
+			saveFile(path, content.filter(s -> StringTools.trim(s).length > 0).join("\n\n"));
 		}
 
 		if(shouldDeleteOldOutput()) {
