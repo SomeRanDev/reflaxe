@@ -15,6 +15,8 @@ import haxe.macro.Context;
 import haxe.macro.Type;
 import haxe.macro.Expr;
 
+using reflaxe.helpers.DynamicHelper;
+
 class NullableMetaAccessHelper {
 	public static function maybeHas(m: Null<MetaAccess>, name: String): Bool {
 		return m != null && m.has != null && m.has(name);
@@ -59,7 +61,7 @@ class NullableMetaAccessHelper {
 
 	public static function extractStringFromFirstMeta(metaAccess: Null<MetaAccess>, metaName: String, index: Int = 0): Null<String> {
 		final result = extractPrimtiveFromFirstMeta(metaAccess, metaName, index);
-		return if(result != null && Type.getClassName(result) == "String") result;
+		return if(result != null && result.isString()) result;
 		else null;
 	}
 
