@@ -187,7 +187,7 @@ class ReflectCompiler {
 			final enm = enumRef.get();
 			compiler.setupModule(TEnumDecl(enumRef));
 			if(compiler.shouldGenerateEnum(enm)) {
-				compiler.addEnumOutput(enm, compiler.compileEnum(enm, enm.constructs));
+				compiler.addEnumOutput(enm, transpileEnum(enm, compiler));
 			}
 		}
 
@@ -285,6 +285,25 @@ class ReflectCompiler {
 			tfunc.expr = cfv.fixCaptures();
 		}
 		return tfunc;
+	}
+
+	// =======================================================
+	// * transpileEnum
+	// =======================================================
+	static function transpileEnum(enm: EnumType, compiler: BaseCompiler): Null<String> {
+		final options = [];
+		for(name => field in enm.constructs) {
+			final args = switch(field.type) {
+				case TFun(args, ret): args;
+				case _: [];
+			}
+			options.push({
+				name: name,
+				field: field,
+				args: args
+			});
+		}
+		return compiler.compileEnum(enm, options);
 	}
 
 	// =======================================================
