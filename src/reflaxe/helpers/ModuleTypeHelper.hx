@@ -67,6 +67,11 @@ class ModuleTypeHelper {
 		return prefix + "|" + getCommonData(type).globalName();
 	}
 
+	public static function equals(type: Null<ModuleType>, other: Null<ModuleType>): Bool {
+		if(type == null || other == null) return false;
+		return getUniqueId(type) == getUniqueId(other);
+	}
+
 	public static function isClass(type: ModuleType): Bool {
 		return switch(type) {
 			case TClassDecl(_): true;
