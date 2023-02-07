@@ -86,7 +86,7 @@ class TypeUsageTracker {
 			if(newType) {
 				switch(mt) {
 					case TAbstract(a): {
-						addType(Context.followWithAbstracts(TAbstract(a, [])), level);
+						addType(Context.followWithAbstracts(TypeHelper.fromModuleType(mt)), level);
 					}
 					case _:
 				}
@@ -193,11 +193,11 @@ class TypeUsageTracker {
 			}
 
 			case TTypeDecl(defType): {
-				addType(Context.follow(TType(defType, [])), ExtendedFrom);
+				addType(Context.follow(TypeHelper.fromModuleType(moduleType)), ExtendedFrom);
 			}
 
 			case TAbstract(a): {
-				addType(Context.followWithAbstracts(TAbstract(a, [])), ExtendedFrom);
+				addType(Context.followWithAbstracts(TypeHelper.fromModuleType(moduleType)), ExtendedFrom);
 			}
 		}
 
