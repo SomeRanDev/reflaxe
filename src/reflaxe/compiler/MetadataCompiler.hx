@@ -35,7 +35,7 @@ class MetadataCompiler {
 		}
 
 		for(template in options.metadataTemplates) {
-			final name = template.meta.name;
+			final name = template.meta.metadata;
 			final entries = metaAccess.extract(name);
 
 			if(template.disallowMultiple && entries.length > 1) {

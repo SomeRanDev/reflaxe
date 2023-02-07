@@ -488,32 +488,35 @@ class EverythingIsExprSanitizer {
 				final pos = makeEmptyPos();
 				final t = TDynamic(null);
 				final newName = nameGenerator.generateName(e.t, "maybeNull");
+				final newNameExpr = { expr: TIdent(newName), t: t, pos: pos };
+				final nullExpr = { expr: TConst(TNull), t: t, pos: pos };
 				{
 					expr: TBlock([
-					{
-						expr: TVar({
+						{
+							expr: TVar({
+								t: e1.t,
+								name: newName,
+								meta: cast [],
+								id: 9000000 + (variableId++),
+								extra: { params: [], expr: e1 },
+								capture: false
+							}, null),
+							pos: e1.pos,
+							t: t
+						},
+						{
+							expr: TIf({
+								expr: TBinop(OpNotEq, newNameExpr, nullExpr),
+								t: t,
+								pos: pos
+							}, newNameExpr, e2),
 							t: e1.t,
-							name: newName,
-							meta: cast [],
-							id: 9000000 + (variableId++),
-							extra: { params: [], expr: e1 },
-							capture: false
-						}),
-						pos: e1.pos,
-						t: t
-					},
-					{
-						expr: TIf({
-							expr: TBinop(OpNotEq, TIdent(newName), e2),
-							t: t,
 							pos: pos
-						}),
-						t: e1.t,
-						pos: pos
-					}
-				]),
-				t: e1.t,
-				pos: e.pos
+						}
+					]),
+					t: e1.t,
+					pos: e.pos
+				}
 			}
 			case _: null;
 		}

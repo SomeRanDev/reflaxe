@@ -55,8 +55,8 @@ class ReflectCompiler {
 			[];
 		}
 
-		final metaDesc = {
-			name: name,
+		final metaDesc: #if (haxe_ver >= "4.3.0") haxe.macro.Compiler.MetadataDescription #else Dynamic #end = {
+			metadata: name,
 			doc: doc,
 			params: params,
 			platforms: [Cross],

@@ -207,7 +207,7 @@ class BaseCompilerOptions {
 	// it here allows Reflaxe to validate the meta automatically,
 	// ensuring the correct number/type of arguments are used.
 	public var metadataTemplates: Array<{
-		meta: #if (haxe_ver >= "4.3.0") MetadataDescription #else Dynamic #end,
+		meta: #if (haxe_ver >= "4.3.0") haxe.macro.Compiler.MetadataDescription #else Dynamic #end,
 		disallowMultiple: Bool,
 		paramTypes: Null<Array<MetaArgumentType>>,
 		compileFunc: Null<(MetadataEntry, Array<String>) -> Null<String>>
