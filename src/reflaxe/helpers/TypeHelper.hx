@@ -39,6 +39,10 @@ class TypeHelper {
 		}
 	}
 
+	public static function equals(type: Type, other: Type): String {
+		return Std.string(type) == Std.string(other);
+	}
+
 	public static function convertAnonToModuleType(t: Type): Null<ModuleType> {
 		return switch(t) {
 			case TAnonymous(anonTypeRef): {
