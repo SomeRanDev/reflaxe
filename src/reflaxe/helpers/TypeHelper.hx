@@ -87,6 +87,20 @@ class TypeHelper {
 			case _: false;
 		}
 	}
+
+	public static function unwrapArrayType(t: Type): Null<Type> {
+		return switch(t) {
+			case TInst(clsRef, params) if(params.length == 1): {
+				final cls = clsRef.get();
+				if(cls.name == "Array" && cls.pack.length == 0) {
+					params[0];
+				} else {
+					null;
+				}
+			}
+			case _: null;
+		}
+	}
 }
 
 #end
