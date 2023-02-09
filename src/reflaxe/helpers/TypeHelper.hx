@@ -43,6 +43,25 @@ class TypeHelper {
 		return Std.string(type) == Std.string(other);
 	}
 
+	public static function getMeta(type: Type) {
+		return switch(t) {
+			case TInst(c, _): c.get().meta;
+			case TEnum(e, _): e.get().meta;
+			case TType(t, _): t.get().meta;
+			case TAbstract(a, _): a.get().meta;
+			case TLazy(f): getMeta(f());
+			case TMono(t): {
+				final type = t.get();
+				if(type != null) {
+					getMeta(type);
+				} else {
+					null;
+				}
+			}
+			case _: null;
+		}
+	}
+
 	public static function convertAnonToModuleType(t: Type): Null<ModuleType> {
 		return switch(t) {
 			case TAnonymous(anonTypeRef): {
