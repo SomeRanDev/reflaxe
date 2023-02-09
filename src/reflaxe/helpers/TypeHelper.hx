@@ -39,7 +39,7 @@ class TypeHelper {
 		}
 	}
 
-	public static function equals(type: Type, other: Type): String {
+	public static function equals(type: Type, other: Type): Bool {
 		return Std.string(type) == Std.string(other);
 	}
 
