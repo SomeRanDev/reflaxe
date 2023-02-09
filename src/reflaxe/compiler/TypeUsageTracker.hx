@@ -111,6 +111,13 @@ class TypeUsageTracker {
 					addType(functionType, level);
 				}
 
+				// If an anonymous structure, extract the types of the fields.
+				case TAnonymous(anonRef): {
+					for(f in anonRef.get().fields) {
+						addType(f.type, level);
+					}
+				}
+
 				case _: {}
 			}
 
@@ -193,7 +200,8 @@ class TypeUsageTracker {
 			}
 
 			case TTypeDecl(defType): {
-				addType(Context.follow(TypeHelper.fromModuleType(moduleType)), ExtendedFrom);
+				//Context.follow(TypeHelper.fromModuleType(moduleType))
+				addType(defType.get().type, ExtendedFrom);
 			}
 
 			case TAbstract(a): {
@@ -203,12 +211,12 @@ class TypeUsageTracker {
 
 		// Format the final result.
 		final result: TypeUsageMap = [];
-		for(i in 0...5) {
+		for(i in 0...6) {
 			final level = Std.int(Math.pow(2, i));
 			result.set(cast level, []);
 		}
 		for(id => moduleData in modules) {
-			for(i in 0...5) {
+			for(i in 0...6) {
 				final level = Std.int(Math.pow(2, i));
 				if((moduleData.level & level) != 0) {
 					result[level].push(moduleData.m);
