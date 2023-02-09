@@ -54,6 +54,13 @@ class OperatorHelper {
 		}
 	}
 
+	public static function isAssign(op: Binop): Bool {
+		return switch(op) {
+			case OpAssign: true;
+			case _: false;
+		}
+	}
+
 	public static function isAddition(op: Binop): Bool {
 		return switch(op) {
 			case OpAdd: true;
