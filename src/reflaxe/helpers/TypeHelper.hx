@@ -44,7 +44,7 @@ class TypeHelper {
 	}
 
 	public static function getMeta(type: Type) {
-		return switch(t) {
+		return switch(type) {
 			case TInst(c, _): c.get().meta;
 			case TEnum(e, _): e.get().meta;
 			case TType(t, _): t.get().meta;
