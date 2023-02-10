@@ -30,6 +30,22 @@ class TypedExprHelper {
 		}
 	}
 
+	public static function unwrapUnsafeCasts(expr: TypedExpr): TypedExpr {
+		return switch(expr.expr) {
+			case TParenthesis(e): {
+				unwrapUnsafeCasts(e);
+			}
+			case TCast(e, maybeModuleType): {
+				if(maybeModuleType == null) {
+					unwrapUnsafeCasts(e);
+				} else {
+					expr;
+				}
+			}
+			case _: expr;
+		}
+	}
+
 	public static function getDeclarationMeta(e: TypedExpr): Null<{ thisExpr: Null<TypedExpr>, meta: Null<MetaAccess> }> {
 		return switch(e.expr) {
 			case TField(ethis, fa): { thisExpr: ethis, meta: fa.getFieldAccessNameMeta().meta };
