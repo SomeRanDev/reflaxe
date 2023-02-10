@@ -20,17 +20,22 @@ enum abstract TypeUsageLevel(Int) from Int to Int {
 	// A local variable declaration with this type exists in an expression.
 	var VariableType = 2;
 
+	// A static variable or function from this type is used.
+	var StaticAccess = 4;
+
 	// This type is constructed in an expression (i.e. "new ThisType").
-	var Constructed = 4;
+	var Constructed = 8;
 
 	// This type is used as a parameter or return type for a function in the class. 
-	var FunctionDeclaration = 8;
+	var FunctionDeclaration = 16;
 
 	// A variable field with this type exists.
-	var VariableDeclaration = 16;
+	var VariableDeclaration = 32;
 
 	// This type is extended or implemented from.
-	var ExtendedFrom = 32;
+	var ExtendedFrom = 64;
+
+	public static function LevelCount() return 7;
 
 	@:op(A>B) function gt(o:TypeUsageLevel): Bool;
 	@:op(A<B) function lt(o:TypeUsageLevel): Bool;
@@ -143,8 +148,45 @@ class TypeUsageTracker {
 			}
 		}
 
+		// Helper function adding all the types contained in the expression.
+		// Recursively applies to all expressions contained within.
+		function addTypedExpr(te: TypedExpr) {
+			// If it's a static field access, add the type being accessed.
+			switch(te.expr) {
+				case TField(_, fa): {
+					switch(fa) {
+						case FStatic(clsRef, clsFieldRef): {
+							addType(TypeHelper.fromModuleType(TClassDecl(clsRef)), StaticAccess);
+						}
+						case _:
+					}
+				}
+				case _:
+			}
+
+			// Add the expression's type to the appropriate usage level.
+			switch(te.expr) {
+				case TNew(clsRef, params, el): {
+					addType(TInst(clsRef, params), Constructed);
+				}
+				case TVar(tvar, maybeExpr): {
+					addType(tvar.t, VariableType);
+				}
+				case _: {
+					addType(te.t, Expression);
+				}
+			}
+
+			// Iterate through all the sub-expressions.
+			haxe.macro.TypedExprTools.iter(te, addTypedExpr);
+		}
+
 		// Helper function for tracking ClassField.
 		function addClassField(clsField: ClassField, isStatic: Bool = false) {
+			final e = clsField.expr();
+			if(e != null) {
+				addTypedExpr(e);
+			}
 			switch(clsField.kind) {
 				case FVar(read, write): {
 					addType(clsField.type, VariableDeclaration);
@@ -211,12 +253,12 @@ class TypeUsageTracker {
 
 		// Format the final result.
 		final result: TypeUsageMap = [];
-		for(i in 0...6) {
+		for(i in 0...TypeUsageLevel.LevelCount()) {
 			final level = Std.int(Math.pow(2, i));
 			result.set(cast level, []);
 		}
 		for(id => moduleData in modules) {
-			for(i in 0...6) {
+			for(i in 0...TypeUsageLevel.LevelCount()) {
 				final level = Std.int(Math.pow(2, i));
 				if((moduleData.level & level) != 0) {
 					result[level].push(moduleData.m);
