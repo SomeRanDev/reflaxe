@@ -111,6 +111,20 @@ class TypeHelper {
 		}
 	}
 
+	public static function unwrapNullType(t: Type): Null<Type> {
+		return switch(t) {
+			case TAbstract(absRef, params) if(params.length == 1): {
+				final abs = absRef.get();
+				if(abs.name == "Null" && abs.pack.length == 0) {
+					params[0];
+				} else {
+					null;
+				}
+			}
+			case _: null;
+		}
+	}
+
 	public static function unwrapArrayType(t: Type): Null<Type> {
 		return switch(t) {
 			case TInst(clsRef, params) if(params.length == 1): {
