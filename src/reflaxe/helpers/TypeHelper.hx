@@ -10,6 +10,8 @@ package reflaxe.helpers;
 
 import haxe.macro.Type;
 
+using reflaxe.helpers.NameMetaHelper;
+
 class TypeHelper {
 	public static function fromModuleType(t: ModuleType): Type {
 		return switch(t) {
@@ -95,7 +97,12 @@ class TypeHelper {
 		return switch(t) {
 			case TInst(clsTypeRef, []): {
 				final clsType = clsTypeRef.get();
-				clsType.module == clsType.name && clsType.name == "String";
+				// Doing `clsType.name == "String"` will not work if the
+				// String class has a @:native metadata.
+				// There doesn't appear to be a way to get the original name,
+				// so we just ignore this check if @:native exists.
+				final isNameString = clsType.hasMeta(":native") || clsType.name == "String";
+				isNameString && clsType.module == "String" && clsType.pack.length == 0 && clsType.hasMeta(":coreApi");
 			}
 			case _: false;
 		}
