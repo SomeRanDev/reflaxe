@@ -21,10 +21,10 @@ class TypedExprHelper {
 		}
 	}
 
-	public static function upwrapParenthesis(expr: TypedExpr): TypedExpr {
+	public static function unwrapParenthesis(expr: TypedExpr): TypedExpr {
 		return switch(expr.expr) {
 			case TParenthesis(e): {
-				upwrapParenthesis(e);
+				unwrapParenthesis(e);
 			}
 			case e: expr;
 		}
