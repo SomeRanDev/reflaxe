@@ -10,6 +10,7 @@ package reflaxe.helpers;
 
 import haxe.macro.Type;
 
+using reflaxe.helpers.ModuleTypeHelper;
 using reflaxe.helpers.NameMetaHelper;
 
 class TypeHelper {
@@ -38,6 +39,32 @@ class TypeHelper {
 				}
 			}
 			case _: null;
+		}
+	}
+
+	public static function getUniqueId(t: Type): String {
+		return switch(t) {
+			case TLazy(f): getUniqueId(f());
+			case TAnonymous(_) | TFun(_, _): Std.string(t);
+			case TDynamic(t): {
+				if(t != null) {
+					"TD" + getUniqueId(t);
+				} else {
+					"TD_Empty";
+				}
+			}
+			case TMono(t): {
+				final type = t.get();
+				if(type != null) {
+					"TM" + getUniqueId(type);
+				} else {
+					"TM_Empty";
+				}
+			}
+			case _: {
+				final mt = toModuleType(t);
+				"T" + mt.getUniqueId();
+			}
 		}
 	}
 
@@ -118,6 +145,15 @@ class TypeHelper {
 		}
 	}
 
+	public static function isNull(t: Type): Bool {
+		return switch(t) {
+			case TAbstract(absRef, params) if(params.length == 1): {
+				absRef.get().name == "Null";
+			}
+			case _: false;
+		}
+	}
+
 	public static function unwrapNullType(t: Type): Null<Type> {
 		return switch(t) {
 			case TAbstract(absRef, params) if(params.length == 1): {
@@ -130,6 +166,11 @@ class TypeHelper {
 			}
 			case _: null;
 		}
+	}
+
+	public static function unwrapNullTypeOrSelf(t: Type): Null<Type> {
+		final temp = unwrapNullType(t);
+		return temp != null ? temp : t;
 	}
 
 	public static function unwrapArrayType(t: Type): Null<Type> {
