@@ -11,7 +11,12 @@ import reflaxe.BaseCompiler;
 using reflaxe.helpers.ModuleTypeHelper;
 using reflaxe.helpers.TypeHelper;
 
-typedef TypeUsageMap = Map<TypeUsageLevel, Array<ModuleType>>;
+enum TypeOrModuleType {
+	EType(t: Type);
+	EModuleType(mt: ModuleType);
+}
+
+typedef TypeUsageMap = Map<TypeUsageLevel, Array<TypeOrModuleType>>;
 
 enum abstract TypeUsageLevel(Int) from Int to Int {
 	// An expression of this type exists.
@@ -70,24 +75,27 @@ class TypeUsageTracker {
 
 	// Get all the ModuleTypes by a single ModuleType.
 	public static function trackTypesInModuleType(moduleType: ModuleType): TypeUsageMap {
-		final modules: Map<String, { m: ModuleType, level: Int }> = [];
+		final modules: Map<String, { m: TypeOrModuleType, level: Int }> = [];
 
 		var addType: Null<(Null<Type>, TypeUsageLevel) -> Void> = null;
+
+		function addToMap(id: String, data: { m: TypeOrModuleType, level: Int }) {
+			return if(!modules.exists(id)) {
+				modules.set(id, data);
+				true;
+			} else if((modules.get(id).level & data.level) == 0) {
+				modules.get(id).level |= data.level;
+				true;
+			} else {
+				false;
+			}
+		}
 
 		// Helper function for tracking ModuleType.
 		function addModuleType(mt: Null<ModuleType>, level: TypeUsageLevel) {
 			if(mt == null) return;
 			final id = mt.getUniqueId();
-			var newType = true;
-
-			if(!modules.exists(id)) {
-				modules.set(id, { m: mt, level: level });
-			} else if((modules.get(id).level & level) == 0) {
-				modules.get(id).level |= level;
-			} else {
-				newType = false;
-			}
-
+			var newType = addToMap(id, { m: EModuleType(mt), level: level });
 			if(newType) {
 				switch(mt) {
 					case TAbstract(a): {
@@ -104,6 +112,13 @@ class TypeUsageTracker {
 			final typeMt = t.toModuleType();
 			if(typeMt != null) {
 				addModuleType(typeMt, level);
+			}
+
+			switch(t) {
+				case TFun(_, _) | TAnonymous(_): {
+					addToMap(t.getUniqueId(), { m: EType(t), level: level });
+				}
+				case _: {}
 			}
 
 			switch(t) {
