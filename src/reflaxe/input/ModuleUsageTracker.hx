@@ -17,6 +17,7 @@ import haxe.macro.Expr;
 import haxe.macro.Type;
 
 using reflaxe.helpers.ModuleTypeHelper;
+using reflaxe.helpers.NameMetaHelper;
 using reflaxe.helpers.TypeHelper;
 
 typedef CommonModuleTypeData = {
@@ -50,7 +51,9 @@ class ModuleUsageTracker {
 	}
 
 	function nonStdTypes(): Array<ModuleType> {
-		return allModuleTypes.filter(t -> !isStdType(t));
+		return allModuleTypes.filter(t -> {
+			return !isStdType(t);
+		});
 	}
 
 	// =======================================================
@@ -185,6 +188,10 @@ class ModuleUsageTracker {
 	// contains "std" right before the expected module file
 	// path, it's likely a member of the standard lib.
 	static function isStdType(type: ModuleType): Bool {
+		final cd = type.getCommonData();
+		if(cd.hasMeta(":coreApi") || cd.hasMeta(":pseudoCoreApi")) {
+			return true;
+		}
 		final pos = Context.getPosInfos(type.getPos());
 		if(!haxe.io.Path.isAbsolute(pos.file)) {
 			return false;
