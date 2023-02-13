@@ -120,6 +120,13 @@ class TypeHelper {
 		return params.map(tp -> tp.t);
 	}
 
+	public static function isAnonStruct(t: Type): Bool {
+		return switch(t) {
+			case TAnonymous(_): true;
+			case _: false;
+		}
+	}
+
 	public static function isString(t: Type): Bool {
 		return switch(t) {
 			case TInst(clsTypeRef, []): {
