@@ -127,6 +127,13 @@ class TypeHelper {
 		}
 	}
 
+	public static function isDynamic(t: Type): Bool {
+		return switch(t) {
+			case TDynamic(_): true;
+			case _: false;
+		}
+	}
+
 	public static function isString(t: Type): Bool {
 		return switch(t) {
 			case TInst(clsTypeRef, []): {
