@@ -372,10 +372,24 @@ abstract class BaseCompiler {
 		}
 	}
 
+	// Returns the contents of the file if it exists.
+	// The "priority" can be specified to get content
+	// specifically assigned that priority level.
+	// Returns an empty string if nothing exists.
+	function getExtraFileContent(path: OutputPath, priority: Int = 0): String {
+		final pathString = path.toString();
+		return if(!extraFiles.exists(pathString)) {
+			"";
+		} else {
+			final current = extraFiles.get(pathString);
+			current.length <= priority ? "" : current[priority];
+		}
+	}
+
 	// Set the content or append it if it already exists.
 	// The "priority" allows for content to be appended
 	// at different places within the file. 
-	function appendToExtraFile(path: OutputPath, content: String, priority: Int = 0) {
+	function replaceInExtraFile(path: OutputPath, content: String, priority: Int = 0) {
 		final pathString = path.toString();
 		if(!extraFiles.exists(pathString)) {
 			extraFiles.set(pathString, []);
@@ -384,8 +398,15 @@ abstract class BaseCompiler {
 		while(current.length <= priority) {
 			current.push("");
 		}
-		current[priority] += content;
+		current[priority] = content;
 		extraFiles.set(pathString, current);
+	}
+
+	// Set the content or append it if it already exists.
+	// The "priority" allows for content to be appended
+	// at different places within the file. 
+	function appendToExtraFile(path: OutputPath, content: String, priority: Int = 0) {
+		replaceInExtraFile(path, getExtraFileContent(path, priority) + content, priority);
 	}
 
 	// =======================================================
