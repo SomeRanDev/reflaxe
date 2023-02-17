@@ -50,7 +50,7 @@ class ModuleUsageTracker {
 		return outputTypes;
 	}
 
-	function nonStdTypes(): Array<ModuleType> {
+	public function nonStdTypes(): Array<ModuleType> {
 		return allModuleTypes.filter(t -> {
 			return !isStdType(t);
 		});

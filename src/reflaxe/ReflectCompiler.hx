@@ -153,12 +153,31 @@ class ReflectCompiler {
 	}
 
 	static function addClassesToCompiler(compiler: BaseCompiler) {
+		if(compiler.options.dynamicDCE) {
+			dynamicallyAddModulesToCompiler(compiler);
+		} else {
+			addModulesToCompiler(compiler, getAllModulesTypesForCompiler(compiler));
+		}
+	}
+
+	static function dynamicallyAddModulesToCompiler(compiler: BaseCompiler) {
+		final tracker = new ModuleUsageTracker(moduleTypes, compiler);
+		compiler.dynamicTypeStack = tracker.nonStdTypes();
+		compiler.dynamicTypesHandled = compiler.dynamicTypeStack.map(mt -> mt.getUniqueId());
+		while(compiler.dynamicTypeStack.length > 0) {
+			final temp = compiler.dynamicTypeStack;
+			compiler.dynamicTypeStack = [];
+			addModulesToCompiler(compiler, temp);
+		}
+	}
+
+	static function addModulesToCompiler(compiler: BaseCompiler, modules: Array<ModuleType>) {
 		final classDecls: Array<Ref<ClassType>> = [];
 		final enumDecls: Array<Ref<EnumType>> = [];
 		final defDecls: Array<Ref<DefType>> = [];
 		final abstractDecls: Array<Ref<AbstractType>> = [];
 
-		for(moduleType in getAllModulesTypesForCompiler(compiler)) {
+		for(moduleType in modules) {
 			switch(moduleType) {
 				case TClassDecl(clsTypeRef): {
 					classDecls.push(clsTypeRef);

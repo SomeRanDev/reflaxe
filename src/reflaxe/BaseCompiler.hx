@@ -15,6 +15,7 @@ import reflaxe.output.OutputManager;
 import reflaxe.output.OutputPath;
 
 using reflaxe.helpers.ClassTypeHelper;
+using reflaxe.helpers.ModuleTypeHelper;
 using reflaxe.helpers.NullableMetaAccessHelper;
 
 // =======================================================
@@ -137,6 +138,15 @@ class BaseCompilerOptions {
 	// function and any classes it references are compiled.
 	// Otherwise, Haxe's less restrictive output type list is used.
 	public var smartDCE: Bool = false;
+
+	// -------------------------------------------------------
+	// If "true", any std module is only compiled if explicitly
+	// added during compilation using:
+	// `BaseCompiler.addModuleTypeForCompilation(ModuleType)`
+	//
+	// Helpful for projects that want to be extremely
+	// precise with what modules are compiled.
+	public var dynamicDCE: Bool = false;
 
 	// -------------------------------------------------------
 	// If "true", a map of all the ModuleTypes mapped by their
@@ -687,6 +697,25 @@ abstract class BaseCompiler {
 			case TThrow(_): 14;
 			case TMeta(_, e): expressionType(e);
 			case TParenthesis(e): expressionType(e);
+		}
+	}
+
+	// =======================================================
+	// * Dynamic DCE
+	//
+	// These fields are used for the `dynamicDCE` option.
+	// While enabled, use `addModuleTypeForCompilation` to
+	// add additional ModuleTypes to be compiled.
+	// =======================================================
+	public var dynamicTypeStack: Array<ModuleType>;
+	public var dynamicTypesHandled: Array<String>;
+
+	function addModuleTypeForCompilation(mt: ModuleType) {
+		if(dynamicTypeStack == null || dynamicTypesHandled == null) return;
+		final id = mt.getUniqueId();
+		if(!dynamicTypesHandled.contains(id)) {
+			dynamicTypesHandled.push(id);
+			dynamicTypeStack.push(mt);
 		}
 	}
 }
