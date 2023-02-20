@@ -76,6 +76,26 @@ class ReflectCompiler {
 	}
 
 	// =======================================================
+	// * Plugin System
+	// =======================================================
+	static var initCallbacks: Null<Array<Dynamic>> = null;
+
+	// Call this to access the BaseCompiler that's about to be used.
+	// This can be used to add callbacks to the hooks if desired.
+	public static function onCompileBegin<T: BaseCompiler>(callback: (T) -> Void) {
+		if(initCallbacks == null) initCallbacks = [];
+		initCallbacks.push(callback);
+	}
+
+	static function callInitCallbacks<T: BaseCompiler>(compiler: T) {
+		if(initCallbacks != null) {
+			for(c in initCallbacks) {
+				Reflect.callMethod(null, c, [compiler]);
+			}
+		}
+	}
+
+	// =======================================================
 	// * Private Members
 	// =======================================================
 	static var moduleTypes: Array<ModuleType>;
@@ -127,6 +147,7 @@ class ReflectCompiler {
 	}
 
 	static function useCompiler(compiler: BaseCompiler) {
+		callInitCallbacks(compiler);
 		compiler.onCompileStart();
 		addClassesToCompiler(compiler);
 		compiler.onCompileEnd();
