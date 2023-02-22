@@ -20,6 +20,7 @@ import reflaxe.BaseCompiler;
 import reflaxe.compiler.EverythingIsExprSanitizer;
 import reflaxe.compiler.RepeatVariableFixer;
 import reflaxe.compiler.CaptureVariableFixer;
+import reflaxe.compiler.NullSafetyEnforcer;
 import reflaxe.compiler.TypeUsageTracker;
 import reflaxe.input.ModuleUsageTracker;
 
@@ -217,6 +218,7 @@ class ReflectCompiler {
 
 		for(clsRef in classDecls) {
 			final cls = clsRef.get();
+			NullTypeEnforcer.checkClass(cls);
 			compiler.setupModule(TClassDecl(clsRef));
 			if(compiler.shouldGenerateClass(cls)) {
 				compiler.addClassOutput(cls, transpileClass(cls, compiler));

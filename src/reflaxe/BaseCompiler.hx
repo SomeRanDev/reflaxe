@@ -96,7 +96,7 @@ class BaseCompilerOptions {
 	// If "true", null safety will be enforced for all the code
 	// compiled to the target. Useful for ensuring null is only
 	// used on types explicitly marked as nullable.
-	public var enforceNullSafety: Bool = true;
+	public var enforceNullTyping: Bool = true;
 
 	// -------------------------------------------------------
 	// If "true", typedefs will be converted to their internal

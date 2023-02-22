@@ -229,10 +229,10 @@ public var reservedVarNames: Array<String> = [];
 public var targetCodeInjectionName: Null<String> = null;
 
 // -------------------------------------------------------
-// If "true", null safety will be enforced for all the code
+// If "true", null typing will be enforced for all the code
 // compiled to the target. Useful for ensuring null is only
 // used on types explicitly marked as nullable.
-public var enforceNullSafety: Bool = true;
+public var enforceNullTyping: Bool = true;
 
 // -------------------------------------------------------
 // If "true", typedefs will be converted to their internal

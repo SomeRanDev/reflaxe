@@ -64,6 +64,13 @@ class TypedExprHelper {
 			case _: null;
 		}
 	}
+
+	public static function isNull(e: TypedExpr): Bool {
+		return switch(e.expr) {
+			case TConst(TNull): true;
+			case _: false;
+		}
+	}
 }
 
 #end
