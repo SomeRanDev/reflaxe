@@ -21,6 +21,7 @@ using reflaxe.helpers.TypedExprHelper;
 class ExprOptimizer {
 	public static function optimizeAndUnwrap(expr: TypedExpr): Array<TypedExpr> {
 		var el = unwrapBlock(flattenSingleExprBlocks(expr));
+		el = UnnecessaryIfRemover.optimize(el);
 		el = UnnecessaryBlockRemover.optimize(el);
 		el = UnnecessaryVarDeclRemover.optimize(el);
 		return el;

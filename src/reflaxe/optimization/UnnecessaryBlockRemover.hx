@@ -80,6 +80,7 @@ class UnnecessaryBlockRemover {
 		for(i in 0...exprList.length) {
 			final expr = exprList[i];
 			switch(expr.expr) {
+				case TBlock([]): {}
 				case TBlock(el): {
 					// Merge the possible sub-expression blocks for this sub-block.
 					final ubr = new UnnecessaryBlockRemover(el);
