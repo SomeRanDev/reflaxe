@@ -21,6 +21,13 @@ using reflaxe.helpers.TypedExprHelper;
 
 class EverythingIsExprSanitizer {
 	// -------------------------------------------------------
+	// Whether a variable that will be initialized regardless
+	// should be initialized with `null`. I'm not sure what the
+	// default behavior should be, so I'll just control with
+	// a constant for now.
+	public static final INIT_NULL = false;
+
+	// -------------------------------------------------------
 	// Stores the original, provided expression
 	public var haxeExpr: TypedExpr;
 
@@ -443,7 +450,7 @@ class EverythingIsExprSanitizer {
 			name: varName,
 			meta: cast [],
 			id: 9000000 + (variableId++),
-			extra: { params: [], expr: varAssignExpr },
+			extra: !INIT_NULL ? null : { params: [], expr: varAssignExpr },
 			capture: false
 		};
 
@@ -458,7 +465,7 @@ class EverythingIsExprSanitizer {
 		final eiec = new EverythingIsExprSanitizer(e, compiler, idExpr);
 		
 		final varExpr = {
-			expr: TVar(tvar, varAssignExpr),
+			expr: TVar(tvar, !INIT_NULL ? null : varAssignExpr),
 			pos: e.pos,
 			t: e.t
 		}
