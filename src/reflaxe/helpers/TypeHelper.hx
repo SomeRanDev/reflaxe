@@ -168,6 +168,15 @@ class TypeHelper {
 		}
 	}
 
+	public static function isAny(t: Type): Bool {
+		return switch(t) {
+			case TAbstract(absRef, []): {
+				absRef.get().name == "Any";
+			}
+			case _: false;
+		}
+	}
+
 	public static function unwrapNullType(t: Type): Null<Type> {
 		return switch(t) {
 			case TAbstract(absRef, params) if(params.length == 1): {
