@@ -30,7 +30,7 @@ class TempVarNameGenerator {
 	// -------------------------------------------------------
 	// Generate variable name based on the type
 	public function generateName(t: Null<Type>, baseNameOverride: Null<String> = null) {
-		final baseName = baseNameOverride != null ? baseNameOverride : generateBaseName(t);
+		final baseName = baseNameOverride != null ? baseNameOverride : replaceDisallowedCharacters(generateBaseName(t));
 		final count = if(variableNameCounts.exists(baseName)) {
 			variableNameCounts.get(baseName);
 		} else {
@@ -42,6 +42,10 @@ class TempVarNameGenerator {
 		variableNameCounts.set(baseName, count + 1);
 
 		return result;
+	}
+
+	function replaceDisallowedCharacters(s: String): String {
+		return ~/[^0-9a-zA-Z_]+/.split(s).join("");
 	}
 
 	// -------------------------------------------------------
