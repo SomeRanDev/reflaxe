@@ -20,7 +20,7 @@ import reflaxe.BaseCompiler;
 import reflaxe.compiler.EverythingIsExprSanitizer;
 import reflaxe.compiler.RepeatVariableFixer;
 import reflaxe.compiler.CaptureVariableFixer;
-import reflaxe.compiler.NullSafetyEnforcer;
+import reflaxe.compiler.NullTypeEnforcer;
 import reflaxe.compiler.TypeUsageTracker;
 import reflaxe.input.ModuleUsageTracker;
 
@@ -314,6 +314,9 @@ class ReflectCompiler {
 	}
 
 	static function preprocessFunction(compiler: BaseCompiler, field: ClassField, tfunc: TFunc): TFunc {
+		if(compiler.options.enforceNullTyping) {
+			NullTypeEnforcer.modifyExpression(tfunc.expr);
+		}
 		if(compiler.options.normalizeEIE) {
 			final eiec = new EverythingIsExprSanitizer(tfunc.expr, compiler, null);
 			tfunc.expr = eiec.convertedExpr();
