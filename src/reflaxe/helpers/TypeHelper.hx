@@ -209,6 +209,20 @@ class TypeHelper {
 			case _: null;
 		}
 	}
+
+	public static function getTFunArgs(t: Type): Null<Array<{t: Type, opt: Bool, name: String}>> {
+		return switch(t) {
+			case TFun(args, _): args;
+			case _: null;
+		}
+	}
+
+	public static function getTFunReturn(t: Type): Null<Type> {
+		return switch(t) {
+			case TFun(_, ret): ret;
+			case _: null;
+		}
+	}
 }
 
 #end
