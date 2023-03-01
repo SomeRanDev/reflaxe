@@ -712,6 +712,7 @@ abstract class BaseCompiler {
 
 	function addModuleTypeForCompilation(mt: ModuleType) {
 		if(dynamicTypeStack == null || dynamicTypesHandled == null) return;
+		// if(mt.getCommonData().isExtern) return;
 		final id = mt.getUniqueId();
 		if(!dynamicTypesHandled.contains(id)) {
 			dynamicTypesHandled.push(id);

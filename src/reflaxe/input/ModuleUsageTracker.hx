@@ -64,6 +64,10 @@ class ModuleUsageTracker {
 			return;
 		}
 
+		// if(moduleType.getCommonData().isExtern) {
+		// 	return;
+		// }
+
 		outputTypes.push(moduleType);
 		outputTypeMap[moduleTypeId(moduleType)] = true;
 
