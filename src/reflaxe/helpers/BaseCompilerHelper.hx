@@ -36,8 +36,8 @@ class BaseCompilerHelper {
 				case _: Context.error("One string argument expected.", entry.pos);
 			}
 
-			final thisExpr = declaration.thisExpr != null ? compiler.compileExpression(declaration.thisExpr) : null;
-			final argExprs = arguments.map(compiler.compileExpression);
+			final thisExpr = declaration.thisExpr != null ? compiler.compileExpressionOrError(declaration.thisExpr) : null;
+			final argExprs = arguments.map(compiler.compileExpressionOrError);
 
 			var result = code;
 

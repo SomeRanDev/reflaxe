@@ -625,7 +625,10 @@ abstract class BaseCompiler {
 				if(currentType != -1) lines.push("");
 				currentType = newType;
 			}
-			lines.push(formatExpressionLine(compileExpression(e)));
+			final output = compileExpression(e);
+			if(output != null) {
+				lines.push(formatExpressionLine(output));
+			}
 		}
 		return lines.join("\n");
 	}
