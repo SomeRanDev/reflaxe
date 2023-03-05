@@ -71,6 +71,22 @@ class TypedExprHelper {
 			case _: false;
 		}
 	}
+
+	public static function getClassField(expr: TypedExpr): Null<ClassField> {
+		return switch(expr.expr) {
+			case TParenthesis(e): getClassField(e);
+			case TField(e, fa): {
+				switch(fa) {
+					case FInstance(_, _, cfRef): cfRef.get();
+					case FStatic(_, cfRef): cfRef.get();
+					case FAnon(cfRef): cfRef.get();
+					case FClosure(_, cfRef): cfRef.get();
+					case _: null;
+				}
+			}
+			case _: null;
+		}
+	}
 }
 
 #end
