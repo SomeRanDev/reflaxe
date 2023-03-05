@@ -14,6 +14,47 @@ using reflaxe.helpers.ModuleTypeHelper;
 using reflaxe.helpers.NameMetaHelper;
 
 class TypeHelper {
+	public static function findResolvedTypeParams(t: Type, cf: ClassField): Null<Array<Type>> {
+		final result = [];
+		final paramNameIndexMap = new Map<String, Int>();
+		for(i in 0...cf.params.length) {
+			paramNameIndexMap.set(cf.params[i].name, i);
+			result.push(null);
+		}
+
+		final resolvedTypes = getSubTypeList(t);
+		final cfSubTypes = getSubTypeList(cf.type);
+		for(i in 0...cfSubTypes.length) {
+			final subType = cfSubTypes[i];
+			final typeParamName = getTypeParameterName(subType);
+			if(typeParamName != null) {
+				final index = paramNameIndexMap.get(typeParamName);
+				if(result[index] == null) {
+					result[index] = resolvedTypes[i];
+				}
+			}
+		}
+
+		for(type in result) {
+			if(type == null) {
+				return null;
+			}
+		}
+
+		return result;
+	}
+
+	public static function getSubTypeList(t: Type): Array<Type> {
+		final result = [];
+		haxe.macro.TypeTools.iter(t, function(subType) {
+			result.push(subType);
+			for(subSubType in getSubTypeList(subType)) {
+				result.push(subSubType);
+			}
+		});
+		return result;
+	}
+
 	public static function fromModuleType(t: ModuleType): Type {
 		return switch(t) {
 			case TClassDecl(c): TInst(c, extractParamTypes(c.get().params));
