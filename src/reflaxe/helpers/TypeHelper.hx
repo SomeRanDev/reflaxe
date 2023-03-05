@@ -237,6 +237,19 @@ class TypeHelper {
 			case _: false;
 		}
 	}
+
+	public static function getTypeParameterName(t: Type): Null<String> {
+		return switch(t) {
+			case TInst(clsRef, params): {
+				switch(clsRef.get().kind) {
+					case KTypeParameter(_): clsRef.get().name;
+					case _: null;
+				}
+			}
+			case _: null;
+		}
+	}
+
 	public static function unwrapNullType(t: Type): Null<Type> {
 		return switch(t) {
 			case TAbstract(absRef, params) if(params.length == 1): {
