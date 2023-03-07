@@ -11,6 +11,7 @@ package reflaxe.helpers;
 import haxe.macro.Type;
 
 using reflaxe.helpers.NameMetaHelper;
+using reflaxe.helpers.TypeHelper;
 
 class TypedExprHelper {
 	public static function copy(e: TypedExpr, newDef: Null<TypedExprDef> = null): TypedExpr {
@@ -46,13 +47,40 @@ class TypedExprHelper {
 		}
 	}
 
-	public static function getDeclarationMeta(e: TypedExpr): Null<{ thisExpr: Null<TypedExpr>, meta: Null<MetaAccess> }> {
+	public static function getDeclarationMeta(e: TypedExpr, arguments: Null<Array<TypedExpr>> = null): Null<{ thisExpr: Null<TypedExpr>, meta: Null<MetaAccess> }> {
 		return switch(e.expr) {
-			case TField(ethis, fa): { thisExpr: ethis, meta: fa.getFieldAccessNameMeta().meta };
+			case TField(ethis, fa): {
+				var thisExpr = ethis;
+
+				// This might be a static function from an abstract.
+				// In that case, the "this" expression would be the first argument.
+				if(arguments != null) {
+					switch(fa) {
+						case FStatic(clsRef, fieldRef): {
+							switch(fieldRef.get().type) {
+								case TFun(args, ret): {
+									// If a static function, and the first argument is "this",
+									// we can assume it's an abstract function.
+									if(args.length > 0 && args[0].name == "this") {
+										thisExpr = arguments[0];
+									}
+								}
+								case _: {}
+							}
+						}
+						case _: {}
+					}
+				}
+				
+				{
+					thisExpr: thisExpr,
+					meta: fa.getFieldAccessNameMeta().meta
+				};
+			}
 			case TVar(tvar, _): { thisExpr: e, meta: tvar.meta };
 			case TEnumParameter(_, ef, _): { thisExpr: e, meta: ef.meta };
-			case TMeta(_, e1): getDeclarationMeta(e1);
-			case TParenthesis(e1): getDeclarationMeta(e1);
+			case TMeta(_, e1): getDeclarationMeta(e1, arguments);
+			case TParenthesis(e1): getDeclarationMeta(e1, arguments);
 			case TNew(clsTypeRef, _, _): {
 				final c = clsTypeRef.get().constructor;
 				if(c != null) {
@@ -62,6 +90,23 @@ class TypedExprHelper {
 				}
 			}
 			case _: null;
+		}
+	}
+
+	// If this is an expression that is being called, this function
+	// checks if it has any type parameters applied and returns them.
+	public static function getFunctionTypeParams(e: TypedExpr, overrideReturnType: Null<Type> = null): Null<Array<Type>> {
+		final classField = getClassField(e);
+		return if(classField != null) {
+			final t = switch(e.t) {
+				case TFun(args, ret) if(overrideReturnType != null): {
+					TFun(args, overrideReturnType);
+				}
+				case _: e.t;
+			}
+			t.findResolvedTypeParams(classField);
+		} else {
+			null;
 		}
 	}
 
