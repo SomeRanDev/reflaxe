@@ -15,6 +15,10 @@ using reflaxe.helpers.NameMetaHelper;
 
 class TypeHelper {
 	public static function findResolvedTypeParams(t: Type, cf: ClassField): Null<Array<Type>> {
+		if(cf.params.length == 0) {
+			return [];
+		}
+
 		final result = [];
 		final paramNameIndexMap = new Map<String, Int>();
 		for(i in 0...cf.params.length) {
@@ -24,13 +28,13 @@ class TypeHelper {
 
 		final resolvedTypes = getSubTypeList(t);
 		final cfSubTypes = getSubTypeList(cf.type);
-		for(i in 0...cfSubTypes.length) {
-			final subType = cfSubTypes[i];
+
+		for(key => subType in cfSubTypes) {
 			final typeParamName = getTypeParameterName(subType);
-			if(typeParamName != null) {
+			if(typeParamName != null && paramNameIndexMap.exists(typeParamName)) {
 				final index = paramNameIndexMap.get(typeParamName);
 				if(result[index] == null) {
-					result[index] = resolvedTypes[i];
+					result[index] = resolvedTypes[key];
 				}
 			}
 		}
@@ -44,13 +48,21 @@ class TypeHelper {
 		return result;
 	}
 
-	public static function getSubTypeList(t: Type): Array<Type> {
-		final result = [];
+	public static function getSubTypeList(t: Type): Map<String, Type> {
+		final result: Map<String, Type> = [];
+		var index = 0;
+		if(t == null) {
+			return [];
+		}
 		haxe.macro.TypeTools.iter(t, function(subType) {
-			result.push(subType);
-			for(subSubType in getSubTypeList(subType)) {
-				result.push(subSubType);
+			if(subType != null) {
+				final si = Std.string(index);
+				result.set(si, subType);
+				for(id => subSubType in getSubTypeList(subType)) {
+					result.set(si + "_" + id, subSubType);
+				}
 			}
+			index++;
 		});
 		return result;
 	}
