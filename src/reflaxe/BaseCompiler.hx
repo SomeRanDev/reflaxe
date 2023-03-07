@@ -14,9 +14,13 @@ import reflaxe.optimization.ExprOptimizer;
 import reflaxe.output.OutputManager;
 import reflaxe.output.OutputPath;
 
+using StringTools;
+
 using reflaxe.helpers.ClassTypeHelper;
 using reflaxe.helpers.ModuleTypeHelper;
 using reflaxe.helpers.NullableMetaAccessHelper;
+using reflaxe.helpers.TypedExprHelper;
+using reflaxe.helpers.TypeHelper;
 
 // =======================================================
 // * BaseCompilerFileOutputType
@@ -585,6 +589,7 @@ abstract class BaseCompiler {
 	}
 
 	public function onExpressionUnsuccessful(pos: Position) {
+		throw "fdsfds";
 		err("Could not generate expression", pos);
 	}
 
@@ -721,6 +726,85 @@ abstract class BaseCompiler {
 			dynamicTypesHandled.push(id);
 			dynamicTypeStack.push(mt);
 		}
+	}
+
+	// =======================================================
+	// * compileNativeFunctionCodeMeta
+	//
+	// This function is for compiling the result of functions
+	// using the @:nativeFunctionCode meta.
+	// =======================================================
+	public function compileNativeFunctionCodeMeta(callExpr: TypedExpr, arguments: Array<TypedExpr>, typeParams: Null<Array<() -> String>> = null): Null<String> {
+		final declaration = callExpr.getDeclarationMeta(arguments);
+		if(declaration == null) {
+			return null;
+		}
+		final meta = declaration.meta;
+		if(meta.maybeHas(":nativeFunctionCode")) {
+			final entry = meta.extract(":nativeFunctionCode")[0];
+			if(entry.params == null || entry.params.length == 0) {
+				Context.error("One string argument expected containing the native code.", entry.pos);
+			}
+
+			final code = switch(entry.params[0].expr) {
+				case EConst(CString(s, _)): s;
+				case _: Context.error("One string argument expected.", entry.pos);
+			}
+
+			var result = code;
+
+			if(code.contains("{this}")) {
+				final thisExpr = declaration.thisExpr != null ? compileNFCThisExpression(declaration.thisExpr) : null;
+				if(thisExpr == null) {
+					if(declaration.thisExpr == null) {
+						Context.error("Cannot use {this} on @:nativeFunctionCode meta for constructors.", entry.pos);
+					} else {
+						onExpressionUnsuccessful(callExpr.pos);
+					}
+				} else {
+					result = result.replace("{this}", thisExpr);
+				}
+			}
+
+			var argExprs: Null<Array<String>> = null;
+			for(i in 0...arguments.length) {
+				final key = "{arg" + i + "}";
+				if(code.contains(key)) {
+					if(argExprs == null) {
+						argExprs = arguments.map(function(e) {
+							return this.compileExpressionOrError(e);
+						});
+					}
+					if(argExprs[i] == null) {
+						onExpressionUnsuccessful(arguments[i].pos);
+					} else {
+						result = result.replace(key, argExprs[i]);
+					}
+				}
+			}
+
+			if(typeParams != null) {
+				for(i in 0...typeParams.length) {
+					final key = "{type" + i + "}";
+					if(code.contains(key)) {
+						result = result.replace(key, typeParams[i]());
+					}
+				}
+			}
+
+			return result;
+		}
+
+		return null;
+	}
+
+	// =======================================================
+	// * compileNFCThisExpression
+	//
+	// Compiles the {this} expression for @:nativeFunctionCode.
+	// =======================================================
+	public function compileNFCThisExpression(expr: TypedExpr): String {
+		return compileExpressionOrError(expr); 
 	}
 }
 
