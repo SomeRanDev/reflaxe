@@ -212,6 +212,16 @@ class TypeHelper {
 		}
 	}
 
+	public static function isNumberType(t: Type): Bool {
+		return switch(t) {
+			case TAbstract(abTypeRef, []): {
+				final abType = abTypeRef.get();
+				abType.module == "StdTypes" && (abType.name == "Int" || abType.name == "Float");
+			}
+			case _: false;
+		}
+	}
+
 	public static function isNull(t: Type): Bool {
 		return switch(t) {
 			case TAbstract(absRef, params) if(params.length == 1): {
