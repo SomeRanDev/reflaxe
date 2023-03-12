@@ -122,6 +122,7 @@ class TypeHelper {
 	}
 
 	public static function equals(type: Type, other: Type): Bool {
+		if(isNumberType(type) && isNumberType(other)) return true;
 		return Std.string(type) == Std.string(other);
 	}
 
