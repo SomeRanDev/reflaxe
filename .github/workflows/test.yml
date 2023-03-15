@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Setup Haxe 4.2.5
-      - uses: krdlab/setup-haxe@v1
+        uses: krdlab/setup-haxe@v1
         with:
           haxe-version: 4.2.5
 
@@ -31,7 +31,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Setup Haxe Latest
-      - uses: krdlab/setup-haxe@v1
+        uses: krdlab/setup-haxe@v1
         with:
           haxe-version: latest
 
