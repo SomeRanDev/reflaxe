@@ -14,7 +14,8 @@ All you need to worry about is programming the conversion from Haxe's typed AST 
 
 | Topic | Description |
 | --- | --- |
-| [Installation](https://github.com/RobertBorghese/reflaxe#installation) | How to install into your library. |
+| [Installation (Haxelib)](https://github.com/RobertBorghese/reflaxe#installation) | How to install into your library. |
+| [Installation (Git)](https://github.com/RobertBorghese/reflaxe#installation-from-git) | How to install into your library. |
 | [Compiler Code Sample](https://github.com/RobertBorghese/reflaxe/#compiler-code-sample) | How to code the compiler. |
 | [extraParams.hxml Sample](https://github.com/RobertBorghese/reflaxe/#extraparamshxml-sample) | How to configure your library. |
 | [compile.hxml Sample](https://github.com/RobertBorghese/reflaxe/#compilerhxml-sample) | How to use your library on other Haxe projects. |
@@ -31,6 +32,20 @@ All you need to worry about is programming the conversion from Haxe's typed AST 
 | 1 | Install via haxelib. | <pre>haxelib install reflaxe</pre> |
 | 2 | Add the lib to your `.hxml` file or compile command. | <pre lang="hxml">-lib reflaxe</pre> |
 | 3 | Extend your compiler class from `BaseCompiler`. | <pre lang="haxe">class MyLangCompiler extends reflaxe.BaseCompiler</pre> |
+
+
+&nbsp;
+&nbsp;
+&nbsp;
+
+## Installation from Git
+
+Alternatively, it is recommended you install the development version from git. Otherwise, you may miss out on additional features, better optimizations, and improved performance!
+
+The development version is stable, and it is frequently used and tested in my [Haxe to Unbound C++](https://github.com/RobertBorghese/Haxe-to-UnboundCPP/actions) project.
+```
+haxelib git reflaxe https://github.com/RobertBorghese/reflaxe.git
+```
 
 &nbsp;
 &nbsp;
