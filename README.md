@@ -1,5 +1,6 @@
 <img src="https://i.imgur.com/oZkCZ2C.png" alt="I made a reflaxe logo thingy look at it LOOK AT IT" width="400"/>
 
+[![Test Workflow](https://github.com/RobertBorghese/reflaxe/actions/workflows/test.yml/badge.svg)](https://github.com/RobertBorghese/reflaxe/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 <a href="https://discord.com/channels/162395145352904705/1052688097592225904"><img src="https://discordapp.com/api/guilds/162395145352904705/widget.png?style=shield" alt="Reflaxe Thread"/></a>
 
