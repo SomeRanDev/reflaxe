@@ -1,0 +1,48 @@
+on:
+  push:
+    branches:
+    - main
+  pull_request:
+    branches:
+    - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Haxe 4.2.5
+      - uses: krdlab/setup-haxe@v1
+        with:
+          haxe-version: 4.2.5
+
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Check Haxe Version
+        run: haxe -version
+
+      - name: Move to test/ Folder
+        run: cd test
+
+      - name: Run Test
+        run: haxe Test.hxml
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Haxe Latest
+      - uses: krdlab/setup-haxe@v1
+        with:
+          haxe-version: latest
+
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Check Haxe Version
+        run: haxe -version
+
+      - name: Move to test/ Folder
+        run: cd test
+
+      - name: Run Test
+        run: haxe Test.hxml
