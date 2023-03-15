@@ -21,10 +21,8 @@ jobs:
       - name: Check Haxe Version
         run: haxe -version
 
-      - name: Move to test/ Folder
-        run: cd test
-
       - name: Run Test
+        working-directory: test
         run: haxe Test.hxml
 
   build_latest:
@@ -41,8 +39,6 @@ jobs:
       - name: Check Haxe Version
         run: haxe -version
 
-      - name: Move to test/ Folder
-        run: cd test
-
       - name: Run Test
+        working-directory: test
         run: haxe Test.hxml
