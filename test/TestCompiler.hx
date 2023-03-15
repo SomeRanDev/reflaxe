@@ -265,26 +265,6 @@ class TestCompiler extends BaseCompiler {
 	function moduleNameToTestScript(m: ModuleType): String {
 		return m.getNameOrNative();
 	}
-
-	function typeNameToTestScript(t: Type, errorPos: Position): String {
-		final ct = haxe.macro.TypeTools.toComplexType(t);
-		final typeName = switch(ct) {
-			case TPath(typePath): {
-				// copy TypePath and ignore "params" since TestScript is typeless
-				haxe.macro.ComplexTypeTools.toString(TPath({
-					name: typePath.name,
-					pack: typePath.pack,
-					sub: typePath.sub,
-					params: null
-				}));
-			}
-			case _: null;
-		}
-		if(typeName == null) {
-			err("Incomplete Feature: Cannot convert this type to TestScript at the moment.", errorPos);
-		}
-		return typeName;
-	}
 }
 
 #end
