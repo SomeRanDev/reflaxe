@@ -59,7 +59,7 @@ class TestCompiler extends BaseCompiler {
 		return decl + (body.length > 0 ? body : "\tpass");
 	}
 
-	public function compileEnumImpl(enumType: EnumType, constructs:Map<String, haxe.macro.EnumField>): Null<String> {
+	public function compileEnumImpl(enumType: EnumType, constructs: EnumOptions): Null<String> {
 		return null;
 	}
 
