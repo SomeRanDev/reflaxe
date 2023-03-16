@@ -1,0 +1,86 @@
+.dark-theme {
+  background-color: #333 !important;
+  color: #aae;
+  color-scheme: dark;
+  border-radius: 10px;
+}
+
+.dark-theme a {
+  color: #eeeeee !important;
+}
+
+a.treeLink,
+a.nav-header {
+  background: rgba(0, 0, 0, 0);
+  transition: background 0.1s, margin-left 0.2s, border 0.1s, border-style 0s, border-radius 0.3s ease-out, transform 0.3s;
+  border: 3px solid transparent; /*&rgba(0, 0, 0, 0.03);*/
+  border-radius: 0px;
+  /*margin-left: 2px !important;*/
+}
+
+li:nth-child(odd)>a.treeLink,
+li:nth-child(odd)>a.nav-header {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+li.expando>a {
+  border-radius: 0px;
+  border: 3px dashed rgba(255, 255, 255, 0.2) !important;
+  background: rgba(84,123,177,1) !important;
+  color: #ffffff;
+}
+
+li.expando>a:hover {
+  border-radius: 24px;
+  border: 3px dashed rgba(255, 255, 255, 0.2) !important;
+  background: rgba(84,123,177,1) !important;
+}
+
+.dark-theme li.expando>a {
+  background: rgba(60, 90, 120, 0.4) !important;
+}
+
+a.treeLink:hover,
+a.nav-header:hover {
+  background: red;
+  border: 3px solid rgba(20, 20, 200, 0.6) !important;
+  border-radius: 24px !important;
+  box-shadow: 3px 3px 3px rgba(0, 0, 0, 0.3);
+  transform: translate(-2px, -2px) !important;
+  /*margin-left: 1px;*/
+}
+
+.dark-theme a.treeLink:hover,
+.dark-theme a.nav-header:hover {
+  border: 3px solid rgba(255, 255, 255, 0.4) !important;
+}
+
+a.treeLink:active,
+a.nav-header:active {
+  transform: translate(0px, 0px);
+}
+
+.nav-list>.active>a.treeLink,
+.nav-list>.active>a.treeLink:focus,
+.nav-list>.active>a.nav-header,
+.nav-list>.active>a.nav-header:focus {
+  background: #269;
+  border: 3px solid #269;
+  border-radius: 24px;
+  transform: translate(0px, 0px);
+}
+
+.dark-theme .nav-list>.active>a.treeLink,
+.dark-theme .nav-list>.active>a.treeLink:focus,
+.dark-theme .nav-list>.active>a.nav-header,
+.dark-theme .nav-list>.active>a.nav-header:focus {
+  background: #269;
+}
+
+.nav-list>.active>a.treeLink:hover {
+  border: 3px solid #269;
+}
+
+.dark-theme .nav-list>.active>a.treeLink:hover {
+  border: 3px solid rgba(255, 255, 255, 0.6);
+}

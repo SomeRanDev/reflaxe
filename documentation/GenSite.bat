@@ -1,0 +1,1 @@
+haxelib run dox -i . --title Reflaxe -D description "The ultimate framework for creating your own Haxe targets!" --toplevel-package reflaxe -D themeColor "0x687bf7" -D textColor "0x3d3d3d" -D source-path "https://github.com/RobertBorghese/reflaxe/tree/main/src/" -theme "./reflaxe-theme"
