@@ -56,10 +56,11 @@ class TypeUsageTracker {
 	//
 	// For this purpose, we use haxe.Function in the result Maps. Obtaining a reference
 	// to `haxe.Function` is not easy, so we obtain it once in `init` and store here.
-	static var functionType: Type;
+	static var functionType: Null<Type>;
 
 	// Called at start of Reflaxe
 	public static function init() {
+		#if eval
 		// Store `haxe.Function` Type in "functionType"
 		for(funcType in Context.getModule("haxe.Function")) {
 			switch(funcType) {
@@ -71,23 +72,27 @@ class TypeUsageTracker {
 				case _: {}
 			}
 		}
+		#end
 	}
 
 	// Get all the ModuleTypes by a single ModuleType.
 	public static function trackTypesInModuleType(moduleType: ModuleType): TypeUsageMap {
 		final modules: Map<String, { m: TypeOrModuleType, level: Int }> = [];
 
-		var addType: Null<(Null<Type>, TypeUsageLevel) -> Void> = null;
+		var addType: (Null<Type>, TypeUsageLevel) -> Void = (_, _) -> {};
 
 		function addToMap(id: String, data: { m: TypeOrModuleType, level: Int }) {
 			return if(!modules.exists(id)) {
 				modules.set(id, data);
 				true;
-			} else if((modules.get(id).level & data.level) == 0) {
-				modules.get(id).level |= data.level;
-				true;
 			} else {
-				false;
+				final m = modules.get(id);
+				if(m != null && (m.level & data.level) == 0) {
+					m.level |= data.level;
+					true;
+				} else {
+					false;
+				}
 			}
 		}
 
@@ -99,7 +104,9 @@ class TypeUsageTracker {
 			if(newType) {
 				switch(mt) {
 					case TAbstract(a): {
+						#if eval
 						addType(Context.followWithAbstracts(TypeHelper.fromModuleType(mt)), level);
+						#end
 					}
 					case _:
 				}
@@ -128,7 +135,9 @@ class TypeUsageTracker {
 						addType(a.t, level);
 					}
 					addType(ret, level);
-					addType(functionType, level);
+					if(functionType != null) {
+						addType(functionType, level);
+					}
 				}
 
 				// If an anonymous structure, extract the types of the fields.
@@ -257,12 +266,13 @@ class TypeUsageTracker {
 			}
 
 			case TTypeDecl(defType): {
-				//Context.follow(TypeHelper.fromModuleType(moduleType))
 				addType(defType.get().type, ExtendedFrom);
 			}
 
 			case TAbstract(a): {
+				#if eval
 				addType(Context.followWithAbstracts(TypeHelper.fromModuleType(moduleType)), ExtendedFrom);
+				#end
 			}
 		}
 
@@ -276,7 +286,10 @@ class TypeUsageTracker {
 			for(i in 0...TypeUsageLevel.LevelCount()) {
 				final level = Std.int(Math.pow(2, i));
 				if((moduleData.level & level) != 0) {
-					result[level].push(moduleData.m);
+					final t = result[level];
+					if(t != null) {
+						t.push(moduleData.m);
+					}
 				}
 			}
 		}

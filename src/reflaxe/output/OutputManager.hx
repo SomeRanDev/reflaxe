@@ -15,6 +15,7 @@ import haxe.macro.Type;
 import reflaxe.BaseCompiler;
 
 using reflaxe.helpers.ClassTypeHelper;
+using reflaxe.helpers.NullHelper;
 
 class OutputManager {
 	// -------------------------------------------------------
@@ -74,11 +75,11 @@ class OutputManager {
 	}
 
 	function generatedFilesPath() {
-		return joinPaths(outputDir, GENERATED_LIST_FILENAME);
+		return joinPaths(outputDir.or(""), GENERATED_LIST_FILENAME);
 	}
 
 	function ensureOutputDirExists() {
-		if(!sys.FileSystem.exists(outputDir)) {
+		if(outputDir != null && !sys.FileSystem.exists(outputDir)) {
 			sys.FileSystem.createDirectory(outputDir);
 		}
 	}
@@ -112,6 +113,11 @@ class OutputManager {
 	}
 
 	function generateSingleFile() {
+		if(outputDir == null) {
+			throw "Output directory is not defined.";
+			return;
+		}
+
 		final filePath = if(sys.FileSystem.isDirectory(outputDir)) {
 			ensureOutputDirExists();
 			joinPaths(outputDir, getFileName(options.defaultOutputFilename));
@@ -138,7 +144,10 @@ class OutputManager {
 			if(!files.exists(mid)) {
 				files[mid] = [];
 			}
-			files[mid].push(c.output);
+			final f = files[mid];
+			if(f != null) {
+				f.push(c.output);
+			}
 		}
 
 		for(moduleId => outputList in files) {
@@ -187,6 +196,7 @@ class OutputManager {
 	// -------------------------------------------------------
 	// record and delete output files
 	function recordOutputFile(path: String) {
+		if(outputDir == null) return;
 		final dir = StringTools.endsWith(outputDir, "/") ? outputDir : (outputDir + "/");
 		final outputFilePath = StringTools.replace(path, dir, "");
 		outputFiles.push(outputFilePath);
@@ -194,7 +204,7 @@ class OutputManager {
 		// -------------------------------------------------------
 		// We overwrote this file if it existed, so we can
 		// remove it from old files we're planning to delete.
-		if(oldOutputFiles.contains(outputFilePath)) {
+		if(oldOutputFiles != null && oldOutputFiles.contains(outputFilePath)) {
 			oldOutputFiles.remove(outputFilePath);
 		}
 	}
@@ -205,13 +215,17 @@ class OutputManager {
 	// all the remaining elements are old file paths we
 	// want to delete.
 	function deleteOldOutputFiles() {
-		for(file in oldOutputFiles) {
-			final filePath = joinPaths(outputDir, file);
-			if(sys.FileSystem.exists(filePath)) {
-				try {
-					sys.FileSystem.deleteFile(filePath);
-				} catch(e) {
-					Context.warning('Could not delete file at "$filePath".\n$e', Context.currentPos());
+		if(oldOutputFiles != null && outputDir != null) {
+			for(file in oldOutputFiles) {
+				final filePath = joinPaths(outputDir, file);
+				if(sys.FileSystem.exists(filePath)) {
+					try {
+						sys.FileSystem.deleteFile(filePath);
+					} catch(e) {
+						#if eval
+						Context.warning('Could not delete file at "$filePath".\n$e', Context.currentPos());
+						#end
+					}
 				}
 			}
 		}

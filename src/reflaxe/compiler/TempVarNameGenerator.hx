@@ -18,6 +18,8 @@ package reflaxe.compiler;
 
 import haxe.macro.Type;
 
+using reflaxe.helpers.NullHelper;
+
 class TempVarNameGenerator {
 	// -------------------------------------------------------
 	// Count how many times a variable name is used so if it's
@@ -32,7 +34,7 @@ class TempVarNameGenerator {
 	public function generateName(t: Null<Type>, baseNameOverride: Null<String> = null) {
 		final baseName = baseNameOverride != null ? baseNameOverride : replaceDisallowedCharacters(generateBaseName(t));
 		final count = if(variableNameCounts.exists(baseName)) {
-			variableNameCounts.get(baseName);
+			variableNameCounts.get(baseName).or(0);
 		} else {
 			0;
 		}

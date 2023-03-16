@@ -26,7 +26,7 @@ using reflaxe.helpers.TypedExprHelper;
 using reflaxe.helpers.TypeHelper;
 
 class NullTypeEnforcer {
-	static var returnTypeStack: Array<Type> = [];
+	static var returnTypeStack: Array<Null<Type>> = [];
 
 	// Given an expression and the type it is interacting with,
 	// check if the expression is `null` and the type is `Null<T>`.
@@ -35,7 +35,9 @@ class NullTypeEnforcer {
 	public static function checkAssignment(expr: Null<TypedExpr>, type: Null<Type>) {
 		if(expr == null || type == null) return;
 		if(expr.isNull() && !type.isNull()) {
+			#if eval
 			Context.error("Cannot assign `null` to non-nullable type.", expr.pos);
+			#end
 		}
 	}
 

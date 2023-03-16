@@ -36,8 +36,10 @@ class ReflectCompiler {
 	public static var Compilers: Array<BaseCompiler> = [];
 
 	public static function Start() {
+		#if eval
 		Context.onAfterTyping(onAfterTyping);
 		Context.onAfterGenerate(onAfterGenerate);
+		#end
 	}
 
 	public static function AddCompiler(compiler: BaseCompiler, options: Null<BaseCompilerOptions> = null) {
@@ -91,7 +93,7 @@ class ReflectCompiler {
 	static function callInitCallbacks<T: BaseCompiler>(compiler: T) {
 		if(initCallbacks != null) {
 			for(c in initCallbacks) {
-				Reflect.callMethod(null, c, [compiler]);
+				Reflect.callMethod({}, c, [compiler]);
 			}
 		}
 	}
@@ -99,7 +101,7 @@ class ReflectCompiler {
 	// =======================================================
 	// * Private Members
 	// =======================================================
-	static var moduleTypes: Array<ModuleType>;
+	static var moduleTypes: Null<Array<ModuleType>>;
 
 	static function onAfterTyping(mtypes: Array<ModuleType>) {
 		moduleTypes = mtypes;
@@ -124,6 +126,7 @@ class ReflectCompiler {
 
 	static function findEnabledCompilers(): Array<BaseCompiler> {
 		final validCompilers = [];
+		#if eval
 		for(compiler in Compilers) {
 			final outputDirDef = compiler.options.outputDirDefineName;
 			final outputDir = Context.definedValue(outputDirDef);
@@ -137,14 +140,17 @@ class ReflectCompiler {
 				Context.error(msg, pos);
 			}
 		}
+		#end
 		return validCompilers;
 	}
 
 	static function tooManyCompilersError(compilers: Array<BaseCompiler>) {
+		#if eval
 		final compilerList = compilers.map(c -> Type.getClassName(Type.getClass(c))).join(" | ");
 		final pos = Context.currentPos();
 		final msg = 'Multiple compilers have been enabled, only one may be active per build: $compilerList';
 		Context.error(msg, pos);
+		#end
 	}
 
 	static function useCompiler(compiler: BaseCompiler) {
@@ -157,11 +163,12 @@ class ReflectCompiler {
 	}
  
 	static function getAllModulesTypesForCompiler(compiler: BaseCompiler): Array<ModuleType> {
+		final mt = moduleTypes != null ? moduleTypes : [];
 		final result = if(compiler.options.smartDCE) {
-			final tracker = new ModuleUsageTracker(moduleTypes, compiler);
+			final tracker = new ModuleUsageTracker(mt, compiler);
 			tracker.filteredTypes();
 		} else {
-			moduleTypes;
+			mt;
 		}
 
 		return if(compiler.options.ignoreTypes.length > 0) {
@@ -183,7 +190,8 @@ class ReflectCompiler {
 	}
 
 	static function dynamicallyAddModulesToCompiler(compiler: BaseCompiler) {
-		final tracker = new ModuleUsageTracker(moduleTypes, compiler);
+		final mt = moduleTypes != null ? moduleTypes : [];
+		final tracker = new ModuleUsageTracker(mt, compiler);
 		compiler.dynamicTypeStack = tracker.nonStdTypes();
 		compiler.dynamicTypesHandled = compiler.dynamicTypeStack.map(mt -> mt.getUniqueId());
 		while(compiler.dynamicTypeStack.length > 0) {
@@ -289,7 +297,9 @@ class ReflectCompiler {
 							});
 						} else {
 							if(!compiler.options.ignoreBodilessFunctions) {
+								#if eval
 								Context.warning("Function information not found.", field.pos);
+								#end
 							}
 						}
 					}
@@ -377,8 +387,9 @@ class ReflectCompiler {
 	// * findTFunc
 	// =======================================================
 	static function findTFunc(field: ClassField): Null<TFunc> {
-		return if(field.expr() != null) {
-			switch(field.expr().expr) {
+		final e = field.expr();
+		return if(e != null) {
+			switch(e.expr) {
 				case TFunction(tfunc): tfunc;
 				case _: null;
 			}

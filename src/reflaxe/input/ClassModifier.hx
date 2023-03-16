@@ -23,13 +23,19 @@ class ClassModifier {
 		if(!modifications.exists(classPath)) {
 			modifications.set(classPath, []);
 
+			#if eval
 			Compiler.addMetadata("@:build(reflaxe.input.ClassModifier.applyMod(\"" + classPath + "\"))", classPath);
+			#end
 		}
 
-		modifications[classPath].set(functionName, newExpr);
+		final m = modifications[classPath];
+		if(m != null) {
+			m.set(functionName, newExpr);
+		}
 	}
 
 	public static function applyMod(classPath: String): Null<Array<Field>> {
+		#if eval
 		final fields = Context.getBuildFields();
 		final mods = modifications[classPath];
 
@@ -46,6 +52,9 @@ class ClassModifier {
 		}
 
 		return fields;
+		#else
+		return [];
+		#end
 	}
 }
 

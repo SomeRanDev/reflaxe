@@ -12,6 +12,7 @@ import haxe.macro.Type;
 
 using reflaxe.helpers.ModuleTypeHelper;
 using reflaxe.helpers.NameMetaHelper;
+using reflaxe.helpers.NullHelper;
 
 class TypeHelper {
 	public static function findResolvedTypeParams(t: Type, cf: ClassField): Null<Array<Type>> {
@@ -19,7 +20,7 @@ class TypeHelper {
 			return [];
 		}
 
-		final result = [];
+		final result: Array<Null<Type>> = [];
 		final paramNameIndexMap = new Map<String, Int>();
 		for(i in 0...cf.params.length) {
 			paramNameIndexMap.set(cf.params[i].name, i);
@@ -33,7 +34,7 @@ class TypeHelper {
 			final typeParamName = getTypeParameterName(subType);
 			if(typeParamName != null && paramNameIndexMap.exists(typeParamName)) {
 				final index = paramNameIndexMap.get(typeParamName);
-				if(result[index] == null) {
+				if(index != null && result[index] == null) {
 					result[index] = resolvedTypes[key];
 				}
 			}
@@ -45,7 +46,11 @@ class TypeHelper {
 			}
 		}
 
-		return result;
+		// Safe to cast from Array<Null<Type>> to Array<Type> since we check for
+		// any nulls in the for-loop directly before this.
+		//
+		// Only an Array without nulls can reach this return.
+		return result.trustMe();
 	}
 
 	public static function getSubTypeList(t: Type): Map<String, Type> {
@@ -54,6 +59,7 @@ class TypeHelper {
 		if(t == null) {
 			return [];
 		}
+		#if eval
 		haxe.macro.TypeTools.iter(t, function(subType) {
 			if(subType != null) {
 				final si = Std.string(index);
@@ -64,6 +70,7 @@ class TypeHelper {
 			}
 			index++;
 		});
+		#end
 		return result;
 	}
 
@@ -116,7 +123,11 @@ class TypeHelper {
 			}
 			case _: {
 				final mt = toModuleType(t);
-				"T" + mt.getUniqueId();
+				if(mt != null) {
+					"T" + mt.getUniqueId();
+				} else {
+					"___TYPEUNIQUEID___" + Std.string(t);
+				}
 			}
 		}
 	}
@@ -126,7 +137,7 @@ class TypeHelper {
 		return Std.string(type) == Std.string(other);
 	}
 
-	public static function getMeta(type: Type) {
+	public static function getMeta(type: Type): Null<MetaAccess> {
 		return switch(type) {
 			case TInst(c, _): c.get().meta;
 			case TEnum(e, _): e.get().meta;

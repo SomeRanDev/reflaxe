@@ -29,6 +29,7 @@ class ExpressionModifier {
 	}
 
 	public static function applyMods(): Null<Array<Field>> {
+		#if eval
 		final fields = Context.getBuildFields();
 
 		for(i in 0...fields.length) {
@@ -44,6 +45,9 @@ class ExpressionModifier {
 		}
 
 		return fields;
+		#else
+		return [];
+		#end
 	}
 
 	static function applyModsToExpr(e: Expr): Expr {

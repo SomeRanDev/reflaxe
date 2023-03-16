@@ -321,8 +321,10 @@ abstract class BaseCompiler {
 	// * err
 	// =======================================================
 	function err(msg: String, pos: Null<Position> = null) {
+		#if eval
 		if(pos == null) pos = Context.currentPos();
 		Context.error(msg, pos);
+		#end
 	}
 
 	// =======================================================
@@ -396,7 +398,11 @@ abstract class BaseCompiler {
 			"";
 		} else {
 			final current = extraFiles.get(pathString);
-			current.length <= priority ? "" : current[priority];
+			if(current != null) {
+				current.length <= priority ? "" : current[priority];
+			} else {
+				"";
+			}
 		}
 	}
 
@@ -409,11 +415,13 @@ abstract class BaseCompiler {
 			extraFiles.set(pathString, []);
 		}
 		final current = extraFiles.get(pathString);
-		while(current.length <= priority) {
-			current.push("");
+		if(current != null) {
+			while(current.length <= priority) {
+				current.push("");
+			}
+			current[priority] = content;
+			extraFiles.set(pathString, current);
 		}
-		current[priority] = content;
-		extraFiles.set(pathString, current);
 	}
 
 	// Set the content or append it if it already exists.
@@ -584,12 +592,12 @@ abstract class BaseCompiler {
 		final result = compileExpression(expr);
 		if(result == null) {
 			onExpressionUnsuccessful(expr.pos);
+			return "";
 		}
 		return result;
 	}
 
 	public function onExpressionUnsuccessful(pos: Position) {
-		throw "fdsfds";
 		err("Could not generate expression", pos);
 	}
 
@@ -674,6 +682,9 @@ abstract class BaseCompiler {
 	// Used in "compileExpressionsIntoLines".
 	// =======================================================
 	function expressionType(expr: Null<TypedExpr>): Int {
+		if(expr == null) {
+			return 0;
+		}
 		return switch(expr.expr) {
 			case TConst(_) |
 				TLocal(_) |
@@ -715,12 +726,11 @@ abstract class BaseCompiler {
 	// While enabled, use `addModuleTypeForCompilation` to
 	// add additional ModuleTypes to be compiled.
 	// =======================================================
-	public var dynamicTypeStack: Array<ModuleType>;
-	public var dynamicTypesHandled: Array<String>;
+	public var dynamicTypeStack: Null<Array<ModuleType>>;
+	public var dynamicTypesHandled: Null<Array<String>>;
 
 	function addModuleTypeForCompilation(mt: ModuleType) {
 		if(dynamicTypeStack == null || dynamicTypesHandled == null) return;
-		// if(mt.getCommonData().isExtern) return;
 		final id = mt.getUniqueId();
 		if(!dynamicTypesHandled.contains(id)) {
 			dynamicTypesHandled.push(id);
@@ -741,14 +751,28 @@ abstract class BaseCompiler {
 		}
 		final meta = declaration.meta;
 		if(meta.maybeHas(":nativeFunctionCode")) {
-			final entry = meta.extract(":nativeFunctionCode")[0];
-			if(entry.params == null || entry.params.length == 0) {
+			final entry = meta.maybeExtract(":nativeFunctionCode")[0];
+
+			// Prevent null safety error from `entry.params`.
+			@:nullSafety(Off)
+			if(entry == null || entry.params == null || entry.params.length == 0) {
+				#if eval
 				Context.error("One string argument expected containing the native code.", entry.pos);
+				#end
+				return null;
 			}
 
+			// Prevent null safety error from `entry.params[0]` as function will return if `entry.params.length == 0`.
+			@:nullSafety(Off)
 			final code = switch(entry.params[0].expr) {
 				case EConst(CString(s, _)): s;
-				case _: Context.error("One string argument expected.", entry.pos);
+				case _: {
+					#if eval
+					Context.error("One string argument expected.", entry.pos);
+					#else
+					"";
+					#end
+				}
 			}
 
 			var result = code;
@@ -757,7 +781,9 @@ abstract class BaseCompiler {
 				final thisExpr = declaration.thisExpr != null ? compileNFCThisExpression(declaration.thisExpr) : null;
 				if(thisExpr == null) {
 					if(declaration.thisExpr == null) {
+						#if eval
 						Context.error("Cannot use {this} on @:nativeFunctionCode meta for constructors.", entry.pos);
+						#end
 					} else {
 						onExpressionUnsuccessful(callExpr.pos);
 					}

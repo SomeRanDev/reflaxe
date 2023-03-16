@@ -33,7 +33,9 @@ class CaptureVariableFixer {
 	var arrayWrapVarIds: Array<Int>;
 
 	// Placeholder Position
+	#if eval
 	var tempPos: Position;
+	#end
 
 	// Constructor
 	public function new(expr: TypedExpr, parent: Null<RepeatVariableFixer> = null, initVarNames: Null<Array<String>> = null) {
@@ -47,7 +49,9 @@ class CaptureVariableFixer {
 		nonLambdaVars = [];
 		arrayWrapVarIds = [];
 
+		#if eval
 		tempPos = haxe.macro.Context.makePosition({ min: 0, max: 0, file: "" });
+		#end
 	}
 
 	// Applies the changes to the supplied expression.
@@ -102,7 +106,9 @@ class CaptureVariableFixer {
 			final t = typeAndTVar.type;
 			final tvar = typeAndTVar.tvar;
 			if(t != null && t.isPrimitive() && arrayWrapVarIds.contains(tvar.id)) {
+				#if eval
 				tvar.meta.maybeAdd(":arrayWrap", [], tempPos);
+				#end
 			}
 		}
 		

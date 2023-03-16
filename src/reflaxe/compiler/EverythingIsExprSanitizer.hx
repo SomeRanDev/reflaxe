@@ -13,10 +13,12 @@ package reflaxe.compiler;
 
 #if (macro || reflaxe_runtime)
 
+import haxe.macro.Context;
 import haxe.macro.Expr;
 import haxe.macro.Type;
 
 using reflaxe.helpers.NullableMetaAccessHelper;
+using reflaxe.helpers.NullHelper;
 using reflaxe.helpers.TypedExprHelper;
 
 class EverythingIsExprSanitizer {
@@ -113,7 +115,7 @@ class EverythingIsExprSanitizer {
 			final newExprDef = processExpr(expr);
 			if(newExprDef != null) {
 				topScopeArray[index] = {
-					expr: newExprDef,
+					expr: (newExprDef : TypedExprDef),
 					pos: expr.pos,
 					t: expr.t
 				};
@@ -159,6 +161,8 @@ class EverythingIsExprSanitizer {
 	// An infinite while loop is used to locally replicate
 	// a recursive-like system when necessary.
 	function processExpr(expr: TypedExpr): Null<TypedExprDef> {
+		if(expr == null) return null;
+
 		final pushed = switch(expr.expr) {
 			case TParenthesis(_) | TMeta(_, _): false;
 			case _: {
@@ -210,7 +214,7 @@ class EverythingIsExprSanitizer {
 				TUnop(op, postfix, handleValueExpr(expr));
 			}
 			case TFunction(tfunc): {
-				final newTFunc = Reflect.copy(tfunc);
+				final newTFunc = Reflect.copy(tfunc).trustMe();
 				newTFunc.expr = handleNonValueBlock(tfunc.expr);
 				TFunction(newTFunc);
 			}
@@ -253,7 +257,7 @@ class EverythingIsExprSanitizer {
 				);
 			}
 			case TReturn(expr): {
-				TReturn(handleValueExpr(expr, "result"));
+				TReturn(expr != null ? handleValueExpr(expr, "result") : null);
 			}
 			case TMeta(m, e): {
 				metaStack.push(m.name);
@@ -339,6 +343,7 @@ class EverythingIsExprSanitizer {
 	// Converts (a = b = 1) => (b = 1; a = b)
 	// =======================================================
 	function handleValueExpr(e: TypedExpr, varNameOverride: Null<String> = null): TypedExpr {
+		if(e == null) return { expr: TIdent("null"), pos: makeEmptyPos(), t: TDynamic(null) };
 		#if (haxe_ver >= "4.3.0")
 		if(compiler.options.convertNullCoal && isNullCoalExpr(e)) {
 			final newExpr = standardizeNullCoalValue(e);
@@ -399,6 +404,7 @@ class EverythingIsExprSanitizer {
 	// outside and the assigned expression is used afterward.
 	// =======================================================
 	function isAssignExpr(e: TypedExpr) {
+		if(e == null) return false;
 		return switch(e.expr) {
 			case TBinop(OpAssign | OpAssignOp(_), _, _): true;
 			case _: false;
@@ -416,7 +422,7 @@ class EverythingIsExprSanitizer {
 			case _: null;
 		}
 
-		return left.copy();
+		return left != null ? left.copy() : null;
 	}
 
 	// =======================================================
@@ -431,6 +437,7 @@ class EverythingIsExprSanitizer {
 	// if they're being treated like values.
 	// =======================================================
 	public static function isBlocklikeExpr(e: TypedExpr) {
+		if(e == null) return false;
 		return switch(e.expr) {
 			case TBlock(_): true;
 			case TIf(_, _, _): true;
@@ -595,6 +602,7 @@ class EverythingIsExprSanitizer {
 		if(metaStack.contains(":wrappedInLambda")) {
 			return false;
 		}
+		if(e == null) return false;
 		return switch(e.t) {
 			case TFun(args, ret): switch(e.expr) {
 				case TField(_, fa): {
@@ -628,7 +636,7 @@ class EverythingIsExprSanitizer {
 
 		final args = [];
 		final createArgs = [];
-		var retType = null;
+		var retType: Null<Type> = null;
 		switch(e.t) {
 			case TFun(tfunArgs, tfunRet): {
 				for(a in tfunArgs) {
@@ -651,10 +659,11 @@ class EverythingIsExprSanitizer {
 			case _: false;
 		}
 
+		#if eval
 		final result = {
 			expr: TBlock([{
 				expr: TFunction({
-					t: retType,
+					t: retType.or(Context.getType("Void")),
 					expr: {
 						expr: TReturn({
 							expr: TCall({
@@ -679,6 +688,9 @@ class EverythingIsExprSanitizer {
 
 		final eiec = new EverythingIsExprSanitizer(result, compiler, null);
 		return unwrapBlock(eiec.convertedExpr());
+		#else
+		return null;
+		#end
 	}
 
 	function unwrapBlock(e: TypedExpr): TypedExpr {
@@ -738,22 +750,22 @@ class EverythingIsExprSanitizer {
 		}
 	}
 
-	function makeTExpr(def: TypedExprDef, pos: Null<haxe.macro.Expr.Position> = null, t: Null<haxe.macro.Type> = null) {
-		if(pos == null) {
-			pos = makeEmptyPos();
-		}
-		if(t == null) {
-			t = TDynamic(null);
-		}
+	function makeTExpr(def: TypedExprDef, pos: Null<haxe.macro.Expr.Position> = null, t: Null<haxe.macro.Type> = null): TypedExpr {
 		return {
 			expr: def,
-			pos: pos,
-			t: t
+			pos: pos.or(makeEmptyPos()),
+			t: t.or(TDynamic(null))
 		}
 	}
 
 	function makeEmptyPos(): haxe.macro.Expr.Position {
-		return haxe.macro.Context.makePosition({ min: 0, max: 0, file: "" });
+		return {
+			#if eval
+			haxe.macro.Context.makePosition({ min: 0, max: 0, file: "" });
+			#else
+			{ min: 0, max: 0, file: "" };
+			#end
+		}
 	}
 }
 

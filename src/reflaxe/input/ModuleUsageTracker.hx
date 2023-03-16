@@ -196,7 +196,7 @@ class ModuleUsageTracker {
 		if(cd.hasMeta(":coreApi") || cd.hasMeta(":pseudoCoreApi")) {
 			return true;
 		}
-		final pos = Context.getPosInfos(type.getPos());
+		final pos = #if eval Context.getPosInfos(type.getPos()) #else { file: "" } #end;
 		if(!haxe.io.Path.isAbsolute(pos.file)) {
 			return false;
 		}

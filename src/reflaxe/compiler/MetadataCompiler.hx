@@ -15,6 +15,7 @@ import haxe.macro.Expr;
 import haxe.macro.Type;
 
 using reflaxe.helpers.NullableMetaAccessHelper;
+using reflaxe.helpers.NullHelper;
 
 class MetadataCompiler {
 	public static function compileMetadata(options: BaseCompilerOptions, metaAccess: Null<MetaAccess>, target: haxe.display.Display.MetadataTarget): Null<String> {
@@ -24,7 +25,7 @@ class MetadataCompiler {
 
 		final compiledMeta = [];
 
-		if(options.allowMetaMetadata) {
+		if(options.allowMetaMetadata && options.autoNativeMetaFormat != null) {
 			final nativeMeta = metaAccess.extractNativeMeta();
 			if(nativeMeta != null) {
 				for(m in nativeMeta) {
@@ -70,7 +71,9 @@ class MetadataCompiler {
 						}
 						if(!matches) {
 							argsMatch = false;
-							err("Metadata argument of type '" + paramTypes[i].t + "' expected.", i < e.params.length ? e.params[i].pos : e.pos);
+							final params = e.params.or([]);
+							final pos = i < params.length ? params[i].pos : e.pos;
+							err("Metadata argument of type '" + paramTypes[i].t + "' expected.", pos);
 						}
 					}
 				}
@@ -95,7 +98,9 @@ class MetadataCompiler {
 	}
 
 	static function err(msg: String, pos: Position) {
+		#if eval
 		Context.error(msg, pos);
+		#end
 	}
 
 	static function getMetaArgInputType(e: Expr): String {

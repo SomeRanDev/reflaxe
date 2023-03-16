@@ -10,7 +10,7 @@ import reflaxe.BaseCompiler;
 
 class TargetCodeInjection {
 	public static function checkTargetCodeInjection(injectFunctionName: String, expr: TypedExpr, compiler: BaseCompiler): Null<String> {
-		var arguments: Array<TypedExpr>;
+		var arguments: Null<Array<TypedExpr>> = null;
 		final callIdent = switch(expr.expr) {
 			case TCall(e, el): {
 				switch(e.expr) {
@@ -24,15 +24,21 @@ class TargetCodeInjection {
 			case _: null;
 		}
 
-		return if(callIdent == injectFunctionName) {
+		return if(callIdent == injectFunctionName && arguments != null) {
 			if(arguments.length == 0) {
+				#if eval
 				Context.error(injectFunctionName + " requires at least one String argument.", expr.pos);
+				#end
 			}
 
-			final injectionString = switch(arguments[0].expr) {
+			final injectionString: String = switch(arguments[0].expr) {
 				case TConst(TString(s)): s;
 				case _: {
+					#if eval
 					Context.error(injectFunctionName + " first parameter must be a constant String.", arguments[0].pos);
+					#else
+					"";
+					#end
 				}
 			}
 
@@ -40,7 +46,9 @@ class TargetCodeInjection {
 			for(i in 1...arguments.length) {
 				final arg = compiler.compileExpression(arguments[i]);
 				if(arg == null) {
+					#if eval
 					Context.error("Compiled expression resulted in nothing.", arguments[i].pos);
+					#end
 				}
 				injectionArguments.push(arg);
 			}
@@ -53,7 +61,8 @@ class TargetCodeInjection {
 				} else {
 					"{}";
 				}
-				result += splitter + split[i];
+				// `split[i]` will never be null since i < split.length
+				@:nullSafety(Off) result += splitter + split[i];
 			}
 
 			result;

@@ -66,7 +66,9 @@ class RepeatVariableFixer {
 						if(regex.match(name)) {
 							final m = regex.matched(1);
 							final num = Std.parseInt(m);
-							name = name.substring(0, name.length - m.length) + (num + 1);
+							if(num != null) {
+								name = name.substring(0, name.length - m.length) + (num + 1);
+							}
 						} else {
 							name += "2";
 						}

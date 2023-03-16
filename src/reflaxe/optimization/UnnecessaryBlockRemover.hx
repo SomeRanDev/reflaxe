@@ -31,6 +31,7 @@ class UnnecessaryBlockRemover {
 		exprList = list;
 		requiredNames = [];
 		declaredVars = [];
+		multiUseVarNames = [];
 	}
 
 	public function removeUnnecessaryBlocks(): Array<TypedExpr> {
@@ -147,7 +148,10 @@ class UnnecessaryBlockRemover {
 			switch(e.expr) {
 				case TVar(tvar, maybeExpr): {
 					if(!varInstanceCount.exists(tvar.name)) varInstanceCount.set(tvar.name, []);
-					varInstanceCount.get(tvar.name).push(tvar.id);
+					final count = varInstanceCount.get(tvar.name);
+					if(count != null) {
+						count.push(tvar.id);
+					}
 				}
 				case _:
 			}

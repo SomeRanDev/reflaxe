@@ -43,10 +43,16 @@ class NullableMetaAccessHelper {
 		final meta = metaAccess.extract(":meta");
 		for(m in meta) {
 			if(m.params == null || m.params.length == 0) {
+				#if eval
 				Context.error("Native meta expression expected as parameter.", m.pos);
+				#end
+				return null;
 			}
 			if(!allowMultiParam && m.params.length > 1) {
+				#if eval
 				Context.error("Only one expression should be supplied for native meta.", m.pos);
+				#end
+				return null;
 			}
 			for(param in m.params) {
 				result.push(haxe.macro.ExprTools.toString(param));
@@ -77,11 +83,11 @@ class NullableMetaAccessHelper {
 
 	public static function extractPrimtiveFromAllMeta(metaAccess: Null<MetaAccess>, metaName: String, index: Int = 0): Array<Dynamic> {
 		if(metaAccess == null) return [];
-		final result = [];
+		final result: Array<Dynamic> = [];
 		final metaList = maybeExtract(metaAccess, metaName);
 		for(m in metaList) {
 			final prim = extractPrimitiveFromEntry(m, index);
-			if(result != null) result.push(prim);
+			if(prim != null) result.push(prim);
 		}
 		return result;
 	}
@@ -92,8 +98,10 @@ class NullableMetaAccessHelper {
 		if(metaList.length > 0) {
 			final result = [];
 			final m = metaList[0];
-			for(i in 0...m.params.length) {
-				result.push(extractPrimitiveFromEntry(m, i));
+			if(m.params != null) {
+				for(i in 0...m.params.length) {
+					result.push(extractPrimitiveFromEntry(m, i));
+				}
 			}
 			return result;
 		}
@@ -101,13 +109,16 @@ class NullableMetaAccessHelper {
 	}
 
 	public static function extractParamsFromAllMeta(metaAccess: Null<MetaAccess>, metaName: String): Array<Array<Dynamic>> {
-		if(metaAccess == null) return null;
+		if(metaAccess == null) return [];
 		final metaList = maybeExtract(metaAccess, metaName);
-		final result = [];
+		final result: Array<Array<Dynamic>> = [];
 		for(m in metaList) {
-			final params = [];
-			for(i in 0...m.params.length) {
-				params.push(extractPrimitiveFromEntry(m, i));
+			final params: Array<Dynamic> = [];
+			if(m.params != null) {
+				for(i in 0...m.params.length) {
+					final prim = extractPrimitiveFromEntry(m, i);
+					if(prim != null) params.push(prim);
+				}
 			}
 			result.push(params);
 		}
@@ -115,6 +126,7 @@ class NullableMetaAccessHelper {
 	}
 
 	private static function extractPrimitiveFromEntry(entry: MetadataEntry, index: Int = 0): Null<Dynamic> {
+		if(entry.params == null) return null;
 		return if(entry.params.length > index) {
 			switch(entry.params[index].expr) {
 				case EConst(CInt(v)): Std.string(v);
