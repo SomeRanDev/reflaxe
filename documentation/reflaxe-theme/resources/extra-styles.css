@@ -11,8 +11,8 @@
 
 a.treeLink,
 a.nav-header {
-  background: rgba(0, 0, 0, 0);
-  transition: background 0.1s, margin-left 0.2s, border 0.1s, border-style 0s, border-radius 0.3s ease-out, transform 0.3s;
+  background: rgba(0, 0, 0, 0) !important;
+  transition: padding-bottom 0.2s, background 0.1s, margin-left 0.2s, border 0.1s, border-style 0s, border-radius 0.3s ease-out, transform 0.3s;
   border: 3px solid transparent; /*&rgba(0, 0, 0, 0.03);*/
   border-radius: 0px;
   /*margin-left: 2px !important;*/
@@ -30,24 +30,40 @@ li.expando>a {
   color: #ffffff;
 }
 
+li.expando.expanded>a {
+  background: rgba(108,159,230,1) !important;
+}
+
 li.expando>a:hover {
   border-radius: 24px;
   border: 3px dashed rgba(255, 255, 255, 0.2) !important;
   background: rgba(84,123,177,1) !important;
 }
 
+li.expando.expanded>a:hover {
+  background: rgba(108,159,230,1) !important;
+}
+
+.dark-theme li.expando>a:hover {
+  border: 3px dashed rgba(255, 255, 255, 0.2) !important;
+}
+
 .dark-theme li.expando>a {
   background: rgba(60, 90, 120, 0.4) !important;
 }
 
+.dark-theme li.expando.expanded>a {
+  background: rgba(118, 172, 227, 0.6) !important;
+}
+
 a.treeLink:hover,
 a.nav-header:hover {
-  background: red;
   border: 3px solid rgba(20, 20, 200, 0.6) !important;
   border-radius: 24px !important;
   box-shadow: 3px 3px 3px rgba(0, 0, 0, 0.3);
-  transform: translate(-2px, -2px) !important;
-  /*margin-left: 1px;*/
+  /*transform: translate(-2px, -2px) !important;*/
+  margin-left: -13px;
+  /*padding-bottom: 4px !important;*/
 }
 
 .dark-theme a.treeLink:hover,
@@ -64,7 +80,7 @@ a.nav-header:active {
 .nav-list>.active>a.treeLink:focus,
 .nav-list>.active>a.nav-header,
 .nav-list>.active>a.nav-header:focus {
-  background: #269;
+  background: #269 !important;
   border: 3px solid #269;
   border-radius: 24px;
   transform: translate(0px, 0px);
@@ -84,3 +100,154 @@ a.nav-header:active {
 .dark-theme .nav-list>.active>a.treeLink:hover {
   border: 3px solid rgba(255, 255, 255, 0.6);
 }
+
+/* SCROLL BAR */
+
+.sidebar-nav {
+}
+
+.sidebar-nav::-webkit-scrollbar {
+  width: 10px;
+}
+
+.sidebar-nav::-webkit-scrollbar-track {
+  border-radius: 8px;
+  background-color: #e7e7e7;
+  border: 1px solid #cacaca;
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb {
+  border-radius: 8px;
+  background-color: #bbc2f0;
+}
+
+/* TITLE BAR */
+
+.navbar {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.47) !important;
+  box-shadow: 0px 10px 10px rgba(0, 0, 0, 0.3);
+}
+
+.navbar-inner {
+  background-color: #ac8aff !important;
+  /*background: linear-gradient(90deg, #ac8aff 11px, transparent 1%) center, linear-gradient(#ac8aff 11px, transparent 1%) center, #ffffff !important;
+  background-size: 12px 12px !important;*/
+}
+
+.brand {
+  margin: 10px !important;
+  background-color: #ffffff;
+  border-radius: 6px;
+  box-shadow: 4px 4px 4px rgba(0, 0, 0, 0.5);
+}
+
+.dark-theme .brand {
+  background-color: #000000 !important;
+}
+
+/* CODE */
+
+h3 code {
+  background-color: white !important;
+  box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.2);
+  border: 3px double rgba(0, 0, 0, 0.2);
+  border-radius: 1px;
+  padding-left: 12px;
+  padding-right: 12px;
+}
+
+.dark-theme h3 code {
+  background-color: rgba(10, 10, 10, 1) !important;
+}
+
+body {
+  background: linear-gradient(90deg, #ebebeb 11px, transparent 1%) center, linear-gradient(#ebebeb 11px, transparent 1%) center, rgba(0, 0, 0, 0.4);
+  background-size: 12px 12px !important;
+}
+
+@layer {
+  .dark-theme body {
+    background: linear-gradient(90deg, #111 11px, transparent 1%) center, linear-gradient(#111 11px, transparent 1%) center, #444444 !important;
+    background-size: 12px 12px !important;
+  }
+}
+
+/* CODE HEADER */
+
+.page-header, .table-condensed {
+  background-color: rgba(255, 255, 255, 0.7);
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.3);
+  padding: 8px;
+}
+
+.dark-theme .page-header {
+  background-color: rgba(0, 0, 0, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* BUTTON */
+
+/* https://codepen.io/fabiocberg/pen/wvqpXqg */
+
+.button-paper {
+  align-self: center;
+  background-color: #fff;
+  background-image: none;
+  background-position: 0 90%;
+  background-repeat: repeat no-repeat;
+  background-size: 4px 3px;
+  border-radius: 15px 225px 255px 15px 15px 255px 225px 15px;
+  border-style: solid;
+  border-width: 2px;
+  box-shadow: rgba(0, 0, 0, .2) 15px 28px 25px -18px;
+  box-sizing: border-box;
+  color: #41403e;
+  cursor: pointer;
+  display: inline-block;
+  font-family: Neucha, sans-serif;
+  font-size: 1rem;
+  line-height: 23px;
+  outline: none;
+  padding: .75rem;
+  text-decoration: none;
+  transition: transform 235ms ease-in-out;
+  border-bottom-left-radius: 15px 255px;
+  border-bottom-right-radius: 225px 15px;
+  border-top-left-radius: 255px 15px;
+  border-top-right-radius: 15px 225px;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+}
+
+.dark-theme .button-paper {
+  background-color: #333;
+  color: #ffffff;
+}
+
+.button-paper:hover {
+  box-shadow: rgba(0, 0, 0, .3) 2px 8px 8px -5px;
+  transform: translate3d(0, 2px, 0);
+}
+
+.button-paper:active {
+  transform: translate3d(0, 4px, 0);
+  transition: transform 100ms ease-in-out;
+}
+
+/* SEARCH */
+
+.search-box {
+  padding: auto;
+  padding-top: 20px;
+  border: 1px solid rgba(0, 0, 0, 0.3);
+}
+
+.input-prepend.input-block-level {
+  margin-left: 0px;
+  margin-right: 8px;
+  box-shadow: 4px 4px 4px rgba(0, 0, 0, 0.3);
+  border-radius: 4px;
+}
+
