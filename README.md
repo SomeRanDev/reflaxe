@@ -8,6 +8,8 @@
 
 All you need to worry about is programming the conversion from Haxe's typed AST to your desired programming language. Reflaxe handles organizing the input AST, reading user configuration, and generating the output file(s), while also providing various configuration options and helper functions for Haxe target developers.
 
+[Read the docs here!](https://robertborghese.github.io/reflaxe/)
+
 &nbsp;
 &nbsp;
 
