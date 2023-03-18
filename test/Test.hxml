@@ -37,5 +37,9 @@
 # so now it tells the compiler to compile to our "test" target to the "out" directory.
 -D testoutput=out
 
-# Main function
+# -D mainClass is only required for Haxe v4.2.5 and below
+# Set it to the same value of `-main`.
+-D mainClass=MyClass
+
+# Main class
 -main MyClass

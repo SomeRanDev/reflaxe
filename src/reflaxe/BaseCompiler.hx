@@ -477,6 +477,69 @@ abstract class BaseCompiler {
 	}
 
 	// =======================================================
+	// * getMainExpr
+	// 
+	// Returns the "main" typed expression for the program.
+	// For example, if `-main MyClass` is set in the project,
+	// the expression will be: `MyClass.main()`.
+	//
+	// Please note if using Haxe v4.2.5 or below, the main
+	// class must be defined using `-D mainClass`.
+	// For example: `-D mainClass=MyClass`.
+	// =======================================================
+	public function getMainExpr(): Null<TypedExpr> {
+		#if macro
+			#if (haxe_ver >= "4.3.0")
+			return Context.getMainExpr();
+			#else
+			final mainClass = Context.definedValue("mainClass");
+			if(mainClass == null || mainClass.length == 0) {
+				return null;
+			}
+			final pos = Context.makePosition({ file: "(unknown)", min: 0, max: 0 });
+			return try {
+				Context.typeExpr(macro @:pos(pos) $i{mainClass}.main());
+			} catch(e) {
+				Context.error("Error occured trying to get main class:\n" + e, pos);
+				null;
+			}
+			#end
+		#else
+		return null;
+		#end
+	}
+
+	// =======================================================
+	// * getMainExpr
+	// 
+	// Extracts the `ModuleType` of the main class based on
+	// `getMainExpr` function.
+	// =======================================================
+	public function getMainModule(): Null<ModuleType> {
+		final mainExpr = getMainExpr();
+
+		if(mainExpr == null) {
+			return null;
+		}
+
+		// The main expression should(?) always be a call to a static function.
+		return switch(mainExpr.expr) {
+			case TCall(callExpr, _): {
+				switch(callExpr.expr) {
+					case TField(_, fa): {
+						switch(fa) {
+							case FStatic(clsRef, _): TClassDecl(clsRef);
+							case _: null;
+						}
+					}
+					case _: null;
+				}
+			}
+			case _: null;
+		}
+	}
+
+	// =======================================================
 	// * typeUsage
 	// 
 	// Store and reference the typeUsage Map for the current
