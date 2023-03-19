@@ -12,6 +12,7 @@ import haxe.macro.Expr;
 import haxe.macro.Type;
 
 using reflaxe.helpers.NullableMetaAccessHelper;
+using reflaxe.helpers.PositionHelper;
 using reflaxe.helpers.TVarHelper;
 using reflaxe.helpers.TypedExprHelper;
 using reflaxe.helpers.TypeHelper;
@@ -50,7 +51,7 @@ class CaptureVariableFixer {
 		arrayWrapVarIds = [];
 
 		#if eval
-		tempPos = haxe.macro.Context.makePosition({ min: 0, max: 0, file: "" });
+		tempPos = PositionHelper.unknownPos();
 		#end
 	}
 

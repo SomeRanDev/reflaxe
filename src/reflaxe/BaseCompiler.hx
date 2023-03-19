@@ -19,6 +19,7 @@ using StringTools;
 using reflaxe.helpers.ClassTypeHelper;
 using reflaxe.helpers.ModuleTypeHelper;
 using reflaxe.helpers.NullableMetaAccessHelper;
+using reflaxe.helpers.PositionHelper;
 using reflaxe.helpers.TypedExprHelper;
 using reflaxe.helpers.TypeHelper;
 
@@ -512,7 +513,7 @@ abstract class BaseCompiler {
 			if(mainClass == null || mainClass.length == 0) {
 				return null;
 			}
-			final pos = Context.makePosition({ file: "(unknown)", min: 0, max: 0 });
+			final pos = PositionHelper.unknownPos();
 			return try {
 				Context.typeExpr(macro @:pos(pos) $i{mainClass}.main());
 			} catch(e) {

@@ -19,6 +19,7 @@ import haxe.macro.Type;
 
 using reflaxe.helpers.NullableMetaAccessHelper;
 using reflaxe.helpers.NullHelper;
+using reflaxe.helpers.PositionHelper;
 using reflaxe.helpers.TypedExprHelper;
 
 class EverythingIsExprSanitizer {
@@ -343,7 +344,7 @@ class EverythingIsExprSanitizer {
 	// Converts (a = b = 1) => (b = 1; a = b)
 	// =======================================================
 	function handleValueExpr(e: TypedExpr, varNameOverride: Null<String> = null): TypedExpr {
-		if(e == null) return { expr: TIdent("null"), pos: makeEmptyPos(), t: TDynamic(null) };
+		if(e == null) return { expr: TIdent("null"), pos: PositionHelper.unknownPos(), t: TDynamic(null) };
 		#if (haxe_ver >= "4.3.0")
 		if(compiler.options.convertNullCoal && isNullCoalExpr(e)) {
 			final newExpr = standardizeNullCoalValue(e);
@@ -499,7 +500,7 @@ class EverythingIsExprSanitizer {
 	function standardizeNullCoalValue(e: TypedExpr): Null<TypedExpr> {
 		return switch(e.expr) {
 			case TBinop(OpNullCoal, e1, e2): {
-				final pos = makeEmptyPos();
+				final pos = PositionHelper.unknownPos();
 				final t = TDynamic(null);
 				final newName = nameGenerator.generateName(e.t, "maybeNull");
 				final newNameExpr = { expr: TIdent(newName), t: t, pos: pos };
@@ -560,7 +561,7 @@ class EverythingIsExprSanitizer {
 
 		if(opInfo == null) return null;
 
-		final pos = makeEmptyPos();
+		final pos = PositionHelper.unknownPos();
 		final t = TDynamic(null);
 
 		function getAddSubOp(isAdd: Bool) return isAdd ? Binop.OpAdd : Binop.OpSub;
@@ -631,7 +632,7 @@ class EverythingIsExprSanitizer {
 	}
 
 	function standardizeFunctionValue(e: TypedExpr): Null<TypedExpr> {
-		final pos = makeEmptyPos();
+		final pos = PositionHelper.unknownPos();
 		final t = TDynamic(null);
 
 		final args = [];
@@ -753,18 +754,8 @@ class EverythingIsExprSanitizer {
 	function makeTExpr(def: TypedExprDef, pos: Null<haxe.macro.Expr.Position> = null, t: Null<haxe.macro.Type> = null): TypedExpr {
 		return {
 			expr: def,
-			pos: pos.or(makeEmptyPos()),
+			pos: pos.or(PositionHelper.unknownPos()),
 			t: t.or(TDynamic(null))
-		}
-	}
-
-	function makeEmptyPos(): haxe.macro.Expr.Position {
-		return {
-			#if eval
-			haxe.macro.Context.makePosition({ min: 0, max: 0, file: "" });
-			#else
-			{ min: 0, max: 0, file: "" };
-			#end
 		}
 	}
 }
