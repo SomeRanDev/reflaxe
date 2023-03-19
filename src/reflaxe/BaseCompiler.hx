@@ -313,6 +313,22 @@ abstract class BaseCompiler {
 	public function onAbstractAdded(cls: AbstractType, output: Null<String>): Void {}
 
 	// =======================================================
+	// * Compile-End Callbacks
+	//
+	// Functions accumulated while compiling to call upon completion.
+	// =======================================================
+	public var compileEndCallbacks(default, null): Array<() -> Void> = [];
+
+	// Calls the provided callback at the end of compilation.
+	// Useful for running code upon compiling a class or expression that will
+	// be able to make decisions based on the final state of the compiler.
+	//
+	// I.e: Adding reflection code only if a reflection function is used.
+	function addCompileEndCallback(callback: () -> Void) {
+		compileEndCallbacks.push(callback);
+	}
+
+	// =======================================================
 	// * new
 	// =======================================================
 	public function new() {}
