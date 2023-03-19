@@ -154,10 +154,20 @@ class ReflectCompiler {
 	}
 
 	static function useCompiler(compiler: BaseCompiler) {
+		// Start
 		callInitCallbacks(compiler);
 		compiler.onCompileStart();
+
+		// Compile
 		addClassesToCompiler(compiler);
+
+		// End
 		compiler.onCompileEnd();
+		for(callback in compiler.compileEndCallbacks) {
+			callback();
+		}
+
+		// Generate files
 		generateFiles(compiler);
 		compiler.onOutputComplete();
 	}
