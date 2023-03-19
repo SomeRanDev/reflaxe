@@ -234,15 +234,6 @@ class TypeHelper {
 		}
 	}
 
-	public static function isNull(t: Type): Bool {
-		return switch(t) {
-			case TAbstract(absRef, params) if(params.length == 1): {
-				absRef.get().name == "Null";
-			}
-			case _: false;
-		}
-	}
-
 	public static function isAny(t: Type): Bool {
 		return switch(t) {
 			case TAbstract(absRef, []): {
@@ -252,6 +243,25 @@ class TypeHelper {
 		}
 	}
 
+	// ----------------------------
+	// Checks if the type is a Null<T>.
+	public static function isNull(t: Type): Bool {
+		return switch(t) {
+			case TAbstract(absRef, params) if(params.length == 1): {
+				absRef.get().name == "Null";
+			}
+			case _: false;
+		}
+	}
+
+	// ----------------------------
+	// Checks if the type is Class<T>.
+	public static function isClass(t: Type): Bool {
+		return getClassParameter(t) != null;
+	}
+
+	// ----------------------------
+	// Checks if the type is a TMono.
 	public static function isMonomorph(t: Type): Bool {
 		return switch(t) {
 			case TMono(tRef): true;
@@ -272,11 +282,43 @@ class TypeHelper {
 		}
 	}
 
+	// ----------------------------
+	// If this is a placeholder type for a type parameter,
+	// this returns the name of the type parameter.
 	public static function getTypeParameterName(t: Type): Null<String> {
 		return switch(t) {
 			case TInst(clsRef, params): {
 				switch(clsRef.get().kind) {
 					case KTypeParameter(_): clsRef.get().name;
+					case _: null;
+				}
+			}
+			case _: null;
+		}
+	}
+
+	// ----------------------------
+	// If the type is Class<T>, this returns T.
+	public static function getClassParameter(t: Type): Null<ModuleType> {
+		return switch(t) {
+			case TAbstract(absRef, [param]): {
+				final abs = absRef.get();
+				if(abs.name == "Class" && abs.module == "Class" && abs.pack.length == 0) {
+					toModuleType(param);
+				} else {
+					null;
+				}
+			}
+			case TType(defRef, []): {
+				switch(defRef.get().type) {
+					case TAnonymous(anon): {
+						switch(anon.get().status) {
+							case AClassStatics(clsRef): TClassDecl(clsRef);
+							case AEnumStatics(enumRef): TEnumDecl(enumRef);
+							case AAbstractStatics(absRef): TAbstract(absRef);
+							case _: null;
+						}
+					}
 					case _: null;
 				}
 			}
