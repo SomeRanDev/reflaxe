@@ -297,12 +297,12 @@ class ReflectCompiler {
 				}
 				case FMethod(methodKind): {
 					if(shouldGenerateFunc(field, compiler, isStatic, methodKind)) {
-						final tfunc = findTFunc(field);
-						if(tfunc != null) {
+						final data = findFuncData(field);
+						if(data != null) {
 							funcFields.push({
 								isStatic: isStatic,
 								kind: methodKind,
-								tfunc: preprocessFunction(compiler, field, tfunc),
+								data: preprocessFunction(compiler, field, data),
 								field: field
 							});
 						} else {
@@ -333,23 +333,26 @@ class ReflectCompiler {
 		return compiler.compileClass(cls, varFields, funcFields);
 	}
 
-	static function preprocessFunction(compiler: BaseCompiler, field: ClassField, tfunc: TFunc): TFunc {
+	static function preprocessFunction(compiler: BaseCompiler, field: ClassField, data: ClassFuncData): ClassFuncData {
+		if(data.expr == null) {
+			return data;
+		}
 		if(compiler.options.enforceNullTyping) {
-			NullTypeEnforcer.modifyExpression(tfunc.expr);
+			NullTypeEnforcer.modifyExpression(data.expr);
 		}
 		if(compiler.options.normalizeEIE) {
-			final eiec = new EverythingIsExprSanitizer(tfunc.expr, compiler, null);
-			tfunc.expr = eiec.convertedExpr();
+			final eiec = new EverythingIsExprSanitizer(data.expr, compiler, null);
+			data.expr = eiec.convertedExpr();
 		}
 		if(compiler.options.preventRepeatVars) {
-			final rvf = new RepeatVariableFixer(tfunc.expr, null, tfunc.args.map(a -> a.v.name));
-			tfunc.expr = rvf.fixRepeatVariables();
+			final rvf = new RepeatVariableFixer(data.expr, null, data.args.map(a -> a.name));
+			data.expr = rvf.fixRepeatVariables();
 		}
 		if(compiler.options.wrapLambdaCaptureVarsInArray) {
-			final cfv = new CaptureVariableFixer(tfunc.expr);
-			tfunc.expr = cfv.fixCaptures();
+			final cfv = new CaptureVariableFixer(data.expr);
+			data.expr = cfv.fixCaptures();
 		}
-		return tfunc;
+		return data;
 	}
 
 	// =======================================================
@@ -394,17 +397,26 @@ class ReflectCompiler {
 	}
 
 	// =======================================================
-	// * findTFunc
+	// * findFuncData
 	// =======================================================
-	static function findTFunc(field: ClassField): Null<TFunc> {
+	static function findFuncData(field: ClassField): Null<ClassFuncData> {
 		final e = field.expr();
-		return if(e != null) {
+		final tfunc = if(e != null) {
 			switch(e.expr) {
 				case TFunction(tfunc): tfunc;
 				case _: null;
 			}
 		} else {
 			null;
+		}
+		return switch(field.type) {
+			case TFun(args, ret): {
+				ret: ret,
+				args: args,
+				tfunc: tfunc,
+				expr: tfunc != null ? tfunc.expr : null
+			}
+			case _: null;
 		}
 	}
 }

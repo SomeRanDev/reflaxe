@@ -252,8 +252,9 @@ enum abstract MetaArgumentType(String) to String {
 // Typedefs used for storing ClassFields and their
 // unwrapped data.
 // =======================================================
+typedef ClassFuncData = { ret: Type, args: Array<{t: Type, opt: Bool, name: String}>, tfunc: TFunc, expr: Null<TypedExpr> };
 typedef ClassFieldVars = Array<{ isStatic: Bool, read: VarAccess, write: VarAccess, field: ClassField }>;
-typedef ClassFieldFuncs = Array<{ isStatic: Bool, kind: MethodKind, tfunc: TFunc, field: ClassField }>;
+typedef ClassFieldFuncs = Array<{ isStatic: Bool, kind: MethodKind, data: ClassFuncData, field: ClassField }>;
 
 // =======================================================
 // * EnumOptions
