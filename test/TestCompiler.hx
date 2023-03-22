@@ -79,9 +79,10 @@ class TestCompiler extends BaseCompiler {
 		var funcString = "";
 		for(ff in funcFields) {
 			final field = ff.field;
-			final tfunc = ff.tfunc;
-			final funcHeader = (ff.isStatic ? "static " : "") + "func " + field.getNameOrNative() + "(" + tfunc.args.map(a -> a.v.getNameOrNative()).join(", ") + "):\n";
-			funcString += (funcHeader + compileClassFuncExpr(tfunc.expr).tab()).tab() + "\n\n";
+			final data = ff.data;
+			final funcHeader = (ff.isStatic ? "static " : "") + "func " + field.getNameOrNative() + "(" + data.args.map(a -> a.name).join(", ") + "):\n";
+			final funcContent = data.expr != null ? compileClassFuncExpr(data.expr) : "pass";
+			funcString += (funcHeader + funcContent.tab()).tab() + "\n\n";
 		}
 
 		// Combine all the compiled content together and return it.
