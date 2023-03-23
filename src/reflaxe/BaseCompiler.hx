@@ -820,19 +820,13 @@ abstract class BaseCompiler {
 	}
 
 	// =======================================================
-	// * compileNativeFunctionCodeMeta
+	// * extractStringFromMeta
 	//
-	// This function is for compiling the result of functions
-	// using the @:nativeFunctionCode meta.
+	// Used in compileNativeFunctionCodeMeta & compileNativeTypeCodeMeta.
 	// =======================================================
-	public function compileNativeFunctionCodeMeta(callExpr: TypedExpr, arguments: Array<TypedExpr>, typeParams: Null<Array<() -> String>> = null): Null<String> {
-		final declaration = callExpr.getDeclarationMeta(arguments);
-		if(declaration == null) {
-			return null;
-		}
-		final meta = declaration.meta;
-		if(meta.maybeHas(":nativeFunctionCode")) {
-			final entry = meta.maybeExtract(":nativeFunctionCode")[0];
+	function extractStringFromMeta(meta: MetaAccess, name: String): Null<{ entry: MetadataEntry, code: String }> {
+		if(meta.maybeHas(name)) {
+			final entry = meta.maybeExtract(name)[0];
 
 			// Prevent null safety error from `entry.params`.
 			@:nullSafety(Off)
@@ -856,14 +850,37 @@ abstract class BaseCompiler {
 				}
 			}
 
-			var result = code;
+			{
+				entry: entry,
+				code: code
+			};
+		} else {
+			null;
+		}
+	}
+
+	// =======================================================
+	// * compileNativeFunctionCodeMeta
+	//
+	// This function is for compiling the result of functions
+	// using the @:nativeFunctionCode meta.
+	// =======================================================
+	public function compileNativeFunctionCodeMeta(callExpr: TypedExpr, arguments: Array<TypedExpr>, typeParams: Null<Array<() -> String>> = null): Null<String> {
+		final declaration = callExpr.getDeclarationMeta(arguments);
+		if(declaration == null) {
+			return null;
+		}
+		final meta = declaration.meta;
+		final data = extractStringFromMeta(meta, ":nativeFunctionCode");
+		if(data != null) {
+			var result = data.code;
 
 			if(code.contains("{this}")) {
 				final thisExpr = declaration.thisExpr != null ? compileNFCThisExpression(declaration.thisExpr) : null;
 				if(thisExpr == null) {
 					if(declaration.thisExpr == null) {
 						#if eval
-						Context.error("Cannot use {this} on @:nativeFunctionCode meta for constructors.", entry.pos);
+						Context.error("Cannot use {this} on @:nativeFunctionCode meta for constructors.", data.entry.pos);
 						#end
 					} else {
 						onExpressionUnsuccessful(callExpr.pos);
@@ -912,6 +929,37 @@ abstract class BaseCompiler {
 	// =======================================================
 	public function compileNFCThisExpression(expr: TypedExpr): String {
 		return compileExpressionOrError(expr); 
+	}
+
+	// =======================================================
+	// * compileNativeTypeCodeMeta
+	//
+	// This function is for compiling the result of functions
+	// using the @:nativeTypeCode meta.
+	// =======================================================
+	public function compileNativeTypeCodeMeta(type: Type, typeParams: Null<Array<() -> String>> = null): Null<String> {
+		final meta = type.getMeta();
+		if(meta == null) {
+			return null;
+		}
+
+		final data = extractStringFromMeta(meta, ":nativeTypeCode");
+		if(data != null) {
+			var result = data.code;
+
+			if(typeParams != null) {
+				for(i in 0...typeParams.length) {
+					final key = "{type" + i + "}";
+					if(code.contains(key)) {
+						result = result.replace(key, typeParams[i]());
+					}
+				}
+			}
+
+			return result;
+		}
+
+		return null;
 	}
 }
 
