@@ -135,7 +135,22 @@ class EverythingIsExprSanitizer {
 				if(old == null) {
 					throw "Unexpected null encountered.";
 				}
-				if(!isBlocklikeExpr(old)) {
+
+				// If there's a return statement at the end,
+				// we don't want to assign from it.
+				// 
+				// Convert:
+				// var a = { return 123; };
+				//
+				// To:
+				// var a;
+				// { return 123; }
+				final isReturn = switch(old.expr) {
+					case TReturn(_): true;
+					case _: false;
+				}
+
+				if(!isReturn && !isBlocklikeExpr(old)) {
 					topScopeArray[index] = {
 						expr: TBinop(OpAssign, assigneeExpr, old),
 						pos: assigneeExpr.pos,
