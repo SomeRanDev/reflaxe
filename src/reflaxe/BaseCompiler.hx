@@ -825,7 +825,7 @@ abstract class BaseCompiler {
 	// Used in compileNativeFunctionCodeMeta & compileNativeTypeCodeMeta.
 	// =======================================================
 	function extractStringFromMeta(meta: MetaAccess, name: String): Null<{ entry: MetadataEntry, code: String }> {
-		if(meta.maybeHas(name)) {
+		return if(meta.maybeHas(name)) {
 			final entry = meta.maybeExtract(name)[0];
 
 			// Prevent null safety error from `entry.params`.
@@ -873,7 +873,8 @@ abstract class BaseCompiler {
 		final meta = declaration.meta;
 		final data = extractStringFromMeta(meta, ":nativeFunctionCode");
 		if(data != null) {
-			var result = data.code;
+			final code = data.code;
+			var result = code;
 
 			if(code.contains("{this}")) {
 				final thisExpr = declaration.thisExpr != null ? compileNFCThisExpression(declaration.thisExpr) : null;
@@ -945,7 +946,8 @@ abstract class BaseCompiler {
 
 		final data = extractStringFromMeta(meta, ":nativeTypeCode");
 		if(data != null) {
-			var result = data.code;
+			final code = data.code;
+			var result = code;
 
 			if(typeParams != null) {
 				for(i in 0...typeParams.length) {
