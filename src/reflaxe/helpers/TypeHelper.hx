@@ -283,6 +283,11 @@ class TypeHelper {
 	}
 
 	// ----------------------------
+	public static function isTypeParameter(t: Type): Bool {
+		return getTypeParameterName(t) != null;
+	}
+
+	// ----------------------------
 	// If this is a placeholder type for a type parameter,
 	// this returns the name of the type parameter.
 	public static function getTypeParameterName(t: Type): Null<String> {
