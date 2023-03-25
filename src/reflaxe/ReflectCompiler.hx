@@ -386,7 +386,7 @@ class ReflectCompiler {
 			true;
 		} else {
 			switch([read, write]) {
-				case [AccNormal | AccNo, AccNormal | AccNo]: true;
+				case [AccNormal | AccNo | AccCtor, AccNormal | AccNo | AccCtor]: true;
 				case _: !compiler.options.ignoreNonPhysicalFields;
 			}
 		}
