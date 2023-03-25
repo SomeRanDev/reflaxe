@@ -10,6 +10,7 @@ package reflaxe.helpers;
 
 import haxe.macro.Type;
 
+using reflaxe.helpers.ClassTypeHelper;
 using reflaxe.helpers.NameMetaHelper;
 using reflaxe.helpers.TypeHelper;
 
@@ -117,15 +118,34 @@ class TypedExprHelper {
 		}
 	}
 
+	public static function getFieldAccess(expr: TypedExpr): Null<FieldAccess> {
+		return switch(unwrapParenthesis(expr).expr) {
+			case TField(e, fa): fa;
+			case _: null;
+		}
+	}
+
 	public static function getClassField(expr: TypedExpr): Null<ClassField> {
-		return switch(expr.expr) {
-			case TParenthesis(e): getClassField(e);
-			case TField(e, fa): {
-				switch(fa) {
-					case FInstance(_, _, cfRef): cfRef.get();
-					case FStatic(_, cfRef): cfRef.get();
-					case FAnon(cfRef): cfRef.get();
-					case FClosure(_, cfRef): cfRef.get();
+		return switch(getFieldAccess(expr)) {
+			case FInstance(_, _, cfRef): cfRef.get();
+			case FStatic(_, cfRef): cfRef.get();
+			case FAnon(cfRef): cfRef.get();
+			case FClosure(_, cfRef): cfRef.get();
+			case _: null;
+		}
+	}
+
+	public static function isStaticCall(expr: TypedExpr, classPath: String, funcName: String): Null<Array<TypedExpr>> {
+		return switch(unwrapParenthesis(expr).expr) {
+			case TCall(callExpr, callArgs): {
+				switch(getFieldAccess(callExpr)) {
+					case FStatic(clsRef, cfRef): {
+						if(clsRef.get().matchesDotPath(classPath) && cfRef.get().name == funcName) {
+							callArgs;
+						} else {
+							null;
+						}
+					}
 					case _: null;
 				}
 			}
