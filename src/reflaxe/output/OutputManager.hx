@@ -103,7 +103,21 @@ class OutputManager {
 		}
 
 		for(path => content in compiler.extraFiles) {
-			saveFile(path, content.filter(s -> StringTools.trim(s).length > 0).join("\n\n"));
+			final keys = [];
+			for(priority => cpp in content) {
+				if(StringTools.trim(cpp).length > 0) {
+					keys.push(priority);
+				}
+			}
+
+			keys.sort((a, b) -> a - b);
+
+			var result = [];
+			for(k in keys) {
+				result.push(content.get(k));
+			}
+
+			saveFile(path, result.join("\n\n"));
 		}
 
 		if(shouldDeleteOldOutput()) {

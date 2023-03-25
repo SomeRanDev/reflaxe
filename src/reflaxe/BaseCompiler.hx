@@ -386,11 +386,11 @@ abstract class BaseCompiler {
 	// =======================================================
 	// * Extra Files
 	// =======================================================
-	public var extraFiles(default, null): Map<String, Array<String>> = [];
+	public var extraFiles(default, null): Map<String, Map<Int, String>> = [];
 
 	// Set all the content for a file.
 	function setExtraFile(path: OutputPath, content: String = "") {
-		extraFiles.set(path.toString(), [content]);
+		extraFiles.set(path.toString(), [0 => content]);
 	}
 
 	// Check if the file exists.
@@ -417,7 +417,7 @@ abstract class BaseCompiler {
 		} else {
 			final current = extraFiles.get(pathString);
 			if(current != null) {
-				current.length <= priority ? "" : current[priority];
+				current.exists(priority) ? current[priority] : "";
 			} else {
 				"";
 			}
@@ -434,9 +434,6 @@ abstract class BaseCompiler {
 		}
 		final current = extraFiles.get(pathString);
 		if(current != null) {
-			while(current.length <= priority) {
-				current.push("");
-			}
 			current[priority] = content;
 			extraFiles.set(pathString, current);
 		}
