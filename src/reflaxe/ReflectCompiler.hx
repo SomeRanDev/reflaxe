@@ -345,7 +345,7 @@ class ReflectCompiler {
 			data.expr = eiec.convertedExpr();
 		}
 		if(compiler.options.preventRepeatVars) {
-			final rvf = new RepeatVariableFixer(data.expr, null, data.args.map(a -> a.name));
+			final rvf = new RepeatVariableFixer(data.expr, null, data.tfunc.args.map(a -> a.v.name));
 			data.expr = rvf.fixRepeatVariables();
 		}
 		if(compiler.options.wrapLambdaCaptureVarsInArray) {
