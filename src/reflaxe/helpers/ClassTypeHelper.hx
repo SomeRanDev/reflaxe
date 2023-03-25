@@ -51,6 +51,19 @@ class ClassTypeHelper {
 			case _: false;
 		}
 	}
+
+	public static function matchesDotPath(cls: CommonModuleTypeData, path: String): Bool {
+		if(cls.pack.length == 0) {
+			return cls.name == path;
+		}
+		if((cls.pack.join(".") + "." + cls.name) == path) {
+			return true;
+		}
+		if((cls.module + "." + cls.name) == path) {
+			return true;
+		}
+		return false;
+	}
 }
 
 #end
