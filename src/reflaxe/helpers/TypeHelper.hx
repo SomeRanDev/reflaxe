@@ -185,6 +185,26 @@ class TypeHelper {
 		return params.map(tp -> tp.t);
 	}
 
+	// ----------------------------
+	// Checks if the type is TMono.
+	public static function isMonomorph(t: Type): Bool {
+		return switch(t) {
+			case TMono(_): true;
+			case _: false;
+		}
+	}
+
+	// ----------------------------
+	// Checks if the type is TType.
+	public static function isTypedef(t: Type): Bool {
+		return switch(t) {
+			case TType(_, _): true;
+			case _: false;
+		}
+	}
+
+	// ----------------------------
+	// Checks if the type is TAnonymous.
 	public static function isAnonStruct(t: Type): Bool {
 		return switch(t) {
 			case TAnonymous(_): true;
@@ -192,6 +212,8 @@ class TypeHelper {
 		}
 	}
 
+	// ----------------------------
+	// Checks if the type is TDynamic.
 	public static function isDynamic(t: Type): Bool {
 		return switch(t) {
 			case TDynamic(_): true;
@@ -199,6 +221,8 @@ class TypeHelper {
 		}
 	}
 
+	// ----------------------------
+	// Checks if the type is the String class.
 	public static function isString(t: Type): Bool {
 		return switch(t) {
 			case TInst(clsTypeRef, []): {
@@ -214,6 +238,8 @@ class TypeHelper {
 		}
 	}
 
+	// ----------------------------
+	// Checks if the type is an Int, Float, or Bool.
 	public static function isPrimitive(t: Type): Bool {
 		return switch(t) {
 			case TAbstract(abTypeRef, []): {
@@ -224,6 +250,8 @@ class TypeHelper {
 		}
 	}
 
+	// ----------------------------
+	// Checks if the type is an Int or Float.
 	public static function isNumberType(t: Type): Bool {
 		return switch(t) {
 			case TAbstract(abTypeRef, []): {
@@ -234,6 +262,8 @@ class TypeHelper {
 		}
 	}
 
+	// ----------------------------
+	// Checks if the type is the Any abstract.
 	public static function isAny(t: Type): Bool {
 		return switch(t) {
 			case TAbstract(absRef, []): {
@@ -258,15 +288,6 @@ class TypeHelper {
 	// Checks if the type is Class<T>.
 	public static function isClass(t: Type): Bool {
 		return getClassParameter(t) != null;
-	}
-
-	// ----------------------------
-	// Checks if the type is a TMono.
-	public static function isMonomorph(t: Type): Bool {
-		return switch(t) {
-			case TMono(tRef): true;
-			case _: false;
-		}
 	}
 
 	// ----------------------------
