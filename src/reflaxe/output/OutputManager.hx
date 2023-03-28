@@ -114,7 +114,9 @@ class OutputManager {
 
 			var result = [];
 			for(k in keys) {
-				result.push(content.get(k));
+				if(StringTools.trim(content.get(k)).length > 0) {
+					result.push(content.get(k));
+				}
 			}
 
 			saveFile(path, result.join("\n\n"));
