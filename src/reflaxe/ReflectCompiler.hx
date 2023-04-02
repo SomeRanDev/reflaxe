@@ -22,6 +22,7 @@ import reflaxe.compiler.RepeatVariableFixer;
 import reflaxe.compiler.CaptureVariableFixer;
 import reflaxe.compiler.NullTypeEnforcer;
 import reflaxe.compiler.TypeUsageTracker;
+import reflaxe.input.ClassHierarchyTracker;
 import reflaxe.input.ModuleUsageTracker;
 
 using reflaxe.helpers.SyntaxHelper;
@@ -154,6 +155,11 @@ class ReflectCompiler {
 	}
 
 	static function useCompiler(compiler: BaseCompiler) {
+		// Track Hierarchy
+		if(compiler.options.trackClassHierarchy) {
+			ClassHierarchyTracker.processAllClasses(moduleTypes);
+		}
+
 		// Start
 		callInitCallbacks(compiler);
 		compiler.onCompileStart();

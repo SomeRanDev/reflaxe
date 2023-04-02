@@ -161,6 +161,12 @@ class BaseCompilerOptions {
 	public var trackUsedTypes: Bool = false;
 
 	// -------------------------------------------------------
+	// If "true", functions from `ClassHierarchyTracker` will
+	// be available for use. This requires some processing
+	// prior to the start of compilation, so opting out is an option.
+	public var trackClassHierarchy: Bool = true;
+
+	// -------------------------------------------------------
 	// If "true", any old output files that are not generated
 	// in the most recent compilation will be deleted.
 	// A text file containing all the current output files is
