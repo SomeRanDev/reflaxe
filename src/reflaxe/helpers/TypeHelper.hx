@@ -8,8 +8,10 @@ package reflaxe.helpers;
 
 #if (macro || reflaxe_runtime)
 
+import haxe.macro.Context;
 import haxe.macro.Type;
 
+using reflaxe.helpers.ClassTypeHelper;
 using reflaxe.helpers.ModuleTypeHelper;
 using reflaxe.helpers.NameMetaHelper;
 using reflaxe.helpers.NullHelper;
@@ -396,6 +398,21 @@ class TypeHelper {
 		return switch(t) {
 			case TFun(_, ret): ret;
 			case _: null;
+		}
+	}
+
+	// Returns true if an abstract (or typedef to an abstract) with @:multiType.
+	public static function isMultitype(t: Type): Bool {
+		return switch(t) {
+			#if eval
+			case TType(defRef, _): {
+				isMultitype(Context.follow(t));
+			}
+			#end
+			case TAbstract(absRef, _): {
+				absRef.get().hasMeta(":multiType");
+			}
+			case _: false;
 		}
 	}
 }
