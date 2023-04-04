@@ -183,6 +183,16 @@ class TypeHelper {
 		}
 	}
 
+	public static function withParams(t: Type, params: Array<Type>): Null<Type> {
+		return switch(t) {
+			case TEnum(e, _): TEnum(e, params);
+			case TInst(i, _): TInst(i, params);
+			case TType(t, _): TType(t, params);
+			case TAbstract(a, _): TAbstract(a, params);
+			case _: null;
+		}
+	}
+
 	static function extractParamTypes(params: Array<TypeParameter>): Array<Type> {
 		return params.map(tp -> tp.t);
 	}
