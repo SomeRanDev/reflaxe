@@ -175,7 +175,7 @@ class ReflectCompiler {
 
 		// Compile any additional modules that
 		// may be required after `onCompileEnd`.
-		if(compiler.options.dynamicDCE) {
+		if(isDynamicDce(compiler)) {
 			dynamicallyAddModulesToCompiler(compiler);
 		}
 
@@ -186,7 +186,7 @@ class ReflectCompiler {
  
 	static function getAllModulesTypesForCompiler(compiler: BaseCompiler): Array<ModuleType> {
 		final mt = moduleTypes != null ? moduleTypes : [];
-		final result = if(compiler.options.smartDCE) {
+		final result = if(isSmartDce(compiler)) {
 			final tracker = new ModuleUsageTracker(mt, compiler);
 			tracker.filteredTypes();
 		} else {
@@ -204,7 +204,7 @@ class ReflectCompiler {
 	}
 
 	static function addClassesToCompiler(compiler: BaseCompiler) {
-		if(compiler.options.dynamicDCE) {
+		if(isDynamicDce(compiler)) {
 			dynamicallyAddModulesToCompiler(compiler);
 		} else {
 			addModulesToCompiler(compiler, getAllModulesTypesForCompiler(compiler));
@@ -276,6 +276,21 @@ class ReflectCompiler {
 
 	static function generateFiles(compiler: BaseCompiler) {
 		compiler.generateFiles();
+	}
+
+	// =======================================================
+	// * DCE helpers
+	// =======================================================
+	static function isDceOn(): Bool {
+		return (#if eval Context.definedValue #else Compiler.getDefine #end ("dce")) != "no";
+	}
+
+	static function isSmartDce(compiler: BaseCompiler): Bool {
+		return isDceOn() && compiler.options.smartDCE;
+	}
+
+	static function isDynamicDce(compiler: BaseCompiler): Bool {
+		return isDceOn() && compiler.options.dynamicDCE;
 	}
 
 	// =======================================================
