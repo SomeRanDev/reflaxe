@@ -173,6 +173,12 @@ class ReflectCompiler {
 			callback();
 		}
 
+		// Compile any additional modules that
+		// may be required after `onCompileEnd`.
+		if(compiler.options.dynamicDCE) {
+			dynamicallyAddModulesToCompiler(compiler);
+		}
+
 		// Generate files
 		generateFiles(compiler);
 		compiler.onOutputComplete();
@@ -206,10 +212,6 @@ class ReflectCompiler {
 	}
 
 	static function dynamicallyAddModulesToCompiler(compiler: BaseCompiler) {
-		final mt = moduleTypes != null ? moduleTypes : [];
-		final tracker = new ModuleUsageTracker(mt, compiler);
-		compiler.dynamicTypeStack = tracker.nonStdTypes();
-		compiler.dynamicTypesHandled = compiler.dynamicTypeStack.map(mt -> mt.getUniqueId());
 		while(compiler.dynamicTypeStack.length > 0) {
 			final temp = compiler.dynamicTypeStack;
 			compiler.dynamicTypeStack = [];

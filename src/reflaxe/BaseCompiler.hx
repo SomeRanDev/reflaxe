@@ -151,6 +151,10 @@ class BaseCompilerOptions {
 	//
 	// Helpful for projects that want to be extremely
 	// precise with what modules are compiled.
+	//
+	// By default, no modules are compiled when this is enabled,
+	// `onCompileStart` must be used to decide what will be
+	// compiled first.
 	public var dynamicDCE: Bool = false;
 
 	// -------------------------------------------------------
@@ -810,11 +814,10 @@ abstract class BaseCompiler {
 	// While enabled, use `addModuleTypeForCompilation` to
 	// add additional ModuleTypes to be compiled.
 	// =======================================================
-	public var dynamicTypeStack: Null<Array<ModuleType>>;
-	public var dynamicTypesHandled: Null<Array<String>>;
+	public var dynamicTypeStack: Array<ModuleType> = [];
+	public var dynamicTypesHandled: Array<String> = [];
 
 	function addModuleTypeForCompilation(mt: ModuleType) {
-		if(dynamicTypeStack == null || dynamicTypesHandled == null) return;
 		final id = mt.getUniqueId();
 		if(!dynamicTypesHandled.contains(id)) {
 			dynamicTypesHandled.push(id);
