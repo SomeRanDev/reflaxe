@@ -480,13 +480,23 @@ class EverythingIsExprSanitizer {
 		}
 
 		// If the typing did fail, try again. But this time, exclude the variable type.
+		var untypedTVar = false;
 		if(typedExpr == null) {
 			typedExpr = Context.typeExpr(INIT_NULL ? (macro var $name = null) : (macro var $name));
+			untypedTVar = true;
 		}
 
 		// Finally, extract the TVar object from the TVar TypedExprDef.
 		return switch(typedExpr.expr) {
-			case TVar(tvar, _): tvar;
+			case TVar(tvar, _): {
+				return if(untypedTVar) {
+					final result: Dynamic = tvar;
+					result.t = t;
+					result;
+				} else {
+					tvar;
+				}
+			}
 			case _: throw "Impossible. The expressions provided are always TVar.";
 		}
 	}
