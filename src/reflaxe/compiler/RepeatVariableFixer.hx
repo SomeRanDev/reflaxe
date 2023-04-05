@@ -83,7 +83,7 @@ class RepeatVariableFixer {
 						result.push(temp);
 						continue;
 					} else {
-						result.push(expr);
+						result.push(handleExpression(expr));
 					}
 				}
 				case TBlock(_): {
