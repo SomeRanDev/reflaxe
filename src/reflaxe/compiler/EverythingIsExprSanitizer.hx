@@ -464,11 +464,30 @@ class EverythingIsExprSanitizer {
 		}
 	}
 
+	// Generates a TVar object given a name and Type.
 	function genTVar(name: String, t: Type): TVar {
+		// Let's construct the TVar using an expression.
 		final ct = haxe.macro.TypeTools.toComplexType(t);
-		return switch(Context.typeExpr(INIT_NULL ? (macro var $name: $ct = null) : (macro var $name: $ct)).expr) {
+		final untypedExpr = INIT_NULL ? (macro var $name: $ct = null) : (macro var $name: $ct);
+
+		// We must type the expression to get the TVar.
+		// However, the type might contain type parameters or unknown types that might cause an error.
+		// So if the typing fails, make sure it doesn't cause any problems.
+		var typedExpr = try {
+			Context.typeExpr(untypedExpr);
+		} catch(e) {
+			null;
+		}
+
+		// If the typing did fail, try again. But this time, exclude the variable type.
+		if(typedExpr == null) {
+			typedExpr = Context.typeExpr(INIT_NULL ? (macro var $name = null) : (macro var $name));
+		}
+
+		// Finally, extract the TVar object from the TVar TypedExprDef.
+		return switch(typedExpr.expr) {
 			case TVar(tvar, _): tvar;
-			case _: throw "bla";
+			case _: throw "Impossible. The expressions provided are always TVar.";
 		}
 	}
 
