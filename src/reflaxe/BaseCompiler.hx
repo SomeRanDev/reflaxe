@@ -930,6 +930,48 @@ abstract class BaseCompiler {
 	}
 
 	// =======================================================
+	// * compileNativeVariableCodeMeta
+	//
+	// This function is for compiling the result of functions
+	// using the @:nativeVariableCode meta.
+	// =======================================================
+	public function compileNativeVariableCodeMeta(fieldExpr: TypedExpr, varCpp: Null<String> = null): Null<String> {
+		final declaration = fieldExpr.getDeclarationMeta();
+		if(declaration == null) {
+			return null;
+		}
+		final meta = declaration.meta;
+		final data = extractStringFromMeta(meta, ":nativeVariableCode");
+		if(data != null) {
+			final code = data.code;
+			var result = code;
+
+			if(code.contains("{this}")) {
+				final thisExpr = declaration.thisExpr != null ? compileNFCThisExpression(declaration.thisExpr) : null;
+				if(thisExpr == null) {
+					if(declaration.thisExpr == null) {
+						#if eval
+						Context.error("Cannot use {this} on @:nativeVariableCode meta for constructors.", data.entry.pos);
+						#end
+					} else {
+						onExpressionUnsuccessful(fieldExpr.pos);
+					}
+				} else {
+					result = result.replace("{this}", thisExpr);
+				}
+			}
+
+			if(varCpp != null && code.contains("{var}")) {
+				result = result.replace("{var}", varCpp);
+			}
+
+			return result;
+		}
+
+		return null;
+	}
+
+	// =======================================================
 	// * compileNFCThisExpression
 	//
 	// Compiles the {this} expression for @:nativeFunctionCode.
