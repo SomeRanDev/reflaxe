@@ -205,12 +205,7 @@ class EverythingIsExprSanitizer {
 				TField(handleValueExpr(e), field);
 			}
 			case TParenthesis(e): {
-				final newE = processExpr(e);
-				if(newE != null) {
-					TParenthesis(expr.copy(newE));
-				} else {
-					TParenthesis(expr);
-				}
+				TParenthesis(expr.copy(processExpr(e)));
 			}
 			case TObjectDecl(fields): {
 				final newFields = [];
