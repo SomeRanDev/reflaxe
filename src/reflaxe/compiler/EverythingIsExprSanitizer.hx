@@ -76,7 +76,7 @@ class EverythingIsExprSanitizer {
 
 	static var variableId = 0;
 
-	public function new(expr: TypedExpr, compiler: BaseCompiler, assignee: Null<TypedExpr> = null) {
+	public function new(expr: TypedExpr, compiler: BaseCompiler, assignee: Null<TypedExpr> = null, nGenerator: Null<TempVarNameGenerator> = null) {
 		haxeExpr = expr.copy();
 		this.compiler = compiler;
 
@@ -91,7 +91,7 @@ class EverythingIsExprSanitizer {
 			assigneeExpr = null;
 		}
 
-		nameGenerator = new TempVarNameGenerator();
+		nameGenerator = nGenerator != null ? nGenerator : new TempVarNameGenerator();
 
 		expressionStack = [];
 		metaStack = [];
@@ -235,7 +235,7 @@ class EverythingIsExprSanitizer {
 				TFunction(newTFunc);
 			}
 			case TVar(tvar, expr): {
-				TVar(tvar, expr != null ? handleValueExpr(expr) : null);
+				TVar(tvar, expr != null ? handleValueExpr(expr, "fjgdk") : null);
 			}
 			case TBlock(exprs): {
 				handleNonValueBlock(expr).expr;
@@ -328,7 +328,7 @@ class EverythingIsExprSanitizer {
 			}
 		}
 
-		final eiec = new EverythingIsExprSanitizer(e, compiler, isLastExpression() ? assigneeExpr : null);
+		final eiec = new EverythingIsExprSanitizer(e, compiler, isLastExpression() ? assigneeExpr : null, nameGenerator);
 		return eiec.convertedExpr();
 	}
 
@@ -486,7 +486,7 @@ class EverythingIsExprSanitizer {
 			t: e.t
 		};
 
-		final eiec = new EverythingIsExprSanitizer(e, compiler, idExpr);
+		final eiec = new EverythingIsExprSanitizer(e, compiler, idExpr, nameGenerator);
 		
 		final varExpr = {
 			expr: TVar(tvar, !INIT_NULL ? null : varAssignExpr),
@@ -689,7 +689,7 @@ class EverythingIsExprSanitizer {
 			t: t
 		};
 
-		final eiec = new EverythingIsExprSanitizer(result, compiler, null);
+		final eiec = new EverythingIsExprSanitizer(result, compiler, null, nameGenerator);
 		return unwrapBlock(eiec.convertedExpr());
 		#else
 		return null;
