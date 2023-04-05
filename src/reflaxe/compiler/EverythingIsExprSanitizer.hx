@@ -205,7 +205,12 @@ class EverythingIsExprSanitizer {
 				TField(handleValueExpr(e), field);
 			}
 			case TParenthesis(e): {
-				TParenthesis(expr.copy(processExpr(e)));
+				final newE = processExpr(e);
+				if(newE != null) {
+					TParenthesis(expr.copy(newE));
+				} else {
+					TParenthesis(expr);
+				}
 			}
 			case TObjectDecl(fields): {
 				final newFields = [];
@@ -464,18 +469,19 @@ class EverythingIsExprSanitizer {
 		}
 	}
 
+	function genTVar(name: String, t: Type): TVar {
+		final ct = haxe.macro.TypeTools.toComplexType(t);
+		return switch(Context.typeExpr(INIT_NULL ? (macro var $name: $ct = null) : (macro var $name: $ct)).expr) {
+			case TVar(tvar, _): tvar;
+			case _: throw "bla";
+		}
+	}
+
 	function standardizeSubscopeValue(e: TypedExpr, index: Int, varNameOverride: Null<String> = null): Null<TypedExpr> {
 		var varName = nameGenerator.generateName(e.t, varNameOverride);
 
 		final varAssignExpr = { expr: TConst(TNull), pos: e.pos, t: e.t };
-		final tvar = {
-			t: e.t,
-			name: varName,
-			meta: cast [],
-			id: 9000000 + (variableId++),
-			extra: !INIT_NULL ? null : { params: [], expr: varAssignExpr },
-			capture: false
-		};
+		final tvar = genTVar(varName, e.t);
 
 		final tvarExprDef = TLocal(tvar);
 
@@ -523,14 +529,7 @@ class EverythingIsExprSanitizer {
 				{
 					expr: TBlock([
 						{
-							expr: TVar({
-								t: e1.t,
-								name: newName,
-								meta: cast [],
-								id: 9000000 + (variableId++),
-								extra: { params: [], expr: e1 },
-								capture: false
-							}, null),
+							expr: TVar(genTVar(newName, e1.t), null),
 							pos: e1.pos,
 							t: t
 						},
@@ -661,14 +660,7 @@ class EverythingIsExprSanitizer {
 						pos: pos,
 						t: t
 					});
-					createArgs.push({
-						t: t,
-						name: a.name,
-						meta: cast [],
-						id: 9000000 + (variableId++),
-						extra: null,
-						capture: false
-					});
+					createArgs.push(genTVar(a.name, t));
 					retType = tfunRet;
 				}
 			}

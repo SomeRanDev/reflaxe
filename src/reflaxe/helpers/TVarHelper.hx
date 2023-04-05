@@ -12,14 +12,11 @@ import haxe.macro.Type;
 
 class TVarHelper {
 	public static function copy(tvar: TVar, newName: Null<String> = null): TVar {
-		return {
-			t: tvar.t,
-			name: newName != null ? newName : tvar.name,
-			meta: tvar.meta,
-			id: tvar.id,
-			extra: tvar.extra,
-			capture: tvar.capture
+		var result: Dynamic = Reflect.copy(tvar);
+		if(newName != null) {
+			result.name = newName;
 		}
+		return result;
 	}
 }
 
