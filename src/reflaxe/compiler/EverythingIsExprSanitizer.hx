@@ -235,7 +235,7 @@ class EverythingIsExprSanitizer {
 				TFunction(newTFunc);
 			}
 			case TVar(tvar, expr): {
-				TVar(tvar, expr != null ? handleValueExpr(expr, "fjgdk") : null);
+				TVar(tvar, expr != null ? handleValueExpr(expr) : null);
 			}
 			case TBlock(exprs): {
 				handleNonValueBlock(expr).expr;
