@@ -111,8 +111,8 @@ class TypedExprHelper {
 		}
 	}
 
-	public static function isNull(e: TypedExpr): Bool {
-		return switch(e.expr) {
+	public static function isNullExpr(e: TypedExpr): Bool {
+		return switch(unwrapParenthesis(e).expr) {
 			case TConst(TNull): true;
 			case _: false;
 		}

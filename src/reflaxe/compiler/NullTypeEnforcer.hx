@@ -34,7 +34,7 @@ class NullTypeEnforcer {
 	// If the expression is `null` and the type isn't `Null<T>`, throw an error.
 	public static function checkAssignment(expr: Null<TypedExpr>, type: Null<Type>) {
 		if(expr == null || type == null) return;
-		if(expr.isNull() && !type.isNull()) {
+		if(expr.isNullExpr() && !type.isNull()) {
 			#if eval
 			Context.error("Cannot assign `null` to non-nullable type.", expr.pos);
 			#end
@@ -114,26 +114,26 @@ class NullTypeEnforcer {
 	public static function modifyExpression(expr: TypedExpr): Void {
 		switch(expr.expr) {
 			case TBinop(OpEq, e1, e2): {
-				if(e1.isNull() && e2.isNull()) {
+				if(e1.isNullExpr() && e2.isNullExpr()) {
 					expr.expr = TConst(TBool(true));
-				} else if(e1.isNull()) {
+				} else if(e1.isNullExpr()) {
 					if(!e2.t.isNull()) {
 						expr.expr = TConst(TBool(false));
 					}
-				} else if(e2.isNull()) {
+				} else if(e2.isNullExpr()) {
 					if(!e1.t.isNull()) {
 						expr.expr = TConst(TBool(false));
 					}
 				}
 			}
 			case TBinop(OpNotEq, e1, e2): {
-				if(e1.isNull() && e2.isNull()) {
+				if(e1.isNullExpr() && e2.isNullExpr()) {
 					expr.expr = TConst(TBool(false));
-				} else if(e1.isNull()) {
+				} else if(e1.isNullExpr()) {
 					if(!e2.t.isNull()) {
 						expr.expr = TConst(TBool(true));
 					}
-				} else if(e2.isNull()) {
+				} else if(e2.isNullExpr()) {
 					if(!e1.t.isNull()) {
 						expr.expr = TConst(TBool(true));
 					}
