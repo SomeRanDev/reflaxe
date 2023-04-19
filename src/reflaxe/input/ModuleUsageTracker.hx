@@ -42,17 +42,17 @@ class ModuleUsageTracker {
 		outputTypeMap = [];
 	}
 
-	public function filteredTypes(): Array<ModuleType> {
-		final userTypes = nonStdTypes();
+	public function filteredTypes(stdMeta: Null<Array<String>> = null): Array<ModuleType> {
+		final userTypes = nonStdTypes(stdMeta);
 		for(ut in userTypes) {
 			addUsedModuleType(ut);
 		}
 		return outputTypes;
 	}
 
-	public function nonStdTypes(): Array<ModuleType> {
+	public function nonStdTypes(stdMeta: Null<Array<String>> = null): Array<ModuleType> {
 		return allModuleTypes.filter(t -> {
-			return !isStdType(t);
+			return !t.getCommonData().isExtern && !isStdType(t, stdMeta);
 		});
 	}
 
@@ -191,7 +191,7 @@ class ModuleUsageTracker {
 	// Position of the ModuleType is an absolute path that 
 	// contains "std" right before the expected module file
 	// path, it's likely a member of the standard lib.
-	static function isStdType(type: ModuleType): Bool {
+	static function isStdType(type: ModuleType, stdMeta: Null<Array<String>> = null): Bool {
 		final cd = type.getCommonData();
 		if(cd.hasMeta(":coreApi") || cd.hasMeta(":pseudoCoreApi")) {
 			return true;

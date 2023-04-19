@@ -188,7 +188,7 @@ class ReflectCompiler {
 		final mt = moduleTypes != null ? moduleTypes : [];
 		final result = if(isSmartDce(compiler)) {
 			final tracker = new ModuleUsageTracker(mt, compiler);
-			tracker.filteredTypes();
+			tracker.filteredTypes(compiler.options.customStdMeta);
 		} else {
 			mt;
 		}
@@ -205,6 +205,12 @@ class ReflectCompiler {
 
 	static function addClassesToCompiler(compiler: BaseCompiler) {
 		if(isDynamicDce(compiler)) {
+			if(compiler.getMainExpr() == null) {
+				for(m in getAllModulesTypesForCompiler(compiler)) {
+					compiler.addModuleTypeForCompilation(m);
+				}
+			}
+
 			dynamicallyAddModulesToCompiler(compiler);
 		} else {
 			addModulesToCompiler(compiler, getAllModulesTypesForCompiler(compiler));
@@ -286,7 +292,7 @@ class ReflectCompiler {
 	}
 
 	static function isSmartDce(compiler: BaseCompiler): Bool {
-		return isDceOn() && compiler.options.smartDCE;
+		return isDceOn() && compiler.options.smartDCE || compiler.options.dynamicDCE;
 	}
 
 	static function isDynamicDce(compiler: BaseCompiler): Bool {
