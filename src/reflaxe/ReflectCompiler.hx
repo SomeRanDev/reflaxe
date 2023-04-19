@@ -137,7 +137,7 @@ class ReflectCompiler {
 		#if eval
 		#if (haxe_ver > "5.0.0")
 		final outputPath = switch(Compiler.getConfiguration().platform) {
-			case CustomTarget(_): context.getOutput();
+			case CustomTarget(_): Compiler.getOutput();
 			case _: "";
 		}
 		#end
