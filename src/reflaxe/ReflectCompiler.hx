@@ -151,7 +151,6 @@ class ReflectCompiler {
 			} else if(outputPath.length > 0) {
 				compiler.setOutputDir(outputPath);
 				validCompilers.push(compiler);
-			}
 			#end
 			} else {
 				final compilerName = Type.getClassName(Type.getClass(compiler));
