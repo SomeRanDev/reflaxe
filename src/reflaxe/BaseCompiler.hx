@@ -158,6 +158,12 @@ class BaseCompilerOptions {
 	public var dynamicDCE: Bool = false;
 
 	// -------------------------------------------------------
+	// A list of meta attached to "std" classes for the
+	// custom target. Used to filter these std classes
+	// for the "Smart DCE" option.
+	public var customStdMeta: Array<String> = [];
+
+	// -------------------------------------------------------
 	// If "true", a map of all the ModuleTypes mapped by their
 	// relevence to the implementation are provided to
 	// BaseCompiler's compileClass and compileEnum.
@@ -817,7 +823,7 @@ abstract class BaseCompiler {
 	public var dynamicTypeStack: Array<ModuleType> = [];
 	public var dynamicTypesHandled: Array<String> = [];
 
-	function addModuleTypeForCompilation(mt: ModuleType) {
+	public function addModuleTypeForCompilation(mt: ModuleType) {
 		final id = mt.getUniqueId();
 		if(!dynamicTypesHandled.contains(id)) {
 			dynamicTypesHandled.push(id);
