@@ -135,12 +135,24 @@ class ReflectCompiler {
 	static function findEnabledCompilers(): Array<BaseCompiler> {
 		final validCompilers = [];
 		#if eval
+		#if (haxe_ver > "5.0.0")
+		final outputPath = switch(Compiler.getConfiguration().platform) {
+			case CustomTarget(_): context.getOutput();
+			case _: "";
+		}
+		#end
 		for(compiler in Compilers) {
 			final outputDirDef = compiler.options.outputDirDefineName;
 			final outputDir = Context.definedValue(outputDirDef);
 			if(Context.defined(outputDirDef) && outputDir.length > 0) {
 				compiler.setOutputDir(outputDir);
 				validCompilers.push(compiler);
+			#if (haxe_ver > "5.0.0")
+			} else if(outputPath.length > 0) {
+				compiler.setOutputDir(outputPath);
+				validCompilers.push(compiler);
+			}
+			#end
 			} else {
 				final compilerName = Type.getClassName(Type.getClass(compiler));
 				final pos = Context.currentPos();
