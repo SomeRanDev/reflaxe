@@ -12,6 +12,7 @@ package reflaxe.input;
 
 #if (macro || reflaxe_runtime)
 
+import haxe.macro.Compiler;
 import haxe.macro.Context;
 import haxe.macro.Expr;
 import haxe.macro.Type;
@@ -196,14 +197,24 @@ class ModuleUsageTracker {
 		if(cd.hasMeta(":coreApi") || cd.hasMeta(":pseudoCoreApi")) {
 			return true;
 		}
-		final pos = #if eval Context.getPosInfos(type.getPos()) #else { file: "" } #end;
-		if(!haxe.io.Path.isAbsolute(pos.file)) {
-			return false;
+
+		if(stdMeta != null) {
+			for(m in stdMeta) {
+				if(cd.hasMeta(m)) {
+					return true;
+				}
+			}
 		}
-		final modulePath = type.getModule();
-		final stdFilePathBegin = StringTools.replace(modulePath, ".", "/");
-		final stdFilePath = "std/" + stdFilePathBegin + ".hx";
-		return StringTools.endsWith(pos.file, stdFilePath);
+
+		var onStdPath = false;
+		for(path in Compiler.getConfiguration().stdPath) {
+			if(StringTools.startsWith(Context.getPosInfos(cd.pos).file, path)) {
+				onStdPath = true;
+				break;
+			}
+		}
+
+		return onStdPath;
 	}
 }
 
