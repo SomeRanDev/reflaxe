@@ -16,7 +16,7 @@ import reflaxe.output.OutputPath;
 
 using StringTools;
 
-using reflaxe.helpers.ClassTypeHelper;
+using reflaxe.helpers.BaseTypeHelper;
 using reflaxe.helpers.ModuleTypeHelper;
 using reflaxe.helpers.NullableMetaAccessHelper;
 using reflaxe.helpers.PositionHelper;
@@ -465,7 +465,7 @@ abstract class BaseCompiler {
 	// =======================================================
 	// * Class Management
 	// =======================================================
-	public var classes(default, null): Array<{ cls: CommonModuleTypeData, output: String }> = [];
+	public var classes(default, null): Array<{ cls: BaseType, output: String }> = [];
 
 	public function addClassOutput(cls: ClassType, output: Null<String>) {
 		onClassAdded(cls, output);

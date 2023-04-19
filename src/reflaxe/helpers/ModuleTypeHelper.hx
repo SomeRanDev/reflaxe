@@ -1,5 +1,5 @@
 // =======================================================
-// * CommonModuleTypeData
+// * ModuleTypeHelper
 //
 // Class for extracting common data shared between the
 // ModuleType declaration classes.
@@ -12,21 +12,11 @@ package reflaxe.helpers;
 import haxe.macro.Expr;
 import haxe.macro.Type;
 
-using reflaxe.helpers.ClassTypeHelper;
+using reflaxe.helpers.BaseTypeHelper;
 using reflaxe.helpers.NameMetaHelper;
 
-typedef CommonModuleTypeData = {
-	pack: Array<String>,
-	pos: Position,
-	meta: MetaAccess,
-	module: String,
-	name: String,
-	isExtern: Bool,
-	isPrivate: Bool
-}
-
 class ModuleTypeHelper {
-	public static function getCommonData(type: ModuleType): CommonModuleTypeData {
+	public static function getCommonData(type: ModuleType): BaseType {
 		return switch(type) {
 			case TClassDecl(c): c.get();
 			case TEnumDecl(e): e.get();

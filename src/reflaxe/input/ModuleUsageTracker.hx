@@ -21,13 +21,6 @@ using reflaxe.helpers.ModuleTypeHelper;
 using reflaxe.helpers.NameMetaHelper;
 using reflaxe.helpers.TypeHelper;
 
-typedef CommonModuleTypeData = {
-	pack: Array<String>,
-	pos: Position,
-	module: String,
-	name: String
-}
-
 class ModuleUsageTracker {
 	var allModuleTypes: Array<ModuleType>;
 	var compiler: BaseCompiler;

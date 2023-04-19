@@ -14,7 +14,7 @@ import haxe.macro.Type;
 
 import reflaxe.BaseCompiler;
 
-using reflaxe.helpers.ClassTypeHelper;
+using reflaxe.helpers.BaseTypeHelper;
 using reflaxe.helpers.NullHelper;
 
 class OutputManager {

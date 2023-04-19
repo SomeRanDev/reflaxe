@@ -22,7 +22,7 @@ import haxe.macro.Context;
 import haxe.macro.Type;
 import haxe.macro.TypeTools;
 
-using reflaxe.helpers.ClassTypeHelper;
+using reflaxe.helpers.BaseTypeHelper;
 using reflaxe.helpers.ModuleTypeHelper;
 using reflaxe.helpers.TypeHelper;
 
