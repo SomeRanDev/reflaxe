@@ -238,7 +238,7 @@ class BaseCompilerOptions {
 	// it here allows Reflaxe to validate the meta automatically,
 	// ensuring the correct number/type of arguments are used.
 	public var metadataTemplates: Array<{
-		meta: #if (haxe_ver >= "4.3.0") haxe.macro.Compiler.MetadataDescription #else Dynamic #end,
+		meta: haxe.macro.Compiler.MetadataDescription,
 		disallowMultiple: Bool,
 		paramTypes: Null<Array<MetaArgumentType>>,
 		compileFunc: Null<(MetadataEntry, Array<String>) -> Null<String>>
@@ -520,21 +520,7 @@ abstract class BaseCompiler {
 	// =======================================================
 	public function getMainExpr(): Null<TypedExpr> {
 		#if macro
-			#if (haxe_ver >= "4.3.0")
-			return Context.getMainExpr();
-			#else
-			final mainClass = Context.definedValue("mainClass");
-			if(mainClass == null || mainClass.length == 0) {
-				return null;
-			}
-			final pos = PositionHelper.unknownPos();
-			return try {
-				Context.typeExpr(macro @:pos(pos) $i{mainClass}.main());
-			} catch(e) {
-				Context.error("Error occured trying to get main class:\n" + e, pos);
-				null;
-			}
-			#end
+		return Context.getMainExpr();
 		#else
 		return null;
 		#end

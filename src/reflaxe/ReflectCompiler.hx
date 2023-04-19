@@ -37,9 +37,18 @@ class ReflectCompiler {
 	public static var Compilers: Array<BaseCompiler> = [];
 
 	public static function Start() {
-		#if eval
-		Context.onAfterTyping(onAfterTyping);
-		Context.onAfterGenerate(onAfterGenerate);
+		#if (haxe_ver < "4.3.0")
+		Sys.println("Reflaxe requires Haxe version 4.3.0 or greater.");
+		return;
+		#elseif eval
+		static var called = false;
+		if(!called) {
+			Context.onAfterTyping(onAfterTyping);
+			Context.onAfterGenerate(onAfterGenerate);
+			called = true;
+		} else {
+			throw "reflaxe.ReflectCompiler.Start() called multiple times.";
+		}
 		#end
 	}
 
@@ -59,7 +68,7 @@ class ReflectCompiler {
 			[];
 		}
 
-		final metaDesc: #if (haxe_ver >= "4.3.0") haxe.macro.Compiler.MetadataDescription #else Dynamic #end = {
+		final metaDesc: haxe.macro.Compiler.MetadataDescription = {
 			metadata: name,
 			doc: doc,
 			params: params,
@@ -67,9 +76,7 @@ class ReflectCompiler {
 			targets: targets
 		};
 
-		#if (haxe_ver >= "4.3.0")
 		haxe.macro.Compiler.registerCustomMetadata(metaDesc);
-		#end
 
 		return {
 			meta: metaDesc,

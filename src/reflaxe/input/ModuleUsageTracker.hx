@@ -187,11 +187,8 @@ class ModuleUsageTracker {
 	}
 
 	// -------------------------------------------------------
-	// Convoluted, hacky method of testing whether a ModuleType
-	// is a member of the Haxe standard library. If the 
-	// Position of the ModuleType is an absolute path that 
-	// contains "std" right before the expected module file
-	// path, it's likely a member of the standard lib.
+	// Checks whether a ModuleType is a member of either the Haxe standard library
+	// or the standard library of the target (using the `customStdMeta` option).
 	static function isStdType(type: ModuleType, stdMeta: Null<Array<String>> = null): Bool {
 		final cd = type.getCommonData();
 		if(cd.hasMeta(":coreApi") || cd.hasMeta(":pseudoCoreApi")) {

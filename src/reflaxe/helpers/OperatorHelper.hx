@@ -40,9 +40,7 @@ class OperatorHelper {
 			case OpInterval: "...";
 			case OpArrow: "=>";
 			case OpIn: "in";
-			#if (haxe_ver >= "4.3.0")
 			case OpNullCoal: "??";
-			#end
 		}
 	}
 

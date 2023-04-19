@@ -7,13 +7,13 @@ on:
     - main
 
 jobs:
-  build_4_2_5:
+  build_4_3_0:
     runs-on: ubuntu-latest
     steps:
-      - name: Setup Haxe 4.2.5
+      - name: Setup Haxe 4.3.0
         uses: krdlab/setup-haxe@v1
         with:
-          haxe-version: 4.2.5
+          haxe-version: 4.3.0
 
       - name: Checkout
         uses: actions/checkout@v3

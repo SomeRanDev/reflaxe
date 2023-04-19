@@ -360,14 +360,12 @@ class EverythingIsExprSanitizer {
 	// =======================================================
 	function handleValueExpr(e: TypedExpr, varNameOverride: Null<String> = null): TypedExpr {
 		if(e == null) return { expr: TIdent("null"), pos: PositionHelper.unknownPos(), t: TDynamic(null) };
-		#if (haxe_ver >= "4.3.0")
 		if(compiler.options.convertNullCoal && isNullCoalExpr(e)) {
 			final newExpr = standardizeNullCoalValue(e);
 			if(newExpr != null) {
 				e = newExpr;
 			}
 		}
-		#end
 		if(compiler.options.convertUnopIncrement && isUnopExpr(e)) {
 			final newExpr = standardizeUnopValue(e, true);
 			if(newExpr != null) {
@@ -529,7 +527,6 @@ class EverythingIsExprSanitizer {
 		return e.copy(tvarExprDef);
 	}
 
-	#if (haxe_ver >= "4.3.0")
 	// =======================================================
 	// * Null Coalesce Rewrite
 	//
@@ -574,7 +571,6 @@ class EverythingIsExprSanitizer {
 			case _: null;
 		}
 	}
-	#end
 
 	// =======================================================
 	// * Prefix/Postfix Increment/Decrement Rewrite
