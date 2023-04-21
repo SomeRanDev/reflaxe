@@ -746,7 +746,7 @@ abstract class BaseCompiler {
 	// "allowMetaMetadata" is true or "metadataTemplates"
 	// contains at least one entry.
 	// =======================================================
-	function compileMetadata(metaAccess: Null<MetaAccess>, target: haxe.display.Display.MetadataTarget): Null<String> {
+	public function compileMetadata(metaAccess: Null<MetaAccess>, target: haxe.display.Display.MetadataTarget): Null<String> {
 		return MetadataCompiler.compileMetadata(options, metaAccess, target);
 	}
 
