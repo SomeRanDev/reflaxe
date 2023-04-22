@@ -197,12 +197,14 @@ class ModuleUsageTracker {
 		}
 
 		var onStdPath = false;
+		#if macro
 		for(path in Compiler.getConfiguration().stdPath) {
 			if(StringTools.startsWith(Context.getPosInfos(cd.pos).file, path)) {
 				onStdPath = true;
 				break;
 			}
 		}
+		#end
 
 		return onStdPath;
 	}

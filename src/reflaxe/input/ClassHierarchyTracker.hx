@@ -102,7 +102,7 @@ class ClassHierarchyTracker {
 	// class Base<B> extends TopClass<String> {}
 	// class Child<T> extends Base<T> {}
 	public static function getAllParentTypes(cls: ClassType, params: Null<Array<Type>> = null): Array<Type> {
-		return if(cls.superClass != null) {
+		return #if macro if(cls.superClass != null) {
 			final clsRef = cls.superClass.t;
 			if(params == null) {
 				params = cls.params.map(c -> c.t);
@@ -110,7 +110,7 @@ class ClassHierarchyTracker {
 			final newParams = cls.superClass.params;
 			final superClass = TypeTools.applyTypeParameters(TInst(clsRef, newParams), cls.params, params);
 			[superClass].concat(getAllParentTypes(clsRef.get(), newParams));
-		} else {
+		} else #end {
 			[];
 		}
 	}
@@ -137,7 +137,11 @@ class ClassHierarchyTracker {
 		}
 
 		final result = cls.interfaces.map(function(int) {
+			#if macro
 			return TypeTools.applyTypeParameters(TInst(int.t, int.params), cls.params, params);
+			#else
+			return TInst(int.t, int.params);
+			#end
 		});
 
 		if(cls.superClass != null) {
@@ -190,7 +194,11 @@ class ClassHierarchyTracker {
 
 			for(field in (isStatic ? decl.cls.statics.get() : decl.cls.fields.get())) {
 				if(isCovariant(field, childClassField)) {
+					#if macro
 					return TypeTools.applyTypeParameters(field.type.getTFunReturn(), decl.cls.params, decl.params);
+					#else
+					return field.type.getTFunReturn();
+					#end
 				}
 			}
 		}

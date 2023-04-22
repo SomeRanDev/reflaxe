@@ -76,7 +76,9 @@ class ReflectCompiler {
 			targets: targets
 		};
 
+		#if macro
 		haxe.macro.Compiler.registerCustomMetadata(metaDesc);
+		#end
 
 		return {
 			meta: metaDesc,

@@ -22,7 +22,9 @@ class ExpressionModifier {
 
 	public static function mod(exprFunc: (Expr) -> Null<Expr>): Void {
 		if(modifications.length == 0) {
+			#if macro
 			Compiler.addGlobalMetadata("", "@:build(reflaxe.input.ExpressionModifier.applyMods())");
+			#end
 		}
 
 		modifications.push(exprFunc);

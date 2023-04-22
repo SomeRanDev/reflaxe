@@ -471,17 +471,19 @@ class EverythingIsExprSanitizer {
 		// We must type the expression to get the TVar.
 		// However, the type might contain type parameters or unknown types that might cause an error.
 		// So if the typing fails, make sure it doesn't cause any problems.
-		var typedExpr = try {
+		var typedExpr = #if macro try {
 			Context.typeExpr(untypedExpr);
-		} catch(e) {
+		} catch(e) #end {
 			null;
 		}
 
 		// If the typing did fail, try again. But this time, exclude the variable type.
 		var untypedTVar = false;
 		if(typedExpr == null) {
+			#if macro
 			typedExpr = Context.typeExpr(INIT_NULL ? (macro var $name = null) : (macro var $name));
 			untypedTVar = true;
+			#end
 		}
 
 		// Finally, extract the TVar object from the TVar TypedExprDef.
