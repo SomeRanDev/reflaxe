@@ -433,7 +433,7 @@ abstract class BaseCompiler {
 		} else {
 			final current = extraFiles.get(pathString);
 			if(current != null) {
-				current.exists(priority) ? current[priority] : "";
+				current.exists(priority) ? (current[priority] ?? "") : "";
 			} else {
 				"";
 			}
@@ -869,7 +869,7 @@ abstract class BaseCompiler {
 			return null;
 		}
 		final meta = declaration.meta;
-		final data = extractStringFromMeta(meta, ":nativeFunctionCode");
+		final data = meta != null ? extractStringFromMeta(meta, ":nativeFunctionCode") : null;
 		if(data != null) {
 			final code = data.code;
 			var result = code;
@@ -933,7 +933,7 @@ abstract class BaseCompiler {
 			return null;
 		}
 		final meta = declaration.meta;
-		final data = extractStringFromMeta(meta, ":nativeVariableCode");
+		final data = meta != null ? extractStringFromMeta(meta, ":nativeVariableCode") : null;
 		if(data != null) {
 			final code = data.code;
 			var result = code;

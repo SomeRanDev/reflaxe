@@ -486,6 +486,10 @@ class EverythingIsExprSanitizer {
 			#end
 		}
 
+		if(typedExpr == null) {
+			throw "Impossible";
+		}
+
 		// Finally, extract the TVar object from the TVar TypedExprDef.
 		return switch(typedExpr.expr) {
 			case TVar(tvar, _): {

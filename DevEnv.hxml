@@ -1,3 +1,4 @@
 -D reflaxe_runtime
+--macro nullSafety("reflaxe")
 -cp src
 reflaxe

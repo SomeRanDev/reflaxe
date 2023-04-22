@@ -114,8 +114,9 @@ class OutputManager {
 
 			var result = [];
 			for(k in keys) {
-				if(StringTools.trim(content.get(k)).length > 0) {
-					result.push(content.get(k));
+				final c = content.get(k);
+				if(c != null && StringTools.trim(c).length > 0) {
+					result.push(c);
 				}
 			}
 

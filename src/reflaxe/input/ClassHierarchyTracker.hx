@@ -226,12 +226,14 @@ class ClassHierarchyTracker {
 		if(superField.name != childField.name) {
 			return false;
 		}
+		var superFieldRet = superField.type.getTFunReturn();
+		var childFieldRet = childField.type.getTFunReturn();
+		if(superFieldRet == null || childFieldRet == null) {
+			return false;
+		}
 		#if eval
-		final superFieldRet = Context.follow(superField.type.getTFunReturn());
-		final childFieldRet = Context.follow(childField.type.getTFunReturn());
-		#else
-		final superFieldRet = superField.type.getTFunReturn();
-		final childFieldRet = childField.type.getTFunReturn();
+		superFieldRet = Context.follow(superFieldRet);
+		childFieldRet = Context.follow(childFieldRet);
 		#end
 		if(superFieldRet.isTypeParameter() || childFieldRet.isTypeParameter()) {
 			return false;
