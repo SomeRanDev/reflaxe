@@ -425,6 +425,48 @@ class TypeHelper {
 			case _: false;
 		}
 	}
+
+	public static function isChildOf(t: Type, superClass: Type): Bool {
+		final superClassType = switch(superClass) {
+			case TInst(clsRef, _): clsRef;
+			case _: return false;
+		}
+		return switch(t) {
+			case TInst(clsRef, _): {
+				final c = clsRef.get();
+				if(c.superClass != null) {
+					ModuleTypeHelper.equals(TClassDecl(c.superClass.t), TClassDecl(superClassType));
+				} else {
+					false;
+				}
+			}
+			case _: false;
+		}
+	}
+
+	public static function implementsType(t: Type, interfaceType: Type): Bool {
+		final interfaceClassType = switch(interfaceType) {
+			case TInst(clsRef, _): clsRef;
+			case _: return false;
+		}
+		if(!interfaceClassType.get().isInterface) {
+			return false;
+		}
+		return switch(t) {
+			case TInst(clsRef, _): {
+				final c = clsRef.get();
+				var result = false;
+				for(int in c.interfaces) {
+					if(ModuleTypeHelper.equals(TClassDecl(int.t), TClassDecl(interfaceClassType))) {
+						result = true;
+						break;
+					}
+				}
+				result;
+			}
+			case _: false;
+		}
+	}
 }
 
 #end
