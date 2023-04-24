@@ -378,7 +378,7 @@ class TypeHelper {
 		}
 	}
 
-	public static function unwrapNullTypeOrSelf(t: Type): Null<Type> {
+	public static function unwrapNullTypeOrSelf(t: Type): Type {
 		final temp = unwrapNullType(t);
 		return temp != null ? temp : t;
 	}
