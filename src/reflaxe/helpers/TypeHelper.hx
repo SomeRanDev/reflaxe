@@ -426,6 +426,10 @@ class TypeHelper {
 		}
 	}
 
+	public static function isDescendantOf(t: Type, superClass: Type): Bool {
+		return isChildOf(t, superClass) || implementsType(t, superClass);
+	}
+
 	public static function isChildOf(t: Type, superClass: Type): Bool {
 		final superClassType = switch(superClass) {
 			case TInst(clsRef, _): clsRef;
