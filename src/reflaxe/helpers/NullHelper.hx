@@ -17,6 +17,7 @@ class NullHelper {
 	}
 
 	public static function trustMe<T>(maybe: Null<T>): T {
+		if(maybe == null) throw "Trusted on null value.";
 		@:nullSafety(Off) return maybe;
 	}
 }
