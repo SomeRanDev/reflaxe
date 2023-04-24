@@ -25,6 +25,7 @@ import reflaxe.compiler.TypeUsageTracker;
 import reflaxe.input.ClassHierarchyTracker;
 import reflaxe.input.ModuleUsageTracker;
 
+using reflaxe.helpers.ClassFieldHelper;
 using reflaxe.helpers.SyntaxHelper;
 using reflaxe.helpers.ModuleTypeHelper;
 using reflaxe.helpers.NullableMetaAccessHelper;
@@ -346,7 +347,7 @@ class ReflectCompiler {
 				}
 				case FMethod(methodKind): {
 					if(shouldGenerateFunc(field, compiler, isStatic, methodKind)) {
-						final data = findFuncData(field);
+						final data = field.findFuncData();
 						if(data != null) {
 							funcFields.push({
 								isStatic: isStatic,
@@ -443,30 +444,6 @@ class ReflectCompiler {
 
 	static function shouldGenerateFunc(field: ClassField, compiler: BaseCompiler, isStatic: Bool, kind: MethodKind): Bool {
 		return compiler.shouldGenerateClassField(field);
-	}
-
-	// =======================================================
-	// * findFuncData
-	// =======================================================
-	static function findFuncData(field: ClassField): Null<ClassFuncData> {
-		final e = field.expr();
-		final tfunc = if(e != null) {
-			switch(e.expr) {
-				case TFunction(tfunc): tfunc;
-				case _: null;
-			}
-		} else {
-			null;
-		}
-		return switch(field.type) {
-			case TFun(args, ret): {
-				ret: ret,
-				args: args,
-				tfunc: tfunc,
-				expr: tfunc != null ? tfunc.expr : null
-			}
-			case _: null;
-		}
 	}
 }
 
