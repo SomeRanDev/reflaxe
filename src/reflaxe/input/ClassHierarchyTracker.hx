@@ -206,6 +206,12 @@ class ClassHierarchyTracker {
 		return null;
 	}
 
+	// Given a child class' type and field information, returns `true` if
+	// the provided `childClassField` is a covariant field.
+	public static function funcIsCovariant(childClass: ClassType, childClassField: ClassField, isStatic: Bool): Bool {
+		return funcGetCovariantBaseType(childClass, childClassField, isStatic) != null;
+	}
+
 	// Does the same as `childFuncIsCovariant`, but checks "downwards".
 	// Checks if any children of the supplied "superClass" `ClassType` override
 	// this class's functions and use a covariant return type.
