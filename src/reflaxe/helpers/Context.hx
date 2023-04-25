@@ -2,10 +2,13 @@ package reflaxe.helpers;
 
 #if (macro || reflaxe_runtime)
 
-import haxe.macro.Context;
 import haxe.macro.Expr;
-import haxe.macro.Type.TVar;
 
+/**
+	For some reason... I don't know why... the compiler refuses to allow
+	the existance of anything from the `haxe.macro.Type` module. So this
+	is a small hack to bypass the uses of `TypedExpr`.
+**/
 typedef RTypedExpr = #if (neko || eval || display) haxe.macro.Type.TypedExpr #else Dynamic #end;
 
 /**
@@ -13,13 +16,13 @@ typedef RTypedExpr = #if (neko || eval || display) haxe.macro.Type.TypedExpr #el
 	This causes issues with IDE usage since code needs to be "runtime-compatible",
 	to be used with Visual Studio Code and null-safety checked.
 
-	This class is a replacement for `Context`, providing all the same
+	This class is a replacement for `haxe.macro.Context`, providing all the same
 	functions, but they can exist at runtime.
 **/
-class RContext {
+class Context {
 	public static function error(msg:String, pos:Position): Dynamic {
 		#if (neko || eval || display)
-		return Context.error(msg, pos);
+		return haxe.macro.Context.error(msg, pos);
 		#else
 		return null;
 		#end
@@ -27,7 +30,7 @@ class RContext {
 
 	public static function fatalError(msg:String, pos:Position):Dynamic {
 		#if (neko || eval || display)
-		return Context.fatalError(msg, pos);
+		return haxe.macro.Context.fatalError(msg, pos);
 		#else
 		return null;
 		#end
@@ -35,7 +38,7 @@ class RContext {
 
 	public static function warning(msg:String, pos:Position) {
 		#if (neko || eval || display)
-		return Context.warning(msg, pos);
+		return haxe.macro.Context.warning(msg, pos);
 		#else
 		return null;
 		#end
@@ -43,29 +46,29 @@ class RContext {
 
 	public static function info(msg:String, pos:Position) {
 		#if (neko || eval || display)
-		return Context.info(msg, pos);
+		return haxe.macro.Context.info(msg, pos);
 		#else
 		return null;
 		#end
 	}
 
-	public static function getMessages() : Array<Message> {
+	public static function getMessages() : Array<haxe.macro.Context.Message> {
 		#if (neko || eval || display)
-		return Context.getMessages();
+		return haxe.macro.Context.getMessages();
 		#else
 		return [];
 		#end
 	}
 
-	public static function filterMessages( predicate : Message -> Bool ) {
+	public static function filterMessages( predicate : haxe.macro.Context.Message -> Bool ) {
 		#if (neko || eval || display)
-		Context.filterMessages(predicate);
+		haxe.macro.Context.filterMessages(predicate);
 		#end
 	}
 
 	public static function resolvePath(file:String):String {
 		#if (neko || eval || display)
-		return Context.resolvePath(file);
+		return haxe.macro.Context.resolvePath(file);
 		#else
 		return "";
 		#end
@@ -73,7 +76,7 @@ class RContext {
 
 	public static function getClassPath():Array<String> {
 		#if (neko || eval || display)
-		return Context.getClassPath();
+		return haxe.macro.Context.getClassPath();
 		#else
 		return [];
 		#end
@@ -81,7 +84,7 @@ class RContext {
 
 	public static function containsDisplayPosition(pos:Position):Bool {
 		#if (neko || eval || display)
-		return Context.containsDisplayPosition(pos);
+		return haxe.macro.Context.containsDisplayPosition(pos);
 		#else
 		return false;
 		#end
@@ -89,7 +92,7 @@ class RContext {
 
 	public static function currentPos():Position {
 		#if (neko || eval || display)
-		return Context.currentPos();
+		return haxe.macro.Context.currentPos();
 		#else
 		return {min:0,max:0,file:""};
 		#end
@@ -97,7 +100,7 @@ class RContext {
 
 	public static function getExpectedType():Null<haxe.macro.Type> {
 		#if (neko || eval || display)
-		return Context.getExpectedType();
+		return haxe.macro.Context.getExpectedType();
 		#else
 		return null;
 		#end
@@ -105,7 +108,7 @@ class RContext {
 
 	public static function getCallArguments():Null<Array<Expr>> {
 		#if (neko || eval || display)
-		return Context.getCallArguments();
+		return haxe.macro.Context.getCallArguments();
 		#else
 		return null;
 		#end
@@ -113,7 +116,7 @@ class RContext {
 
 	public static function getLocalClass() {
 		#if (neko || eval || display)
-		return Context.getLocalClass();
+		return haxe.macro.Context.getLocalClass();
 		#else
 		return null;
 		#end
@@ -121,7 +124,7 @@ class RContext {
 
 	public static function getLocalModule():String {
 		#if (neko || eval || display)
-		return Context.getLocalModule();
+		return haxe.macro.Context.getLocalModule();
 		#else
 		return "";
 		#end
@@ -129,7 +132,7 @@ class RContext {
 
 	public static function getLocalType():Null<haxe.macro.Type> {
 		#if (neko || eval || display)
-		return Context.getLocalType();
+		return haxe.macro.Context.getLocalType();
 		#else
 		return null;
 		#end
@@ -137,7 +140,7 @@ class RContext {
 
 	public static function getLocalMethod():Null<String> {
 		#if (neko || eval || display)
-		return Context.getLocalMethod();
+		return haxe.macro.Context.getLocalMethod();
 		#else
 		return null;
 		#end
@@ -145,7 +148,7 @@ class RContext {
 
 	public static function getLocalUsing() {
 		#if (neko || eval || display)
-		return Context.getLocalUsing();
+		return haxe.macro.Context.getLocalUsing();
 		#else
 		return [];
 		#end
@@ -153,7 +156,7 @@ class RContext {
 
 	public static function getLocalImports():Array<ImportExpr> {
 		#if (neko || eval || display)
-		return Context.getLocalImports();
+		return haxe.macro.Context.getLocalImports();
 		#else
 		return [];
 		#end
@@ -161,7 +164,7 @@ class RContext {
 
 	public static function getLocalTVars():Map<String, #if (neko || eval || display) haxe.macro.Type.TVar #else Dynamic #end> {
 		#if (neko || eval || display)
-		return Context.getLocalTVars();
+		return haxe.macro.Context.getLocalTVars();
 		#else
 		return [];
 		#end
@@ -169,7 +172,7 @@ class RContext {
 
 	public static function defined(s:String):Bool {
 		#if (neko || eval || display)
-		return Context.defined(s);
+		return haxe.macro.Context.defined(s);
 		#else
 		return false;
 		#end
@@ -177,7 +180,7 @@ class RContext {
 
 	public static function definedValue(key:String):String {
 		#if (neko || eval || display)
-		return Context.definedValue(key);
+		return haxe.macro.Context.definedValue(key);
 		#else
 		return "";
 		#end
@@ -185,7 +188,7 @@ class RContext {
 
 	public static function getDefines():Map<String, String> {
 		#if (neko || eval || display)
-		return Context.getDefines();
+		return haxe.macro.Context.getDefines();
 		#else
 		return [];
 		#end
@@ -193,7 +196,7 @@ class RContext {
 
 	public static function getType(name:String):haxe.macro.Type {
 		#if (neko || eval || display)
-		return Context.getType(name);
+		return haxe.macro.Context.getType(name);
 		#else
 		throw "Cannot call at runtime";
 		#end
@@ -201,7 +204,7 @@ class RContext {
 
 	public static function getModule(name:String):Array<haxe.macro.Type> {
 		#if (neko || eval || display)
-		return Context.getModule(name);
+		return haxe.macro.Context.getModule(name);
 		#else
 		return [];
 		#end
@@ -209,7 +212,7 @@ class RContext {
 
 	public static function parse(expr:String, pos:Position):Expr {
 		#if (neko || eval || display)
-		return Context.parse(expr, pos);
+		return haxe.macro.Context.parse(expr, pos);
 		#else
 		throw "Cannot call at runtime";
 		#end
@@ -217,7 +220,7 @@ class RContext {
 
 	public static function parseInlineString(expr:String, pos:Position):Expr {
 		#if (neko || eval || display)
-		return Context.parseInlineString(expr, pos);
+		return haxe.macro.Context.parseInlineString(expr, pos);
 		#else
 		throw "Cannot call at runtime";
 		#end
@@ -225,7 +228,7 @@ class RContext {
 
 	public static function makeExpr(v:Dynamic, pos:Position):Expr {
 		#if (neko || eval || display)
-		return Context.makeExpr(v, pos);
+		return haxe.macro.Context.makeExpr(v, pos);
 		#else
 		throw "Cannot call at runtime";
 		#end
@@ -233,7 +236,7 @@ class RContext {
 
 	public static function signature(v:Dynamic):String {
 		#if (neko || eval || display)
-		return Context.signature(v);
+		return haxe.macro.Context.signature(v);
 		#else
 		return "";
 		#end
@@ -241,31 +244,31 @@ class RContext {
 
 	public static function onGenerate(callback:Array<haxe.macro.Type>->Void, persistent:Bool = true) {
 		#if (neko || eval || display)
-		return Context.onGenerate(callback, persistent);
+		return haxe.macro.Context.onGenerate(callback, persistent);
 		#end
 	}
 
 	public static function onAfterGenerate(callback:Void->Void) {
 		#if (neko || eval || display)
-		return Context.onAfterGenerate(callback);
+		return haxe.macro.Context.onAfterGenerate(callback);
 		#end
 	}
 
 	public static function onAfterTyping(callback:Array<haxe.macro.Type.ModuleType>->Void) {
 		#if (neko || eval || display)
-		return Context.onAfterTyping(callback);
+		return haxe.macro.Context.onAfterTyping(callback);
 		#end
 	}
 
 	public static function onTypeNotFound(callback:String->TypeDefinition) {
 		#if (neko || eval || display)
-		return Context.onTypeNotFound(callback);
+		return haxe.macro.Context.onTypeNotFound(callback);
 		#end
 	}
 
 	public static function typeof(e:Expr):haxe.macro.Type {
 		#if (neko || eval || display)
-		return Context.typeof(e);
+		return haxe.macro.Context.typeof(e);
 		#else
 		throw "Cannot call at runtime";
 		#end
@@ -273,7 +276,7 @@ class RContext {
 
 	public static function typeExpr(e:Expr):RTypedExpr {
 		#if (neko || eval || display)
-		return Context.typeExpr(e);
+		return haxe.macro.Context.typeExpr(e);
 		#else
 		throw "Cannot call at runtime";
 		#end
@@ -281,7 +284,7 @@ class RContext {
 
 	public static function resolveType(t:ComplexType, p:Position):haxe.macro.Type {
 		#if (neko || eval || display)
-		return Context.resolveType(t, p);
+		return haxe.macro.Context.resolveType(t, p);
 		#else
 		throw "Cannot call at runtime";
 		#end
@@ -289,7 +292,7 @@ class RContext {
 
 	public static function toComplexType(t:haxe.macro.Type):Null<ComplexType> {
 		#if (neko || eval || display)
-		return Context.toComplexType(t);
+		return haxe.macro.Context.toComplexType(t);
 		#else
 		return null;
 		#end
@@ -297,7 +300,7 @@ class RContext {
 
 	public static function unify(t1:haxe.macro.Type, t2:haxe.macro.Type):Bool {
 		#if (neko || eval || display)
-		return Context.unify(t1, t2);
+		return haxe.macro.Context.unify(t1, t2);
 		#else
 		return false;
 		#end
@@ -305,7 +308,7 @@ class RContext {
 
 	public static function follow(t:haxe.macro.Type, ?once:Bool):haxe.macro.Type {
 		#if (neko || eval || display)
-		return Context.follow(t, once);
+		return haxe.macro.Context.follow(t, once);
 		#else
 		throw "Cannot call at runtime";
 		#end
@@ -313,7 +316,7 @@ class RContext {
 
 	public static function followWithAbstracts(t:haxe.macro.Type, once:Bool = false):haxe.macro.Type {
 		#if (neko || eval || display)
-		return Context.followWithAbstracts(t, once);
+		return haxe.macro.Context.followWithAbstracts(t, once);
 		#else
 		throw "Cannot call at runtime";
 		#end
@@ -321,7 +324,7 @@ class RContext {
 
 	public static function getPosInfos(p:Position):{min:Int, max:Int, file:String} {
 		#if (neko || eval || display)
-		return Context.getPosInfos(p);
+		return haxe.macro.Context.getPosInfos(p);
 		#else
 		return {min:0,max:0,file:""};
 		#end
@@ -329,7 +332,7 @@ class RContext {
 
 	public static function makePosition(inf:{min:Int, max:Int, file:String}):Position {
 		#if (neko || eval || display)
-		return Context.makePosition(inf);
+		return haxe.macro.Context.makePosition(inf);
 		#else
 		throw "Cannot call at runtime";
 		#end
@@ -337,7 +340,7 @@ class RContext {
 
 	public static function getResources():Map<String, haxe.io.Bytes> {
 		#if (neko || eval || display)
-		return Context.getResources();
+		return haxe.macro.Context.getResources();
 		#else
 		return [];
 		#end
@@ -345,13 +348,13 @@ class RContext {
 
 	public static function addResource(name:String, data:haxe.io.Bytes) {
 		#if (neko || eval || display)
-		Context.addResource(name, data);
+		haxe.macro.Context.addResource(name, data);
 		#end
 	}
 
 	public static function getBuildFields():Array<Field> {
 		#if (neko || eval || display)
-		return Context.getBuildFields();
+		return haxe.macro.Context.getBuildFields();
 		#else
 		return [];
 		#end
@@ -359,19 +362,19 @@ class RContext {
 
 	public static function defineType(t:TypeDefinition, ?moduleDependency:String):Void {
 		#if (neko || eval || display)
-		Context.defineType(t, moduleDependency);
+		haxe.macro.Context.defineType(t, moduleDependency);
 		#end
 	}
 
 	public static function defineModule(modulePath:String, types:Array<TypeDefinition>, ?imports:Array<ImportExpr>, ?usings:Array<TypePath>):Void {
 		#if (neko || eval || display)
-		Context.defineModule(modulePath, types, imports, usings);
+		haxe.macro.Context.defineModule(modulePath, types, imports, usings);
 		#end
 	}
 
 	public static function getTypedExpr(t:RTypedExpr):Expr {
 		#if (neko || eval || display)
-		return Context.getTypedExpr(t);
+		return haxe.macro.Context.getTypedExpr(t);
 		#else
 		throw "Cannot call at runtime";
 		#end
@@ -379,7 +382,7 @@ class RContext {
 
 	public static function storeTypedExpr(t:RTypedExpr):Expr {
 		#if (neko || eval || display)
-		return Context.storeTypedExpr(t);
+		return haxe.macro.Context.storeTypedExpr(t);
 		#else
 		throw "Cannot call at runtime";
 		#end
@@ -387,7 +390,7 @@ class RContext {
 
 	public static function storeExpr(e:Expr):Expr {
 		#if (neko || eval || display)
-		return Context.storeExpr(e);
+		return haxe.macro.Context.storeExpr(e);
 		#else
 		throw "Cannot call at runtime";
 		#end
@@ -395,13 +398,13 @@ class RContext {
 
 	public static function registerModuleDependency(modulePath:String, externFile:String) {
 		#if (neko || eval || display)
-		Context.registerModuleDependency(modulePath, externFile);
+		haxe.macro.Context.registerModuleDependency(modulePath, externFile);
 		#end
 	}
 
 	public static function timer(id:String):()->Void {
 		#if (neko || eval || display)
-		return Context.timer(id);
+		return haxe.macro.Context.timer(id);
 		#else
 		throw "Cannot call at runtime";
 		#end
