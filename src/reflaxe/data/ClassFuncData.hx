@@ -35,6 +35,25 @@ class ClassFuncData {
 	public function setExpr(e: TypedExpr) {
 		expr = e;
 	}
+
+	/**
+		Checks if the `args` of both `ClassFuncData` are identical.
+	**/
+	public function argumentsMatch(childData: ClassFuncData) {
+		if(args.length != childData.args.length) {
+			return false;
+		}
+
+		// Covariance does not apply with arguments.
+		// They must be identical to override (right?)
+		// TODO: Typedefs/abstracts should count?
+		for(i in 0...args.length) {
+			if(!args[i].type.equals(childData.args[i].type)) {
+				return false;
+			}
+		}
+		return true;
+	}
 }
 
 #end
