@@ -10,9 +10,14 @@ package reflaxe.helpers;
 
 import haxe.macro.Type;
 
-import reflaxe.BaseCompiler;
+import reflaxe.data.ClassFuncArg;
+import reflaxe.data.ClassFuncData;
+import reflaxe.data.ClassVarData;
 
 class ClassFieldHelper {
+	public static function equals(field: ClassField, other: ClassField): Bool {
+		return Std.string(field) == Std.string(other);
+	}
 
 	/**
 		Extracts the `ClassVarData` from a variable `ClassField`.
