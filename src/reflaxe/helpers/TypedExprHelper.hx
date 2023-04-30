@@ -8,6 +8,7 @@ package reflaxe.helpers;
 
 #if (macro || reflaxe_runtime)
 
+import haxe.macro.Expr;
 import haxe.macro.Type;
 
 using reflaxe.helpers.BaseTypeHelper;
@@ -21,6 +22,14 @@ class TypedExprHelper {
 		#else
 		return false;
 		#end
+	}
+
+	public static function make(e: TypedExprDef, t: Type, pos: Null<Position> = null): TypedExpr {
+		return {
+			expr: e,
+			t: t,
+			pos: pos ?? PositionHelper.unknownPos()
+		}
 	}
 
 	public static function copy(e: TypedExpr, newDef: Null<TypedExprDef> = null): TypedExpr {
