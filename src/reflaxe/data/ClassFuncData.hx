@@ -54,6 +54,38 @@ class ClassFuncData {
 		}
 		return true;
 	}
+
+	/**
+		Given a list of expressions to be passed as arguments to
+		this function, this returns a modified list that replaces
+		all instances of `null` on an argument with a default
+		value with that default value.
+	**/
+	public function replacePadNullsWithDefaults(passedArgs: Array<TypedExpr>): Array<TypedExpr> {
+		var hasDefaults = false;
+		for(a in args) {
+			if(a.expr != null) {
+				hasDefaults = true;
+				break;
+			}
+		}
+		if(!hasDefaults) {
+			return passedArgs;
+		}
+
+		final result: Array<TypedExpr> = [];
+		for(i in 0...args.length) {
+			final arg = args[i];
+			final hasPassedArg = i < passedArgs.length;
+			final useDefault = !hasPassedArg || passedArgs[i].isNullExpr();
+			if(useDefault && arg.expr != null && !arg.hasConflicingDefaultValue()) {
+				result.push(arg.expr);
+			} else if(hasPassedArg) {
+				result.push(passedArgs[i]);
+			}
+		}
+		return result;
+	}
 }
 
 #end
