@@ -36,35 +36,35 @@ class ClassFieldHelper {
 		} else {
 			null;
 		}
+
 		return switch(field.type) {
 			case TFun(args, ret): {
-				// Generate ClassFuncArg depending on whether tfunc is available.
+				// Generate ClassFuncArg depending on whether TFunc is available.
+				var index = 0;
 				final dataArgs: Array<ClassFuncArg> = if(tfunc != null) {
-					tfunc.args.map(a -> {
-						t: a.v.t,
-						opt: a.value != null,
-						name: a.v.name,
-						expr: a.value,
-						tvar: a.v
-					});
+					tfunc.args.map(a -> new ClassFuncArg(index++, a.v.t, a.value != null, a.v.name, a.value, a.v));
 				} else {
-					args.map(a -> {
-						t: a.t,
-						opt: a.opt,
-						name: a.name,
-						expr: null,
-						tvar: null
-					});
+					args.map(a -> new ClassFuncArg(index++, a.t, a.opt, a.name));
+				}
+
+				final kind = switch(field.kind) {
+					case FMethod(kind): kind;
+					case _: throw "Not a method.";
 				}
 
 				// Return the `ClassFuncData`
-				{
-					ret: ret,
-					args: dataArgs,
-					tfunc: tfunc,
-					expr: tfunc != null ? tfunc.expr : null
-				};
+				final result = new ClassFuncData(clsType, field, isStatic, kind, ret, dataArgs, tfunc, tfunc != null ? tfunc.expr : null);
+				for(a in dataArgs) a.setFuncData(result);
+				cache.set(field, result);
+				result;
 			}
+			case _: null;
+		}
+	}
+
+	public static function findFuncDataFromType(field: ClassField, type: Type): Null<ClassFuncData> {
+		return switch(type) {
+			case TInst(clsRef, _): findFuncData(field, clsRef.get());
 			case _: null;
 		}
 	}

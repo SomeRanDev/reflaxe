@@ -22,6 +22,8 @@ import reflaxe.compiler.RepeatVariableFixer;
 import reflaxe.compiler.CaptureVariableFixer;
 import reflaxe.compiler.NullTypeEnforcer;
 import reflaxe.compiler.TypeUsageTracker;
+import reflaxe.data.ClassFuncData;
+import reflaxe.data.ClassVarData;
 import reflaxe.input.ClassHierarchyTracker;
 import reflaxe.input.ModuleUsageTracker;
 
@@ -324,8 +326,8 @@ class ReflectCompiler {
 	// * transpileClass
 	// =======================================================
 	static function transpileClass(cls: ClassType, compiler: BaseCompiler): Null<String> {
-		final varFields: ClassFieldVars = [];
-		final funcFields: ClassFieldFuncs = [];
+		final varFields: Array<ClassVarData> = [];
+		final funcFields: Array<ClassFuncData> = [];
 
 		final ignoreExterns = compiler.options.ignoreExterns;
 
@@ -337,24 +339,19 @@ class ReflectCompiler {
 			switch(field.kind) {
 				case FVar(readVarAccess, writeVarAccess): {
 					if(shouldGenerateVar(field, compiler, isStatic, readVarAccess, writeVarAccess)) {
-						varFields.push({
-							isStatic: isStatic,
-							read: readVarAccess,
-							write: writeVarAccess,
-							field: field
-						});
+						final data = field.findVarData(cls, isStatic);
+						if(data != null) {
+							varFields.push(data);
+						} else {
+							throw "Variable information not found.";
+						}
 					}
 				}
 				case FMethod(methodKind): {
 					if(shouldGenerateFunc(field, compiler, isStatic, methodKind)) {
-						final data = field.findFuncData();
+						final data = field.findFuncData(cls, isStatic);
 						if(data != null) {
-							funcFields.push({
-								isStatic: isStatic,
-								kind: methodKind,
-								data: preprocessFunction(compiler, field, data),
-								field: field
-							});
+							funcFields.push(preprocessFunction(compiler, field, data));
 						} else {
 							if(!compiler.options.ignoreBodilessFunctions) {
 								#if eval
@@ -392,15 +389,15 @@ class ReflectCompiler {
 		}
 		if(compiler.options.normalizeEIE) {
 			final eiec = new EverythingIsExprSanitizer(data.expr, compiler, null);
-			data.expr = eiec.convertedExpr();
+			data.setExpr(eiec.convertedExpr());
 		}
 		if(compiler.options.preventRepeatVars) {
-			final rvf = new RepeatVariableFixer(data.expr, null, data.tfunc.args.map(a -> a.v.name));
-			data.expr = rvf.fixRepeatVariables();
+			final rvf = new RepeatVariableFixer(data.expr, null, data.args.map(a -> a.name));
+			data.setExpr(rvf.fixRepeatVariables());
 		}
 		if(compiler.options.wrapLambdaCaptureVarsInArray) {
 			final cfv = new CaptureVariableFixer(data.expr);
-			data.expr = cfv.fixCaptures();
+			data.setExpr(cfv.fixCaptures());
 		}
 		return data;
 	}

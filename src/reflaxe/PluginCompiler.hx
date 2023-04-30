@@ -16,16 +16,18 @@ package reflaxe;
 import haxe.macro.Type;
 
 import reflaxe.BaseCompiler;
+import reflaxe.data.ClassFuncData;
+import reflaxe.data.ClassVarData;
 import reflaxe.output.PluginHook;
 
 abstract class PluginCompiler<T: BaseCompiler> extends BaseCompiler {
-	public var compileClassHook = new PluginHook4<T, ClassType, ClassFieldVars, ClassFieldFuncs>();
+	public var compileClassHook = new PluginHook4<T, ClassType, Array<ClassVarData>, Array<ClassFuncData>>();
 	public var compileEnumHook = new PluginHook3<T, EnumType, EnumOptions>();
 	public var compileTypedefHook = new PluginHook2<T, DefType>();
 	public var compileAbstractHook = new PluginHook2<T, AbstractType>();
 	public var compileExpressionHook = new PluginHook2<T, TypedExpr>();
 
-	public override function compileClass(classType: ClassType, varFields: ClassFieldVars, funcFields: ClassFieldFuncs): Null<String> {
+	public override function compileClass(classType: ClassType, varFields: Array<ClassVarData>, funcFields: Array<ClassFuncData>): Null<String> {
 		final result = super.compileClass(classType, varFields, funcFields);
 		return compileClassHook.call(result, cast this, classType, varFields, funcFields);
 	}

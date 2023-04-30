@@ -9,6 +9,8 @@ import haxe.macro.Type;
 import reflaxe.compiler.TargetCodeInjection;
 import reflaxe.compiler.MetadataCompiler;
 import reflaxe.compiler.TypeUsageTracker;
+import reflaxe.data.ClassFuncData;
+import reflaxe.data.ClassVarData;
 import reflaxe.helpers.ModuleTypeHelper;
 import reflaxe.optimization.ExprOptimizer;
 import reflaxe.output.OutputManager;
@@ -262,19 +264,6 @@ enum abstract MetaArgumentType(String) to String {
 }
 
 // =======================================================
-// * ClassFieldVars
-// * ClassFieldFuncs
-//
-// Typedefs used for storing ClassFields and their
-// unwrapped data.
-// =======================================================
-typedef ClassFieldVars = Array<{ isStatic: Bool, read: VarAccess, write: VarAccess, field: ClassField }>;
-
-typedef ClassFieldFuncs = Array<{ isStatic: Bool, kind: MethodKind, data: ClassFuncData, field: ClassField }>;
-typedef ClassFuncData = { ret: Type, args: Array<ClassFuncArg>, tfunc: TFunc, expr: Null<TypedExpr> };
-typedef ClassFuncArg = { t: Type, opt: Bool, name: String, expr: Null<TypedExpr>, tvar: Null<TVar> };
-
-// =======================================================
 // * EnumOptions
 //
 // Typedef used for storing EnumFields and their
@@ -295,7 +284,7 @@ abstract class BaseCompiler {
 	//
 	// Override in custom compiler to control it.
 	// =======================================================
-	public abstract function compileClassImpl(classType: ClassType, varFields: ClassFieldVars, funcFields: ClassFieldFuncs): Null<String>;
+	public abstract function compileClassImpl(classType: ClassType, varFields: Array<ClassVarData>, funcFields: Array<ClassFuncData>): Null<String>;
 	public abstract function compileEnumImpl(enumType: EnumType, options: EnumOptions): Null<String>;
 	public abstract function compileExpressionImpl(expr: TypedExpr): Null<String>;
 
@@ -599,7 +588,7 @@ abstract class BaseCompiler {
 	// Compiles the provided class.
 	// Override compileClassImpl to configure the behavior.
 	// =======================================================
-	public function compileClass(classType: ClassType, varFields: ClassFieldVars, funcFields: ClassFieldFuncs): Null<String> {
+	public function compileClass(classType: ClassType, varFields: Array<ClassVarData>, funcFields: Array<ClassFuncData>): Null<String> {
 		return compileClassImpl(classType, varFields, funcFields);
 	}
 
