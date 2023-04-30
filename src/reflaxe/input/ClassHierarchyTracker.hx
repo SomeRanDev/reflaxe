@@ -22,7 +22,10 @@ import haxe.macro.Context;
 import haxe.macro.Type;
 import haxe.macro.TypeTools;
 
+import reflaxe.data.ClassFuncData;
+
 using reflaxe.helpers.BaseTypeHelper;
+using reflaxe.helpers.ClassFieldHelper;
 using reflaxe.helpers.ModuleTypeHelper;
 using reflaxe.helpers.TypeHelper;
 
@@ -45,12 +48,19 @@ final class ClassHierarchyClassData {
 }
 
 class ClassHierarchyTracker {
+	public static var initialized(default, null): Bool = false;
+
 	static var classData: Map<String, ClassHierarchyClassData> = [];
 
 	// Returns an array of all the class types that directly "extends"
 	// or "implements" the provided `ClassType` cls.
 	public static function getAllDirectChildClasses(cls: Null<ClassType>): Array<ClassType> {
-		if(cls == null) return [];
+		if(!initialized)
+			throw "The `trackClassHierarchy` option must be enabled to use this `ClassHierarchyTracker` function.";
+
+		if(cls == null)
+			return [];
+
 		final name = cls.globalName();
 		final data = classData.get(name);
 		return if(data != null) {
@@ -179,21 +189,26 @@ class ClassHierarchyTracker {
 		return funcGetCovariantBaseType(childClass, childClassField, isStatic) != null;
 	}
 
+	// Returns every super class and implemented interface of this class as a `Type`.
+	public static function getAllParentTypesAndInterfaces(childClass: ClassType): Array<Type> {
+		final parents = getAllParentTypes(childClass);
+		parents.reverse();
+		return parents.concat(getAllParentInterfaceTypes(childClass));
+	}
+
 	// If the return type of `ClassField` "childClassField" is covariant (aka. the
 	// function is overriding a parent's function but using a child of the parent's
 	// function's return type), then this function returns the parent function's
 	// return type.
 	public static function funcGetCovariantBaseType(childClass: ClassType, childClassField: ClassField, isStatic: Bool): Null<Type> {
-		final parents = getAllParentTypes(childClass);
-		parents.reverse();
-		for(p in parents.concat(getAllParentInterfaceTypes(childClass))) {
+		for(p in getAllParentTypesAndInterfaces(childClass)) {
 			final decl = switch(p) {
 				case TInst(clsRef, params): { cls: clsRef.get(), params: params };
 				case _: throw "Impossible";
 			}
 
 			for(field in (isStatic ? decl.cls.statics.get() : decl.cls.fields.get())) {
-				if(isCovariant(field, childClassField)) {
+				if(isCovariant(field.findFuncData(decl.cls), childClassField.findFuncData(childClass))) {
 					#if macro
 					return TypeTools.applyTypeParameters(field.type.getTFunReturn(), decl.cls.params, decl.params);
 					#else
@@ -218,7 +233,7 @@ class ClassHierarchyTracker {
 	public static function superFuncIsCovariant(superClass: ClassType, superClassField: ClassField, isStatic: Bool): Bool {
 		for(child in getAllChildClasses(superClass)) {
 			for(field in (isStatic ? child.statics.get() : child.fields.get())) {
-				if(isCovariant(superClassField, field)) {
+				if(isCovariant(superClassField.findFuncData(superClass), field.findFuncData(child))) {
 					return true;
 				}
 			}
@@ -228,12 +243,15 @@ class ClassHierarchyTracker {
 
 	// Given a field and its equivalent child version, returns true if it's
 	// a function with a covariant return type.
-	static function isCovariant(superField: ClassField, childField: ClassField): Bool {
-		if(superField.name != childField.name) {
+	static function isCovariant(superField: Null<ClassFuncData>, childField: Null<ClassFuncData>): Bool {
+		if(superField == null || childField == null) {
 			return false;
 		}
-		var superFieldRet = superField.type.getTFunReturn();
-		var childFieldRet = childField.type.getTFunReturn();
+		if(!isOverride(superField, childField)) {
+			return false;
+		}
+		var superFieldRet = superField.field.type.getTFunReturn();
+		var childFieldRet = childField.field.type.getTFunReturn();
 		if(superFieldRet == null || childFieldRet == null) {
 			return false;
 		}
@@ -245,6 +263,61 @@ class ClassHierarchyTracker {
 			return false;
 		}
 		return Std.string(superFieldRet) != Std.string(childFieldRet);
+	}
+
+	// Given a field and its equivalent child version, returns true if the
+	// child field overrides the super field.
+	static function isOverride(superField: ClassFuncData, childField: ClassFuncData): Bool {
+		if(superField.field.name != childField.field.name) {
+			return false;
+		}
+
+		// If there are no overloads, they must be overrides since they have the same name.
+		if(superField.field.overloads.get().length == 0 && childField.field.overloads.get().length == 0) {
+			return true;
+		}
+
+		return superField.argumentsMatch(childField);
+	}
+
+	// Given a `ClassFuncData` superField, this function finds all the functions
+	// contained within children that override this field.
+	public static function findAllChildOverrides(superField: ClassFuncData): Array<ClassFuncData> {
+		final result: Array<ClassFuncData> = [];
+		for(child in getAllChildClasses(superField.classType)) {
+			for(field in child.fields.get()) {
+				final data = field.findFuncData(child);
+				if(data != null && isOverride(superField, data)) {
+					result.push(data);
+				}
+			}
+		}
+		return result;
+	}
+
+	// Given a `ClassFuncData` childField, this function returns the chain of
+	// super class functions this field overrides.
+	public static function getParentOverrideChain(childField: ClassFuncData): Array<ClassFuncData> {
+		final result: Array<ClassFuncData> = [];
+		for(parent in getAllParentTypesAndInterfaces(childField.classType)) {
+			final decl = switch(parent) {
+				case TInst(clsRef, params): { cls: clsRef.get(), params: params };
+				case _: throw "Impossible";
+			}
+
+			for(field in decl.cls.fields.get()) {
+				final data = field.findFuncDataFromType(parent);
+				if(data != null && !isOverride(data, childField)) {
+					result.push(data);
+				}
+			}
+		}
+		return result;
+	}
+
+	// Returns a combined list of `findAllChildOverrides` and `getParentOverrideChain`.
+	public static function findAllOverrides(field: ClassFuncData): Array<ClassFuncData> {
+		return getParentOverrideChain(field).concat(findAllChildOverrides(field));
 	}
 
 	// In Haxe, it's possible a base class and child class may implement
@@ -290,6 +363,7 @@ class ClassHierarchyTracker {
 			for(mt in modules) {
 				processModule(mt);
 			}
+			initialized = true;
 		}
 	}
 
