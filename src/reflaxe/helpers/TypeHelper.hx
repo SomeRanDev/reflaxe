@@ -364,6 +364,17 @@ class TypeHelper {
 		}
 	}
 
+	public static function wrapWithNull(t: Type): Type {
+		return switch(Context.getType("Null")) {
+			case TAbstract(abRef, _): {
+				TAbstract(abRef, [t]);
+			}
+			case _: {
+				throw "Could not find Null<T>";
+			}
+		}
+	}
+
 	public static function unwrapNullType(t: Type): Null<Type> {
 		return switch(t) {
 			case TAbstract(absRef, params) if(params.length == 1): {
