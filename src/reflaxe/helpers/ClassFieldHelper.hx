@@ -19,14 +19,17 @@ class ClassFieldHelper {
 		return Std.string(field) == Std.string(other);
 	}
 
+	// TODO: change to local static after Haxe bug is fixed
+	// https://github.com/HaxeFoundation/haxe/issues/11193
+	static var findVarData_cache: Map<ClassField, ClassVarData> = [];
+	static var findFuncData_cache: Map<ClassField, ClassFuncData> = [];
+
 	/**
 		Extracts the `ClassVarData` from a variable `ClassField`.
 	**/
 	public static function findVarData(field: ClassField, clsType: ClassType, isStatic: Null<Bool> = null): Null<ClassVarData> {
-		static var cache: Map<ClassField, ClassVarData> = [];
-
-		if(cache.exists(field)) {
-			return cache.get(field);
+		if(findVarData_cache.exists(field)) {
+			return findVarData_cache.get(field);
 		}
 
 		if(isStatic == null) {
@@ -35,7 +38,9 @@ class ClassFieldHelper {
 
 		return switch(field.kind) {
 			case FVar(read, write): {
-				new ClassVarData(clsType, field, isStatic, read, write);
+				final result = new ClassVarData(clsType, field, isStatic, read, write);
+				findVarData_cache.set(field, result);
+				result;
 			}
 			case _: {
 				throw "Not a variable.";
@@ -57,10 +62,8 @@ class ClassFieldHelper {
 		doesn't, it falls back on the limited info within `TFun`.
 	**/
 	public static function findFuncData(field: ClassField, clsType: ClassType, isStatic: Null<Bool> = null): Null<ClassFuncData> {
-		static var cache: Map<ClassField, ClassFuncData> = [];
-
-		if(cache.exists(field)) {
-			return cache.get(field);
+		if(findFuncData_cache.exists(field)) {
+			return findFuncData_cache.get(field);
 		}
 
 		// If `isStatic` is not explicitly provided, manually check if is static.
@@ -103,7 +106,7 @@ class ClassFieldHelper {
 				// Return the `ClassFuncData`
 				final result = new ClassFuncData(clsType, field, isStatic, kind, ret, dataArgs, tfunc, tfunc != null ? tfunc.expr : null);
 				for(a in dataArgs) a.setFuncData(result);
-				cache.set(field, result);
+				findFuncData_cache.set(field, result);
 				result;
 			}
 			case _: null;
