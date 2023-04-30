@@ -10,6 +10,8 @@ import haxe.macro.Type;
 // Required Reflaxe types.
 import reflaxe.ReflectCompiler;
 import reflaxe.BaseCompiler;
+import reflaxe.data.ClassFuncData;
+import reflaxe.data.ClassVarData;
 
 // Reflaxe has a ton of "helper" classes with static extensions.
 // A few are used here.
@@ -56,7 +58,7 @@ class TestCompiler extends BaseCompiler {
 	// If `null` is returned, the class is ignored and nothing is compiled for it.
 	//
 	// https://api.haxe.org/haxe/macro/ClassType.html
-	public function compileClassImpl(classType: ClassType, varFields: ClassFieldVars, funcFields: ClassFieldFuncs): Null<String> {
+	public function compileClassImpl(classType: ClassType, varFields: Array<ClassVarData>, funcFields: Array<ClassFuncData>): Null<String> {
 		// `getNameOrNative` is from `reflaxe.helpers.NameMetaHelper`.
 		// Works with any object that matches { name: String, meta: MetaAccess }
 		// Returns the value provided in `@:native` if that meta exists, and `name` otherwise.
@@ -79,9 +81,8 @@ class TestCompiler extends BaseCompiler {
 		var funcString = "";
 		for(ff in funcFields) {
 			final field = ff.field;
-			final data = ff.data;
-			final funcHeader = (ff.isStatic ? "static " : "") + "func " + field.getNameOrNative() + "(" + data.args.map(a -> a.name).join(", ") + "):\n";
-			final funcContent = data.expr != null ? compileClassFuncExpr(data.expr) : "pass";
+			final funcHeader = (ff.isStatic ? "static " : "") + "func " + field.getNameOrNative() + "(" + ff.args.map(a -> a.name).join(", ") + "):\n";
+			final funcContent = ff.expr != null ? compileClassFuncExpr(ff.expr) : "pass";
 			funcString += (funcHeader + funcContent.tab()).tab() + "\n\n";
 		}
 
