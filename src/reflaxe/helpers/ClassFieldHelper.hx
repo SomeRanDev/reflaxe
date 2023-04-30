@@ -13,6 +13,31 @@ import haxe.macro.Type;
 import reflaxe.BaseCompiler;
 
 class ClassFieldHelper {
+
+	/**
+		Extracts the `ClassVarData` from a variable `ClassField`.
+	**/
+	public static function findVarData(field: ClassField, clsType: ClassType, isStatic: Null<Bool> = null): Null<ClassVarData> {
+		static var cache: Map<ClassField, ClassVarData> = [];
+
+		if(cache.exists(field)) {
+			return cache.get(field);
+		}
+
+		if(isStatic == null) {
+			isStatic = clsType.statics.get().contains(field);
+		}
+
+		return switch(field.kind) {
+			case FVar(read, write): {
+				new ClassVarData(clsType, field, isStatic, read, write);
+			}
+			case _: {
+				throw "Not a variable.";
+			}
+		}
+	}
+
 	/**
 		Extracts the `ClassFuncData` from a function `ClassField`.
 
