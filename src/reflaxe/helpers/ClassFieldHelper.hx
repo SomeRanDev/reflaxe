@@ -51,13 +51,25 @@ class ClassFieldHelper {
 		array of `ClassFuncArg`s is populated with detailed information, but if it
 		doesn't, it falls back on the limited info within `TFun`.
 	**/
-	public static function findFuncData(field: ClassField): Null<ClassFuncData> {
+	public static function findFuncData(field: ClassField, clsType: ClassType, isStatic: Null<Bool> = null): Null<ClassFuncData> {
 		static var cache: Map<ClassField, ClassFuncData> = [];
 
 		if(cache.exists(field)) {
 			return cache.get(field);
 		}
 
+		// If `isStatic` is not explicitly provided, manually check if is static.
+		if(isStatic == null) {
+			isStatic = false;
+			for(s in clsType.statics.get()) {
+				if(equals(s, field)) {
+					isStatic = true;
+					break;
+				}
+			}
+		}
+
+		// Extract TFunc
 		final e = field.expr();
 		final tfunc = if(e != null) {
 			switch(e.expr) {
