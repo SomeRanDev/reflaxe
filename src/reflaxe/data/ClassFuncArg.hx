@@ -28,6 +28,15 @@ class ClassFuncArg {
 		this.expr = expr;
 		this.tvar = tvar;
 	}
+
+	/**
+		Assigning the `ClassFuncData` is delayed so the arguments
+		can be passed first.
+	**/
+	public function setFuncData(funcData: ClassFuncData) {
+		this.funcData = funcData;
+	}
+
 }
 
 #end
