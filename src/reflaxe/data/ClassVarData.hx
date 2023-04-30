@@ -23,10 +23,6 @@ class ClassVarData {
 		this.read = read;
 		this.write = write;
 	}
-
-	public function setExpr(e: TypedExpr) {
-		expr = e;
-	}
 }
 
 #end
