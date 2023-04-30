@@ -52,6 +52,12 @@ class ClassFieldHelper {
 		doesn't, it falls back on the limited info within `TFun`.
 	**/
 	public static function findFuncData(field: ClassField): Null<ClassFuncData> {
+		static var cache: Map<ClassField, ClassFuncData> = [];
+
+		if(cache.exists(field)) {
+			return cache.get(field);
+		}
+
 		final e = field.expr();
 		final tfunc = if(e != null) {
 			switch(e.expr) {
