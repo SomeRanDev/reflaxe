@@ -15,6 +15,14 @@ using reflaxe.helpers.NameMetaHelper;
 using reflaxe.helpers.TypeHelper;
 
 class TypedExprHelper {
+	public static function equals(e: TypedExpr, other: TypedExpr): Bool {
+		#if macro
+		return haxe.macro.TypedExprTools.toString(e) == haxe.macro.TypedExprTools.toString(other);
+		#else
+		return false;
+		#end
+	}
+
 	public static function copy(e: TypedExpr, newDef: Null<TypedExprDef> = null): TypedExpr {
 		return {
 			expr: newDef != null ? newDef : e.expr,
