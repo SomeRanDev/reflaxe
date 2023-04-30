@@ -11,6 +11,7 @@ import reflaxe.compiler.MetadataCompiler;
 import reflaxe.compiler.TypeUsageTracker;
 import reflaxe.data.ClassFuncData;
 import reflaxe.data.ClassVarData;
+import reflaxe.data.EnumOptionData;
 import reflaxe.helpers.ModuleTypeHelper;
 import reflaxe.optimization.ExprOptimizer;
 import reflaxe.output.OutputManager;
@@ -264,14 +265,6 @@ enum abstract MetaArgumentType(String) to String {
 }
 
 // =======================================================
-// * EnumOptions
-//
-// Typedef used for storing EnumFields and their
-// unwrapped data.
-// =======================================================
-typedef EnumOptions = Array<{ name: String, field: EnumField, args: Array<{t:Type, opt:Bool, name:String}> }>;
-
-// =======================================================
 // * BaseCompiler
 //
 // The super class all compilers should extend from.
@@ -285,7 +278,7 @@ abstract class BaseCompiler {
 	// Override in custom compiler to control it.
 	// =======================================================
 	public abstract function compileClassImpl(classType: ClassType, varFields: Array<ClassVarData>, funcFields: Array<ClassFuncData>): Null<String>;
-	public abstract function compileEnumImpl(enumType: EnumType, options: EnumOptions): Null<String>;
+	public abstract function compileEnumImpl(enumType: EnumType, options: Array<EnumOptionData>): Null<String>;
 	public abstract function compileExpressionImpl(expr: TypedExpr): Null<String>;
 
 	// =======================================================
@@ -598,7 +591,7 @@ abstract class BaseCompiler {
 	// Compiles the provided enum.
 	// Override compileEnumImpl to configure the behavior.
 	// =======================================================
-	public function compileEnum(enumType: EnumType, options: EnumOptions): Null<String> {
+	public function compileEnum(enumType: EnumType, options: Array<EnumOptionData>): Null<String> {
 		return compileEnumImpl(enumType, options);
 	}
 

@@ -12,6 +12,7 @@ import reflaxe.ReflectCompiler;
 import reflaxe.BaseCompiler;
 import reflaxe.data.ClassFuncData;
 import reflaxe.data.ClassVarData;
+import reflaxe.data.EnumOptionData;
 
 // Reflaxe has a ton of "helper" classes with static extensions.
 // A few are used here.
@@ -95,7 +96,7 @@ class TestCompiler extends BaseCompiler {
 	// Since we're returning `null` here, all Haxe enums are ignored.
 	//
 	// https://api.haxe.org/haxe/macro/EnumType.html
-	public function compileEnumImpl(enumType: EnumType, constructs: EnumOptions): Null<String> {
+	public function compileEnumImpl(enumType: EnumType, constructs: Array<EnumOptionData>): Null<String> {
 		return null;
 	}
 

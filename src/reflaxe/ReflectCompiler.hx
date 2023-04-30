@@ -24,6 +24,8 @@ import reflaxe.compiler.NullTypeEnforcer;
 import reflaxe.compiler.TypeUsageTracker;
 import reflaxe.data.ClassFuncData;
 import reflaxe.data.ClassVarData;
+import reflaxe.data.EnumOptionArg;
+import reflaxe.data.EnumOptionData;
 import reflaxe.input.ClassHierarchyTracker;
 import reflaxe.input.ModuleUsageTracker;
 
@@ -412,11 +414,15 @@ class ReflectCompiler {
 				case TFun(args, ret): args;
 				case _: [];
 			}
-			options.push({
-				name: name,
-				field: field,
-				args: args
-			});
+
+			final option = new EnumOptionData(enm, field, name);
+
+			for(a in args) {
+				final arg = new EnumOptionArg(option, a.t, a.opt, a.name);
+				option.addArg(arg);
+			}
+
+			options.push(option);
 		}
 		return compiler.compileEnum(enm, options);
 	}
