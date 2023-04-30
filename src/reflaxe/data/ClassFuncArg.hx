@@ -37,6 +37,35 @@ class ClassFuncArg {
 		this.funcData = funcData;
 	}
 
+	/**
+		Returns true if this argument is optional but doesn't
+		have a default value.
+	**/
+	public function isOptionalWithNoDefault() {
+		return opt && expr == null;
+	}
+
+	/**
+		Returns true if this argument is optional, but there
+		are subsequent arguments that are not.
+	**/
+	public function isFrontOptional() {
+		final args = funcData.trustMe().args;
+		for(i in index...args.length) {
+			if(!args[i].opt) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+
+	/**
+		Convert this class to a String representation.
+	**/
+	public function toString(): String {
+		return (opt ? "?" : "") + name + ": " + type + (expr != null ? Std.string(expr) : "");
+	}
 }
 
 #end
