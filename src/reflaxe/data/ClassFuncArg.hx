@@ -59,6 +59,36 @@ class ClassFuncArg {
 		return false;
 	}
 
+	/**
+		If this argument's function is overriden or is overriding a
+		function with a different default value for this argument,
+		this returns true.
+	**/
+	public function hasConflicingDefaultValue(): Bool {
+		if(funcData.trustMe().isStatic) {
+			return false;
+		}
+
+		final overrides = ClassHierarchyTracker.findAllOverrides(funcData.trustMe());
+		for(funcData in overrides) {
+			if(funcData != null && funcData.args.length > index) {
+				final otherDefault = funcData.args[index].expr;
+
+				// check if both have default values
+				if(expr != null && otherDefault != null) {
+					if(!expr.equals(otherDefault)) {
+						return true;
+					}
+				}
+
+				// check if one has default value but other doesn't
+				else if(expr != null || otherDefault != null) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
 
 	/**
 		Convert this class to a String representation.
