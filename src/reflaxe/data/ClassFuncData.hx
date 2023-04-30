@@ -86,6 +86,63 @@ class ClassFuncData {
 		}
 		return result;
 	}
+
+	/**
+		If this function has optional arguments, this function will
+		return a list of all possible argument combinations that can
+		be passed.
+	**/
+	public function findAllArgumentVariations(frontOptionalsOnly: Bool = false): Array<{ args: Array<ClassFuncArg>, padExprs: Array<TypedExpr> }> {
+		var hasRequired = false;
+		final optionalIndexes = [];
+		for(i in 0...args.length) {
+			if(args[i].opt) {
+				optionalIndexes.push(i);
+			} else {
+				hasRequired = true;
+				if(frontOptionalsOnly) {
+					break;
+				}
+			}
+		}
+
+		// If there are no optional arguments, there is only one possibility.
+		if(optionalIndexes.length == 0) {
+			return [{ args: args, padExprs: args.map(a -> TypedExprHelper.make(TIdent(a.name), a.type)) }];
+		}
+
+		// If every argument is optional and `frontOptionalsOnly`, there are no variations.
+		if(!hasRequired && frontOptionalsOnly) {
+			return [];
+		}
+
+		final result = [];
+		final optionalCount = optionalIndexes.length;
+		final possibleCombos = Std.int(Math.pow(2, optionalCount));
+		final pos = PositionHelper.unknownPos();
+		for(comboID in 0...possibleCombos) {
+			final tempArgs = [];
+			final padExprs = [];
+
+			for(j in 0...args.length) {
+				final index = optionalIndexes.indexOf(j);
+				final arg = args[j];
+
+				// If the argument isn't optional, OR the bit index is 1 in `comboID`,
+				// add it to this list of arguments.
+				if(index < 0 || ((comboID & Std.int(Math.pow(2, index))) > 0)) {
+					tempArgs.push(arg);
+					padExprs.push(TypedExprHelper.make(TIdent(arg.name), arg.type));
+				} else {
+					padExprs.push(arg.expr ?? TypedExprHelper.make(TConst(TNull), arg.type));
+				}
+			}
+
+			result.push({ args: tempArgs, padExprs: padExprs });
+		}
+
+		return result;
+	}
 }
 
 #end
