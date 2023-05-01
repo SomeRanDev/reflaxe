@@ -92,7 +92,7 @@ class ClassFuncData {
 		return a list of all possible argument combinations that can
 		be passed.
 	**/
-	public function findAllArgumentVariations(frontOptionalsOnly: Bool = false): Array<{ args: Array<ClassFuncArg>, padExprs: Array<TypedExpr> }> {
+	public function findAllArgumentVariations(frontOptionalsOnly: Bool = false, preventRepeats: Bool = false): Array<{ args: Array<ClassFuncArg>, padExprs: Array<TypedExpr> }> {
 		var hasRequired = false;
 		final optionalIndexes = [];
 		for(i in 0...args.length) {
@@ -119,7 +119,6 @@ class ClassFuncData {
 		final result = [];
 		final optionalCount = optionalIndexes.length;
 		final possibleCombos = Std.int(Math.pow(2, optionalCount));
-		final pos = PositionHelper.unknownPos();
 		for(comboID in 0...possibleCombos) {
 			final tempArgs = [];
 			final padExprs = [];
@@ -139,6 +138,19 @@ class ClassFuncData {
 			}
 
 			result.push({ args: tempArgs, padExprs: padExprs });
+		}
+
+		if(preventRepeats) {
+			final keys: Map<String, Bool> = [];
+			final newResult = [];
+			for(data in result) {
+				final key = Std.string(data.args.map(a -> a.type));
+				if(!keys.exists(key)) {
+					keys.set(key, true);
+					newResult.push(data);
+				}
+			}
+			return newResult;
 		}
 
 		return result;
