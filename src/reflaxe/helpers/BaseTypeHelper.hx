@@ -25,14 +25,16 @@ class BaseTypeHelper {
 		return moduleMembers.slice(0, moduleMembers.length - 2);
 	}
 
-	public static function globalName(cls: BaseType): String {
+	public static function globalName(cls: BaseType, removeSpecialSuffixes: Bool = true): String {
 		final prefix = namespaces(cls).join("_");
 		var name = cls.name;
-		if(StringTools.endsWith(cls.name, IMPL_SUFFIX)) {
-			name = name.substring(0, name.length - IMPL_SUFFIX.length);
-		}
-		if(StringTools.endsWith(cls.name, FIELDS_SUFFIX)) {
-			name = name.substring(0, name.length - FIELDS_SUFFIX.length);
+		if(removeSpecialSuffixes) {
+			if(StringTools.endsWith(cls.name, IMPL_SUFFIX)) {
+				name = name.substring(0, name.length - IMPL_SUFFIX.length);
+			}
+			if(StringTools.endsWith(cls.name, FIELDS_SUFFIX)) {
+				name = name.substring(0, name.length - FIELDS_SUFFIX.length);
+			}
 		}
 		return (prefix.length > 0 ? (prefix + "_") : "") + name;
 	}
