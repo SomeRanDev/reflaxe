@@ -91,18 +91,47 @@ class ClassFuncData {
 		If this function has optional arguments, this function will
 		return a list of all possible argument combinations that can
 		be passed.
+
+		Enabling `frontOptionalsOnly` will make it so only variations
+		for optional arguments that have required arguments after
+		them will be generated. If every argument is optional,
+		an empty array will be returned.
+
+		Enabling `preventRepeats` will filter out any repeated argument
+		combos that have the same types. For example, if a function
+		as two `String` optional arguments, it has four possible combos;
+		however, two of those combos are just one argument of type
+		`String` being passed. This would filter that and provide
+		only three variations: (), (`String`), (`String`, `String`).
 	**/
 	public function findAllArgumentVariations(frontOptionalsOnly: Bool = false, preventRepeats: Bool = false): Array<{ args: Array<ClassFuncArg>, padExprs: Array<TypedExpr> }> {
-		var hasRequired = false;
+		// Find latest require argument if `frontOptionalsOnly`.
+		//
+		// Required and optional arguments can be mixed infinitely, so the first required
+		// argument does not guaretee all "front optionals" have been found.
+		// i.e: in `function(?a, b, ?c, d, ?e)`, "a" and "c" are front optionals.
+		final end = if(frontOptionalsOnly) {
+			var latestRequired = -1;
+			for(i in 0...args.length) {
+				if(!args[i].opt) {
+					latestRequired = i;
+				}
+			}
+			latestRequired;
+		} else {
+			args.length;
+		}
+
+		// If every argument is optional and `frontOptionalsOnly`, there are no variations.
+		if(end == -1) {
+			return [];
+		}
+
+		// Iterate again to find all the optional indexes.
 		final optionalIndexes = [];
-		for(i in 0...args.length) {
+		for(i in 0...end) {
 			if(args[i].opt) {
 				optionalIndexes.push(i);
-			} else {
-				hasRequired = true;
-				if(frontOptionalsOnly) {
-					break;
-				}
 			}
 		}
 
@@ -111,11 +140,8 @@ class ClassFuncData {
 			return [{ args: args, padExprs: args.map(a -> TypedExprHelper.make(TIdent(a.name), a.type)) }];
 		}
 
-		// If every argument is optional and `frontOptionalsOnly`, there are no variations.
-		if(!hasRequired && frontOptionalsOnly) {
-			return [];
-		}
-
+		// Find every variation by determining the max number of combinations (2^optional_count),
+		// then generate each one using the binary for every number from 0 to the max number.
 		final result = [];
 		final optionalCount = optionalIndexes.length;
 		final possibleCombos = Std.int(Math.pow(2, optionalCount));
@@ -140,6 +166,7 @@ class ClassFuncData {
 			result.push({ args: tempArgs, padExprs: padExprs });
 		}
 
+		// Filter out any repeats if they exist.
 		if(preventRepeats) {
 			final keys: Map<String, Bool> = [];
 			final newResult = [];
