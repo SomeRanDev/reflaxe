@@ -23,7 +23,7 @@ jobs:
 
       - name: Test DevEnv.hxml
         run: haxe DevEnv.hxml
-  
+
   test_newproject:
     runs-on: ubuntu-latest
     steps:
@@ -37,6 +37,9 @@ jobs:
 
       - name: Check Haxe Version
         run: haxe -version
+
+      - name: Install Reflaxe
+        run: haxelib git reflaxe https://github.com/RobertBorghese/reflaxe.git
 
       - name: Test DevEnv.hxml
         working-directory: newproject
