@@ -1,3 +1,12 @@
+// ==================================================================
+// * Reflaxe Run.hx
+//
+// This is the script run when using `haxelib run reflaxe`
+//
+// It's main feature is generating a new project by copying the contents
+// of the "newproject" folder into wherever the user prefers.
+// ==================================================================
+
 package;
 
 using StringTools;
@@ -222,6 +231,10 @@ function copyProjectFiles(folderPath: String, fullName: String, abbrName: String
 	copyDir("newproject", folderPath, { fullName: fullName, abbrName: abbrName, ext: ext });
 }
 
+/**
+	Recursive function for copying files.
+	Handles special cases.
+**/
 function copyDir(src: String, dest: String, data: { fullName: String, abbrName: String, ext: String }) {
 	if(!FileSystem.exists(dest)) {
 		FileSystem.createDirectory(dest);
@@ -247,6 +260,10 @@ function copyDir(src: String, dest: String, data: { fullName: String, abbrName: 
 	}
 }
 
+/**
+	Replaces content from the "newproject/" files
+	to match with the user config.
+**/
 function replaceFileContent(content: String, data: { fullName: String, abbrName: String, ext: String }): String {
 	final lowerAbbrName = data.abbrName.toLowerCase();
 	return content.replace("langcompiler", lowerAbbrName + "compiler")
