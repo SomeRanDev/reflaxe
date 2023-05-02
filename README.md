@@ -91,11 +91,11 @@ class MyLangCompiler extends reflaxe.BaseCompiler {
    // fill out just these 3 functions and Reflaxe takes care of the rest
    //---------
 
-   public function compileClassImpl(classType: ClassType, varFields: ClassFieldVars, funcFields: ClassFieldFuncs): Null<String> {
+   public function compileClassImpl(classType: ClassType, varFields: Array<ClassVarData>, funcFields: Array<ClassFuncData>): Null<String> {
       // ...
    }
 
-   public function compileEnumImpl(enumType: EnumType, options: EnumOptions): Null<String> {
+   public function compileEnumImpl(enumType: EnumType, options: Array<EnumOptionData>): Null<String> {
       // ...
    }
 
@@ -136,71 +136,6 @@ The Haxe project that uses your library must first add it to their `.hxml` file.
 
 # set the output directory to "outputDir"
 -D mylang_out=outputDir
-```
-
-&nbsp;
-&nbsp;
-&nbsp;
-
-## `BaseCompiler` Functions
-Here is a list of the relevant `BaseCompiler` functions and typedefs.
-
-```haxe
-//---------
-// These are the typedefs passed to "compileClass"
-typedef ClassFieldVars = Array<{ isStatic: Bool, read: VarAccess, write: VarAccess, field: ClassField }>;
-typedef ClassFieldFuncs = Array<{ isStatic: Bool, kind: MethodKind, tfunc: TFunc, field: ClassField }>;
-
-//---------
-// This is the typedef passed to "compileEnum"
-typedef EnumOptions = Array<{ name: String, field: EnumField, args: Array<{t:Type, opt:Bool, name:String}> }>;
-
-//---------
-// BaseCompiler abstract class
-abstract class BaseCompiler {
-   //---------
-   // This function is given data about Haxe classes. It must either return a String of
-   // the source code this class generates, or `null` if the class should be ignored.
-   public abstract function compileClassImpl(classType: ClassType, varFields: ClassFieldVars, funcFields: ClassFieldFuncs): Null<String>;
-   
-   //---------
-   // Similar to "compileClass", except used for Haxe enums.
-   public abstract function compileEnumImpl(classType: EnumType, options: EnumOptions): Null<String>;
-   
-   //---------
-   // Given the `TypedExpr`, this function should return a String of the generated
-   // expression for the output language.
-   // Returning `null` causes the compiler to ignore this expression.
-   public abstract function compileExpressionImpl(expr: TypedExpr): Null<String>;
-
-   //---------
-   // Typedef and Abstract compiling functions are also included, but they are ignored
-   // by default. They can be overriden if desired.
-   public function compileTypedefImpl(classType: DefType): Null<String> { return null; }
-   public function compileAbstractImpl(classType: AbstractType): Null<String> { return null; }
-   
-   // ---
-   
-   //---------
-   // Normally this function is unused, however if "Manual" mode is selected for
-   // "fileOutputType", this function is called and Reflaxe does not generate any
-   // output itself. If you wish for more control over how files are generated with
-   // your custom Haxe target, this is the function for you.
-   public function generateFilesManually() {}
-   
-   // ---
-   
-   //---------
-   // These functions are created in Reflaxe and should not be overriden.
-   // They should be used in "compileClass" to compile the expressions from functions
-   // and variables as opposed to using "compileExpression" on them directly.
-   public function compileClassVarExpr(expr: TypedExpr): String { ... }
-   public function compileClassFuncExpr(expr: TypedExpr): String { ... }
-   
-   //---------
-   // Use this to compile sub-expressions in compileExpressionImpl
-   public function compileExpression(expr: TypedExpr): Null<String> { ... }
-}
 ```
 
 &nbsp;
@@ -260,7 +195,7 @@ public var reservedVarNames: Array<String> = [];
 public var targetCodeInjectionName: Null<String> = null;
 
 // -------------------------------------------------------
-// If "true", null typing will be enforced for all the code
+// If "true", null safety will be enforced for all the code
 // compiled to the target. Useful for ensuring null is only
 // used on types explicitly marked as nullable.
 public var enforceNullTyping: Bool = true;
@@ -305,6 +240,38 @@ public var convertUnopIncrement: Bool = false;
 // function and any classes it references are compiled.
 // Otherwise, Haxe's less restrictive output type list is used.
 public var smartDCE: Bool = false;
+
+// -------------------------------------------------------
+// If "true", any std module is only compiled if explicitly
+// added during compilation using:
+// `BaseCompiler.addModuleTypeForCompilation(ModuleType)`
+//
+// Helpful for projects that want to be extremely
+// precise with what modules are compiled.
+//
+// By default, no modules are compiled when this is enabled,
+// `onCompileStart` must be used to decide what will be
+// compiled first.
+public var dynamicDCE: Bool = false;
+
+// -------------------------------------------------------
+// A list of meta attached to "std" classes for the
+// custom target. Used to filter these std classes
+// for the "Smart DCE" option.
+public var customStdMeta: Array<String> = [];
+
+// -------------------------------------------------------
+// If "true", a map of all the ModuleTypes mapped by their
+// relevence to the implementation are provided to
+// BaseCompiler's compileClass and compileEnum.
+// Useful for generating "import-like" content.
+public var trackUsedTypes: Bool = false;
+
+// -------------------------------------------------------
+// If "true", functions from `ClassHierarchyTracker` will
+// be available for use. This requires some processing
+// prior to the start of compilation, so opting out is an option.
+public var trackClassHierarchy: Bool = true;
 
 // -------------------------------------------------------
 // If "true", any old output files that are not generated
@@ -368,9 +335,9 @@ public var autoNativeMetaFormat: Null<String> = null;
 // it here allows Reflaxe to validate the meta automatically,
 // ensuring the correct number/type of arguments are used.
 public var metadataTemplates: Array<{
-   meta: #if (haxe_ver >= "4.3.0") MetadataDescription #else Dynamic #end,
-   disallowMultiple: Bool,
-   paramTypes: Null<Array<MetaArgumentType>>,
-   compileFunc: Null<(MetadataEntry, Array<String>) -> Null<String>>
+	meta: haxe.macro.Compiler.MetadataDescription,
+	disallowMultiple: Bool,
+	paramTypes: Null<Array<MetaArgumentType>>,
+	compileFunc: Null<(MetadataEntry, Array<String>) -> Null<String>>
 }> = [];
 ```
