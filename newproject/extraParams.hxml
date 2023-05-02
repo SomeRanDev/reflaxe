@@ -1,0 +1,4 @@
+-D LANG
+-D LANGUAGE
+--macro nullSafety("langcompiler")
+--macro langcompiler.CompilerInit.Start()
