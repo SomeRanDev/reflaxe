@@ -48,10 +48,10 @@ function main() {
 	dir = args.splice(args.length - 1, 1)[0];
 	final mainCommand = args.length < 1 ? "help" : args[0];
 	if(Reflect.hasField(commands, mainCommand)) {
-		Reflect.callMethod(commands, Reflect.getProperty(commands, mainCommand).act, []);
+		Reflect.callMethod(commands, Reflect.getProperty(commands, mainCommand).act, [args.slice(1)]);
 	} else {
-		Sys.println("Could not find command: " + mainCommand + "\n");
-		commands.help.act(args.length > 1 ? args.slice(1) : []);
+		printlnRed("Could not find command: " + mainCommand + "\n");
+		commands.help.act(args);
 	}
 }
 
