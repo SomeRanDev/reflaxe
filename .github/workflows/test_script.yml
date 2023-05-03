@@ -34,3 +34,7 @@ jobs:
       - name: haxelib run reflaxe test
         working-directory: _Temp/reflaxe_Rust
         run: haxelib run reflaxe test
+
+      - name: haxelib run reflaxe build
+        working-directory: _Temp/reflaxe_Rust
+        run: haxelib run reflaxe build
