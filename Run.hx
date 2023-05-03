@@ -32,6 +32,12 @@ final commands = {
 		args: [],
 		act: (args) -> createNewProject(args),
 		example: "new Rust rs"
+	},
+	test: {
+		desc: "Test your target on .hxml project",
+		args: ["hxml_path"],
+		act: (args: Array<String>) -> testProject(args),
+		example: "test test/Test.hxml"
 	}
 }
 
@@ -67,6 +73,7 @@ function getPath(p: String) {
 **/
 function printlnRed(msg: String) { Sys.println('\033[1;31m${msg}\033[0m'); }
 function printlnGreen(msg: String) { Sys.println('\033[1;32m${msg}\033[0m'); }
+function printlnGray(msg: String) { Sys.println('\033[1;30m${msg}\033[0m'); }
 
 /**
 	Generate the content shown for the help command.
@@ -247,6 +254,8 @@ function copyDir(src: String, dest: String, data: { fullName: String, abbrName: 
 				// rename src/langcompiler
 				case "langcompiler":
 					destFile = Path.join([dest, data.abbrName.toLowerCase() + "compiler"]);
+				case "LANG":
+					destFile = Path.join([dest, data.abbrName.toLowerCase()]);
 				// ignore test/out
 				case "out":
 					continue;
@@ -272,4 +281,73 @@ function replaceFileContent(content: String, data: { fullName: String, abbrName:
 		.replace("LANGUAGE", data.fullName)
 		.replace("LANG", data.abbrName)
 		.replace("EXTENSION", data.ext);
+}
+
+function testProject(args: Array<String>) {
+	final path = if(args.length == 0) {
+		Sys.println("No .hxml path provided, using test/Test.hxml\n");
+		"test/Test.hxml";
+	} else if(args.length == 1) {
+		args[0];
+	} else {
+		printlnRed("Too many arguments provided.");
+		return;
+	}
+
+	var haxelibJson: Dynamic = null;
+	final haxelibJsonPath = Path.join([dir, "haxelib.json"]);
+	if(!FileSystem.exists(haxelibJsonPath)) {
+		return printlnRed("haxelib.json file not found!\nThis command must be run in a Reflaxe project.");
+	} else {
+		final haxelibJsonContent = File.getContent(haxelibJsonPath);
+		haxelibJson = haxe.Json.parse(haxelibJsonContent);
+		if(haxelibJson.reflaxe == null) {
+			printlnRed("haxelib.json expected to contain Reflaxe project information.");
+			printlnRed("Please add the following to your haxelib.json to use this command:");
+			Sys.println('"reflaxe": {
+    "name": "<Your Language Name>",
+    "abbr": "<Your Abbreviated Language Name>",
+    "stdPaths": []
+}');
+			return;
+		}
+	}
+
+	// Validate the path
+	if(!FileSystem.exists(path)) {
+		return printlnRed(path + " does not exist!");
+	} else if(Path.extension(path) != "hxml") {
+		return printlnRed(path + " must be a .hxml file!");
+	}
+
+	// Get current cwd
+	// Remember, the command directory is stored in "dir", not "Sys.getCwd()"!!
+	var cwd = dir;
+	final hxmlDir = Path.directory(path);
+
+	// Convert cwd to relative path if possible
+	if(!Path.isAbsolute(hxmlDir)) {
+		final folders = ~/\/\\/g.split(hxmlDir);
+		cwd = Path.join(folders.map(f -> ".."));
+	}
+
+	// Change cwd
+	Sys.setCwd(Path.join([dir, hxmlDir]));
+	printlnGray("cd " + hxmlDir);
+
+	// Generate arguments
+	final getProjPath = (p: ...String) -> Path.normalize(Path.join([cwd].concat(p.toArray())));
+	final haxeArgs = [
+		Path.withoutDirectory(path),
+		"-lib reflaxe",
+		getProjPath("extraParams.hxml"),
+		"-p " + getProjPath(haxelibJson.classPath)
+	];
+	for(stdPath in (haxelibJson.reflaxe?.stdPaths ?? [])) {
+		haxeArgs.push("-p " + getProjPath(stdPath));
+	}
+
+	// Run Haxe project
+	printlnGray("haxe " + haxeArgs.join(" "));
+	Sys.command("haxe", haxeArgs.join(" ").split(" "));
 }
