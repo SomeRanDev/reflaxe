@@ -30,7 +30,7 @@ final commands = {
 	"new": {
 		desc: "Create a new Reflaxe project",
 		args: [],
-		act: (args) -> createNewProject(args),
+		act: (args: Array<String>) -> createNewProject(args),
 		example: "new Rust rs"
 	},
 	test: {
@@ -159,7 +159,7 @@ function createNewProject(args: Array<String>) {
 Can you tell me...\n");
 
 	// Full Name
-	final fullName = readName("Full name? (i.e: Rust, Kotlin, JavaScript)");
+	final fullName = args.length >= 1 ? args[0] : readName("Full name? (i.e: Rust, Kotlin, JavaScript)");
 	if(fullName == null) return;
 
 	// Ensure folder is available based on Full Name
@@ -172,11 +172,11 @@ Can you tell me...\n");
 	}
 
 	// Abbreviated Name
-	final abbrevName = readName("Abbreviated name? (i.e: rust, kt, js)");
+	final abbrevName = args.length >= 2 ? args[1] : readName("Abbreviated name? (i.e: rust, kt, js)");
 	if(abbrevName == null) return;
 	
 	// File Extension
-	final extension = readName("File extension for the files to generate?\nDo not include the dot! (i.e: rs, kt, js)");
+	final extension = args.length >= 3 ? args[2] : readName("File extension for the files to generate?\nDo not include the dot! (i.e: rs, kt, js)");
 	if(extension == null) return;
 
 	// ---
@@ -186,8 +186,14 @@ Can you tell me...\n");
 	Sys.println('Full Name\n  ${fullName}\n
 Abbreviated Name\n  ${abbrevName}\n
 File Extension\n  .${extension}');
-	Sys.print("\nIs this OK? (yes)\n>");
-	final isCorrect = try { Sys.stdin().readLine().toLowerCase(); } catch(e: Eof) { return; }
+
+	final isCorrect = if(args.length < 3) {
+		Sys.print("\nIs this OK? (yes)\n>");
+		try { Sys.stdin().readLine().toLowerCase(); } catch(e: Eof) { return; }
+	} else {
+		"";
+	}
+	
 	if(isCorrect == "" || isCorrect == "y" || isCorrect == "yes") {
 		Sys.println("");
 		printlnGreen("Perfect! Generating project in subfolder: " + folderName);
@@ -276,6 +282,7 @@ function copyDir(src: String, dest: String, data: { fullName: String, abbrName: 
 function replaceFileContent(content: String, data: { fullName: String, abbrName: String, ext: String }): String {
 	final lowerAbbrName = data.abbrName.toLowerCase();
 	return content.replace("langcompiler", lowerAbbrName + "compiler")
+		.replace("package lang", "package " + lowerAbbrName)
 		.replace("__lang__", "__" + lowerAbbrName + "__")
 		.replace("lang-output", lowerAbbrName + "-output")
 		.replace("LANGUAGE", data.fullName)

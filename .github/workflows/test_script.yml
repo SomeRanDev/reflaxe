@@ -29,12 +29,7 @@ jobs:
 
       - name: haxelib run reflaxe new
         working-directory: _Temp
-        run: |
-          haxelib run reflaxe new
-          Rust
-          rs
-          rs
-          yes
+        run: haxelib run reflaxe new Rust rs rs
 
       - name: Check
         working-directory: _Temp
