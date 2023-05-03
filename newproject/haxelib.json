@@ -1,0 +1,17 @@
+{
+  "name": "reflaxe.LANGUAGE",
+  "version": "0.0.1",
+  "description": "A custom Haxe target for LANGUAGE",
+  "url": "http://example.com",
+  "tags": [],
+  "dependencies": {
+    "reflaxe": "git:https://github.com/RobertBorghese/reflaxe"
+  },
+  "classPath": "src/",
+  "releasenote": "Initial release.",
+  "reflaxe": {
+    "name": "LANGUAGE",
+    "abbv": "LANG",
+    "stdPaths": ["std", "std/LANG/_std"]
+  }
+}
