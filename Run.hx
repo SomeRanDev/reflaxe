@@ -356,5 +356,9 @@ function testProject(args: Array<String>) {
 
 	// Run Haxe project
 	printlnGray("haxe " + haxeArgs.join(" "));
-	Sys.command("haxe", haxeArgs.join(" ").split(" "));
+	final exitCode = Sys.command("haxe", haxeArgs.join(" ").split(" "));
+
+	final msg = "Haxe compiler returned exit code " + exitCode;
+	if(exitCode == 0) printlnGreen(msg);
+	else printlnRed(msg);
 }
