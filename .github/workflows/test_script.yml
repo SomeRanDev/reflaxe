@@ -31,6 +31,6 @@ jobs:
         working-directory: _Temp
         run: haxelib run reflaxe new Rust rs rs
 
-      - name: Check
-        working-directory: _Temp
-        run: ls
+      - name: haxelib run reflaxe test
+        working-directory: _Temp/reflaxe_Rust
+        run: haxelib run reflaxe test
