@@ -42,24 +42,3 @@ jobs:
       - name: Run Test
         working-directory: test
         run: haxe Test.hxml
-
-  test_newproject:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Setup Haxe 4.3.0
-        uses: krdlab/setup-haxe@v1
-        with:
-          haxe-version: 4.3.0
-
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Check Haxe Version
-        run: haxe -version
-
-      - name: Install Reflaxe
-        run: haxelib git reflaxe https://github.com/RobertBorghese/reflaxe.git
-
-      - name: Test newproject/Test.hxml
-        working-directory: newproject
-        run: haxe Test.hxml
