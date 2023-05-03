@@ -290,6 +290,9 @@ function replaceFileContent(content: String, data: { fullName: String, abbrName:
 		.replace("EXTENSION", data.ext);
 }
 
+/**
+	The function for running the `test` command.
+**/
 function testProject(args: Array<String>) {
 	final path = if(args.length == 0) {
 		Sys.println("No .hxml path provided, using test/Test.hxml\n");
@@ -358,6 +361,7 @@ function testProject(args: Array<String>) {
 	printlnGray("haxe " + haxeArgs.join(" "));
 	final exitCode = Sys.command("haxe", haxeArgs.join(" ").split(" "));
 
+	// Print exit code
 	final msg = "Haxe compiler returned exit code " + exitCode;
 	if(exitCode == 0) printlnGreen(msg);
 	else printlnRed(msg);
