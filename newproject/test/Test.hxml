@@ -1,0 +1,16 @@
+# -----------------------------------------------------------------------------------
+# Simple hxml file for testing your Reflaxe project.
+# Run this using the `test` command at the root of your project:
+#
+#    haxelib run reflaxe test
+#
+# If you wish to use a specific .html file, add it to the end of the command:
+#
+#    haxelib run reflaxe test path/to/file.hxml
+# -----------------------------------------------------------------------------------
+
+# Set output folder for LANGUAGE
+-D LANG-output=out
+
+# Main function
+-main Code
