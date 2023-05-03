@@ -25,19 +25,29 @@ final commands = {
 		desc: "Shows this message",
 		args: [],
 		act: (args) -> Sys.println(helpContent()),
-		example: "help"
+		example: "help",
+		order: 0
 	},
 	"new": {
 		desc: "Create a new Reflaxe project",
 		args: [],
 		act: (args: Array<String>) -> createNewProject(args),
-		example: "new Rust rs"
+		example: "new Rust rs",
+		order: 1
 	},
 	test: {
 		desc: "Test your target on .hxml project",
 		args: ["hxml_path"],
 		act: (args: Array<String>) -> testProject(args),
-		example: "test test/Test.hxml"
+		example: "test test/Test.hxml",
+		order: 2
+	},
+	build: {
+		desc: "Build your project for distribution",
+		args: ["build_folder"],
+		act: (args: Array<String>) -> buildProject(args),
+		example: "build _Build",
+		order: 3
 	}
 }
 
@@ -69,6 +79,15 @@ function getPath(p: String) {
 }
 
 /**
+	Make the directory of path `p` if it doesn't exist.
+**/
+function makeDirIfNonExist(p: String) {
+	if(!FileSystem.exists(p)) {
+		FileSystem.createDirectory(p);
+	}
+}
+
+/**
 	Print in red or green.
 **/
 function printlnRed(msg: String) { Sys.println('\033[1;31m${msg}\033[0m'); }
@@ -83,9 +102,9 @@ function helpContent(): String {
 
 	final commandNames = Reflect.fields(commands);
 	commandNames.sort((a, b) -> {
-		if(a == "help") return -1;
-		else if(b == "help") return 1;
-		return a < b ? -1 : 1;
+		final i = Reflect.getProperty(commands, a)?.order ?? 9999;
+		final j = Reflect.getProperty(commands, b)?.order ?? 9999;
+		return i - j;
 	});
 
 	// Convert "commands" into an array
@@ -249,9 +268,7 @@ function copyProjectFiles(folderPath: String, fullName: String, abbrName: String
 	Handles special cases.
 **/
 function copyDir(src: String, dest: String, data: { fullName: String, abbrName: String, ext: String }) {
-	if(!FileSystem.exists(dest)) {
-		FileSystem.createDirectory(dest);
-	}
+	makeDirIfNonExist(dest);
 	for(file in FileSystem.readDirectory(src)) {
 		final filePath = Path.join([src, file]);
 		var destFile = Path.join([dest, file]);
@@ -291,6 +308,36 @@ function replaceFileContent(content: String, data: { fullName: String, abbrName:
 }
 
 /**
+	Checks if the directory the command was ran in is a Reflaxe project.
+
+	If it is, a JSON object of the haxelib.json is returned.
+	Otherwise, `null` is returned.
+**/
+function ensureIsReflaxeProject(): Null<Dynamic> {
+	var haxelibJson: Dynamic = null;
+	final haxelibJsonPath = Path.join([dir, "haxelib.json"]);
+	if(!FileSystem.exists(haxelibJsonPath)) {
+		printlnRed("haxelib.json file not found!\nThis command must be run in a Reflaxe project.");
+	} else {
+		final haxelibJsonContent = File.getContent(haxelibJsonPath);
+		haxelibJson = haxe.Json.parse(haxelibJsonContent);
+		if(haxelibJson.reflaxe == null) {
+			printlnRed("haxelib.json expected to contain Reflaxe project information.");
+			printlnRed("Please add the following to your haxelib.json to use this command:");
+			Sys.println('"reflaxe": {
+    "name": "<Your Language Name>",
+    "abbr": "<Your Abbreviated Language Name>",
+    "stdPaths": []
+}');
+			return null;
+		}
+		return haxelibJson;
+	}
+
+	return null;
+}
+
+/**
 	The function for running the `test` command.
 **/
 function testProject(args: Array<String>) {
@@ -304,30 +351,14 @@ function testProject(args: Array<String>) {
 		return;
 	}
 
-	var haxelibJson: Dynamic = null;
-	final haxelibJsonPath = Path.join([dir, "haxelib.json"]);
-	if(!FileSystem.exists(haxelibJsonPath)) {
-		return printlnRed("haxelib.json file not found!\nThis command must be run in a Reflaxe project.");
-	} else {
-		final haxelibJsonContent = File.getContent(haxelibJsonPath);
-		haxelibJson = haxe.Json.parse(haxelibJsonContent);
-		if(haxelibJson.reflaxe == null) {
-			printlnRed("haxelib.json expected to contain Reflaxe project information.");
-			printlnRed("Please add the following to your haxelib.json to use this command:");
-			Sys.println('"reflaxe": {
-    "name": "<Your Language Name>",
-    "abbr": "<Your Abbreviated Language Name>",
-    "stdPaths": []
-}');
-			return;
-		}
-	}
+	final haxelibJson = ensureIsReflaxeProject();
+	if(haxelibJson == null) return;
 
 	// Validate the path
 	if(!FileSystem.exists(path)) {
-		return printlnRed(path + " does not exist!");
+		return printlnRed("`" + path + "` does not exist!");
 	} else if(Path.extension(path) != "hxml") {
-		return printlnRed(path + " must be a .hxml file!");
+		return printlnRed("`" + path + "` must be a .hxml file!");
 	}
 
 	// Get current cwd
@@ -365,4 +396,143 @@ function testProject(args: Array<String>) {
 	final msg = "Haxe compiler returned exit code " + exitCode;
 	if(exitCode == 0) printlnGreen(msg);
 	else printlnRed(msg);
+}
+
+/**
+	The function for running the `build` command.
+**/
+function buildProject(args: Array<String>) {
+	// Validate project, get haxelib.json
+	final haxelibJson = ensureIsReflaxeProject();
+	if(haxelibJson == null) return;
+
+	// Get destination folder
+	final destFolder = if(args.length == 0) {
+		Sys.println("No build folder path provided, using _Build/\n");
+		"_Build";
+	} else if(args.length == 1) {
+		args[0];
+	} else  {
+		printlnRed("Too many argument provided.");
+		return;
+	}
+
+	// Ensure destination folder name valid
+	if(!~/^[A-Za-z0-9_]+$/.match(destFolder)) {
+		printlnRed("`" + destFolder + "` is not a valid folder name!\nPlease only use alphanumeric characters and underscores!");
+		return;
+	}
+
+	// Ensure destination folder relative to cwd
+	final destFolder = Path.join([dir, destFolder]);
+
+	// Check if destination folder already exists
+	if(FileSystem.exists(destFolder)) {
+		if(!FileSystem.isDirectory(destFolder)) {
+			printlnRed("There is already a file named `" + destFolder + "`.\nPlease input a different path for the build folder.");
+			return;
+		} else {
+			// If a folder already exists, ask to delete
+			Sys.println("There is already a folder named `" + destFolder + "`.\nWould you like to delete it? (yes/no)");
+			Sys.print("> ");
+			final response = try { Sys.stdin().readLine().toLowerCase(); } catch(e: Eof) { return; }
+			if(response == "yes" || response == "y") {
+				Sys.println("Deleting...\n");
+				deleteDir(destFolder);
+			} else {
+				Sys.println("Okay! Cancelling build!");
+				return;
+			}
+		}
+	}
+
+	// Make destination folder
+	makeDirIfNonExist(destFolder);
+
+	// Copy source files if possible
+	final classPath = haxelibJson.classPath;
+	if(classPath.length != null && classPath.length > 0) {
+		// Copy class path
+		final dirNormalized = Path.addTrailingSlash(Path.normalize(dir));
+		final classPathSrc = Path.join([dir, classPath]);
+		final classPathDest = Path.join([destFolder, classPath]);
+		copyDirContent(classPathSrc, classPathDest, dirNormalized);
+		Sys.println("Copying class path: " + Path.addTrailingSlash(classPath));
+
+		// Copy std paths
+		final stdPaths: Array<String> = cast (haxelibJson.reflaxe?.stdPaths ?? []);
+		for(stdPath in stdPaths) {
+			final stdPathSrc = Path.join([dir, stdPath]);
+			final ext = StringTools.endsWith(Path.removeTrailingSlashes(stdPath), "_std") ? ".cross.hx" : null;
+			copyDirContent(stdPathSrc, classPathDest, dirNormalized, stdPaths, ext);
+			Sys.println("Copying std path: " + Path.addTrailingSlash(stdPath));
+		}
+
+		// Copy extra files
+		for(file in ["haxelib.json", "extraParams.hxml", "LICENSE", "README.md"]) {
+			final filePath = Path.join([dir, file]);
+			if(FileSystem.exists(filePath)) {
+				File.copy(filePath, Path.join([destFolder, file]));
+				Sys.println("Copying file: " + file);
+			} else {
+				printlnRed("Could not find file: " + file + "; ignoring...");
+			}
+		}
+
+		// Print success
+		Sys.println("");
+		printlnGreen("Build successful:\n" + destFolder);
+	} else {
+		// Print failure
+		printlnRed("\"classPath\" must be defined in haxelib.json to build the project.");
+	}
+}
+
+/**
+	Util function for recursively copying directories containing source files.
+
+	`ignore` is a list of directories that should not be copied.
+	`replaceExt` replaces the extension for all copied source files if provided.
+**/
+function copyDirContent(from: String, to: String, basePath: String, ignore: Null<Array<String>> = null, replaceExt: Null<String> = null) {
+	if(FileSystem.exists(from)) {
+		for(file in FileSystem.readDirectory(from)) {
+			final path = Path.join([from, file]);
+			var dest = Path.join([to, file]);
+			if(!FileSystem.isDirectory(path)) {
+				if(replaceExt != null) {
+					dest = Path.withoutExtension(dest) + replaceExt;
+				}
+				File.copy(path, dest);
+			} else {
+				if(ignore != null && ignore.contains(Path.removeTrailingSlashes(path.replace(basePath, "")))) {
+					continue;
+				}
+				final d = Path.addTrailingSlash(path);
+				final d2 = Path.addTrailingSlash(dest);
+				makeDirIfNonExist(d2);
+				copyDirContent(d, d2, basePath, ignore, replaceExt);
+			}
+		}
+	}
+}
+
+/**
+	Deletes directory even if it has content within it.
+
+	Based on:
+		https://ashes999.github.io/learnhaxe/recursively-delete-a-directory-in-haxe.html
+**/
+function deleteDir(path: String) {
+	if(FileSystem.exists(path) && FileSystem.isDirectory(path)) {
+		final entries = FileSystem.readDirectory(path);
+		for(entry in entries) {
+			if (FileSystem.isDirectory(path + "/" + entry)) {
+				deleteDir(path + "/" + entry);
+				FileSystem.deleteDirectory(path + "/" + entry);
+			} else {
+				FileSystem.deleteFile(path + "/" + entry);
+			}
+		}
+	}
 }
