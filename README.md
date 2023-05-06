@@ -19,6 +19,8 @@ All you need to worry about is programming the conversion from Haxe's typed AST 
 | --- | --- |
 | [Automatic Installation](https://github.com/RobertBorghese/reflaxe#automatic-installation) | How to generate a Reflaxe project using the "new" command. |
 | [Manual Installation](https://github.com/RobertBorghese/reflaxe#manual-installation) | How to install into your library manually. |
+| [Building](https://github.com/RobertBorghese/reflaxe#building) | How to build for library for submission. |
+| [Reflaxe Properties](https://github.com/RobertBorghese/reflaxe#reflaxe-properties) | How to configure unique properties for your Reflaxe project. |
 | [Compiler Code Sample](https://github.com/RobertBorghese/reflaxe/#compiler-code-sample) | How to code the compiler. |
 | [extraParams.hxml Sample](https://github.com/RobertBorghese/reflaxe/#extraparamshxml-sample) | How to configure your library. |
 | [compile.hxml Sample](https://github.com/RobertBorghese/reflaxe/#compilerhxml-sample) | How to use your library on other Haxe projects. |
@@ -49,7 +51,7 @@ haxelib run reflaxe new
 To test your compiler, enter the directory and use `Test.hxml`:
 ```
 cd reflaxe_<langname>
-haxe Test.hxml
+haxelib run reflaxe test
 ```
 
 &nbsp;
@@ -62,6 +64,40 @@ haxe Test.hxml
 | 1 | Install via haxelib git. | <pre>haxelib git reflaxe https://github.com/RobertBorghese/reflaxe.git</pre> |
 | 2 | Add the lib to your `.hxml` file or compile command. | <pre lang="hxml">-lib reflaxe</pre> |
 | 3 | Extend your compiler class from `BaseCompiler`. | <pre lang="haxe">class MyLangCompiler extends reflaxe.BaseCompiler</pre> |
+
+&nbsp;
+&nbsp;
+&nbsp;
+
+## Building
+
+If you generated your project using the Reflaxe `new` script, you may notice your project has multiple source paths. One is for the compiler code, and the other is used for your language's API. Since Haxelib libraries are only allowed one source path, your project must be "built" before distribution.
+
+To do this, simply run the `build` command:
+```
+haxelib run reflaxe build
+```
+
+This will make a copy of your project in the `_Build/` folder, with all of the API files combined into a single directory. When submitting your project to haxelib, zip the files only in the `_Build` folder and submit that.
+
+&nbsp;
+&nbsp;
+&nbsp;
+
+## Reflaxe Properties
+
+You can also configure your multiple directories within `haxelib.json`.
+
+Entering into `haxelib.json`, you'll find a new "reflaxe" property that should look something like this:
+```json
+"reflaxe": {
+   "name": "Langauge",
+   "abbv": "lang",
+   "stdPaths": ["std", "std/lang/_std"]
+}
+```
+
+You may add as many paths to the "stdPaths" as you like, and these will be combined together upon building the project.
 
 &nbsp;
 &nbsp;
