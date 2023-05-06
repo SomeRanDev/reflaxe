@@ -523,14 +523,20 @@ abstract class BaseCompiler {
 	// =======================================================
 	// * Class Management
 	// =======================================================
-	public var classes(default, null): Array<{ cls: BaseType, output: String }> = [];
+	public var classes(default, null): Array<{ cls: BaseType, output: String, fileName: Null<String>, dir: Null<String> }> = [];
 
 	function addToClasses(b: BaseType, output: Null<String>) {
 		if(output != null) {
 			classes.push({
 				cls: b,
-				output: output
+				output: output,
+				fileName: fileNameOverride,
+				dir: fileDirOverride
 			});
+
+			// Reset these for next time
+			fileNameOverride = null;
+			fileDirOverride = null;
 		}
 	}
 

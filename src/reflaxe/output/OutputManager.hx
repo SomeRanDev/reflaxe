@@ -158,10 +158,11 @@ class OutputManager {
 		final files: Map<String, Array<String>> = [];
 		for(c in compiler.classes) {
 			final mid = c.cls.moduleId();
-			if(!files.exists(mid)) {
-				files[mid] = [];
+			final filename = overrideFileName(mid, c);
+			if(!files.exists(filename)) {
+				files[filename] = [];
 			}
-			final f = files[mid];
+			final f = files[filename];
 			if(f != null) {
 				f.push(c.output);
 			}
@@ -176,8 +177,13 @@ class OutputManager {
 	function generateFilePerClass() {
 		ensureOutputDirExists();
 		for(c in compiler.classes) {
-			saveFile(getFileName(c.cls.globalName()), c.output);
+			final filename = overrideFileName(c.cls.globalName(), c);
+			saveFile(getFileName(filename), c.output);
 		}
+	}
+
+	inline function overrideFileName(defaultName: String, o: {fileName: Null<String>, dir: Null<String>}) {
+		return (o.dir != null ? o.dir + "/" : "") + (o.fileName ?? defaultName);
 	}
 
 	function getFileName(filename: String): String {
