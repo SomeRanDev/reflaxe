@@ -22,6 +22,7 @@ All you need to worry about is programming the conversion from Haxe's typed AST 
 | [Building](https://github.com/RobertBorghese/reflaxe#building) | How to build for library for submission. |
 | [Reflaxe Properties](https://github.com/RobertBorghese/reflaxe#reflaxe-properties) | How to configure unique properties for your Reflaxe project. |
 | [Compiler Code Sample](https://github.com/RobertBorghese/reflaxe/#compiler-code-sample) | How to code the compiler. |
+| [CompilerInit Code Sample](https://github.com/RobertBorghese/reflaxe/#compiler-init-code-sample) | How to code the init macro call. |
 | [extraParams.hxml Sample](https://github.com/RobertBorghese/reflaxe/#extraparamshxml-sample) | How to configure your library. |
 | [compile.hxml Sample](https://github.com/RobertBorghese/reflaxe/#compilerhxml-sample) | How to use your library on other Haxe projects. |
 | [BaseCompiler Functions](https://github.com/RobertBorghese/reflaxe/#basecompiler-functions) | The functions used to configure your compiler's behavior and code output. |
@@ -104,25 +105,10 @@ You may add as many paths to the "stdPaths" as you like, and these will be combi
 &nbsp;
 
 ## Compiler Code Sample
-Now fill out the abstract functions from `BaseCompiler` to define how Haxe AST is converted into a String representation of your target language.
+For starters, you must fill out the abstract functions from `BaseCompiler` to define how Haxe AST is converted into a String representation of your target language.
 
 ```haxe
 class MyLangCompiler extends reflaxe.BaseCompiler {
-
-   //---------
-   // call this from your library's hxml file using --macro
-   public static function Start() {
-      final options = {
-         fileOutputExtension: ".mylang",
-         outputDirDefineName: "mylang_out",
-         fileOutputType: FilePerClass
-      };
-
-      //---------
-      // pass an instance of your compiler w/ desired options
-      reflaxe.ReflectCompiler.AddCompiler(new MyLangCompiler(), options);
-   }
-
    //---------
    // fill out just these 3 functions and Reflaxe takes care of the rest
    //---------
@@ -145,6 +131,31 @@ class MyLangCompiler extends reflaxe.BaseCompiler {
 &nbsp;
 &nbsp;
 
+## Compiler Init Code Sample
+Reflaxe projects also require an initialization macro call to setup the various properties for your target. While you can add this "Start" function to your `BaseCompiler` class, the standard for Reflaxe projects is to have this code in a separate class:
+
+```haxe
+class MyLangCompilerInit {
+   //---------
+   // call this from your library's hxml file using --macro
+   public static function Start() {
+      final options = {
+         fileOutputExtension: ".mylang",
+         outputDirDefineName: "mylang_out",
+         fileOutputType: FilePerClass
+      };
+
+      //---------
+      // pass an instance of your compiler w/ desired options
+      reflaxe.ReflectCompiler.AddCompiler(new MyLangCompiler(), options);
+   }
+}
+```
+
+&nbsp;
+&nbsp;
+&nbsp;
+
 ## `extraParams.hxml` Sample
 This framework is expected to be used to create Haxe libraries that "add" an output target. These Haxe libraries are then added to other projects and used to compile Haxe code to the target.
 
@@ -152,11 +163,11 @@ As haxelib only supports one class path per library, combine your class files fo
 
 Your Haxe library using Reflaxe should include an `extraParams.hxml` file that:
 * Defines unique definitions for your target for use in conditional compilation.
-* Runs an initialization macro similar to the `MyLangCompiler.Start` function shown above.
+* Runs an initialization macro similar to the `MyLangCompilerInit.Start` function shown above.
 ```hxml
 -D mylang
 
---macro MyLangCompiler.Start()
+--macro MyLangCompilerInit.Start()
 ```
 
 &nbsp;
