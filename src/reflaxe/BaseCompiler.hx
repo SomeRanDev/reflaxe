@@ -447,48 +447,72 @@ abstract class BaseCompiler {
 	}
 
 	// =======================================================
+	// * File Placement Overrides
+	// =======================================================
+	var fileNameOverride: Null<String> = null;
+	var fileDirOverride: Null<String> = null;
+
+	/**
+		Use while compiling a module type (typically through
+		one of the `BaseCompiler` override methods like
+		`compileClassImpl`) to set the name of the file
+		that will contain the output being generated.
+
+		Setting to an empty `String` or `null` will result
+		in the default file name being used.
+	**/
+	public function setOutputFileName(name: Null<String>) {
+		fileNameOverride = name;
+	}
+
+	/**
+		Use while compiling a module type (typically through
+		one of the `BaseCompiler` override methods like
+		`compileClassImpl`) to set the output directory of
+		the file containing the output for the type being compiled.
+
+		Subdirectories can be used with the forward slash.
+
+		Setting to an empty `String` or `null` will result
+		in the file being generated in the top directory
+		(the output directory).
+	**/
+	public function setOutputFileDir(dir: Null<String>) {
+		fileDirOverride = dir;
+	}
+
+	// =======================================================
 	// * Class Management
 	// =======================================================
 	public var classes(default, null): Array<{ cls: BaseType, output: String }> = [];
 
-	public function addClassOutput(cls: ClassType, output: Null<String>) {
-		onClassAdded(cls, output);
+	function addToClasses(b: BaseType, output: Null<String>) {
 		if(output != null) {
 			classes.push({
-				cls: cls,
+				cls: b,
 				output: output
 			});
 		}
+	}
+
+	public function addClassOutput(cls: ClassType, output: Null<String>) {
+		onClassAdded(cls, output);
+		addToClasses(cls, output);
 	}
 
 	public function addEnumOutput(en: EnumType, output: Null<String>) {
 		onEnumAdded(en, output);
-		if(output != null) {
-			classes.push({
-				cls: en,
-				output: output
-			});
-		}
+		addToClasses(en, output);
 	}
 
 	public function addTypedefOutput(def: DefType, output: Null<String>) {
 		onTypedefAdded(def, output);
-		if(output != null) {
-			classes.push({
-				cls: def,
-				output: output
-			});
-		}
+		addToClasses(def, output);
 	}
 
 	public function addAbstractOutput(abt: AbstractType, output: Null<String>) {
 		onAbstractAdded(abt, output);
-		if(output != null) {
-			classes.push({
-				cls: abt,
-				output: output
-			});
-		}
+		addToClasses(abt, output);
 	}
 
 	// =======================================================
