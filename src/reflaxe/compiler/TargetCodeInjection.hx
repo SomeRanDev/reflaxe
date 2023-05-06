@@ -42,30 +42,33 @@ class TargetCodeInjection {
 				}
 			}
 
-			final injectionArguments = [];
-			for(i in 1...arguments.length) {
-				final arg = compiler.compileExpression(arguments[i]);
-				if(arg == null) {
-					#if eval
-					Context.error("Compiled expression resulted in nothing.", arguments[i].pos);
-					#end
-				}
-				injectionArguments.push(arg);
-			}
+			// Initially fill all arguments as `null`.
+			final injectionArguments = [ for(_ in 1...arguments.length) null ];
 
-			final split = injectionString.split("{}");
-			var result = split[0];
-			for(i in 1...split.length) {
-				final splitter = if(i <= injectionArguments.length) {
-					injectionArguments[i - 1];
+			// Use function so we only compile arguments that are used
+			function getArg(i: Int) {
+				return if(i < injectionArguments.length) {
+					if(injectionArguments[i] == null) {
+						final arg = compiler.compileExpression(arguments[i + 1]);
+						if(arg == null) {
+							#if eval
+							Context.error("Compiled expression resulted in nothing.", arguments[i].pos);
+							#end
+						} else {
+							injectionArguments[i] = arg;
+						}
+					}
+					injectionArguments[i];
 				} else {
-					"{}";
+					null;
 				}
-				// `split[i]` will never be null since i < split.length
-				@:nullSafety(Off) result += splitter + split[i];
 			}
 
-			result;
+			// Find all instances of {NUMBER} and replace with argument if possible
+			~/{(\d+)}/g.map(injectionString, function(ereg) {
+				final num = Std.parseInt(ereg.matched(1));
+				return getArg(num) ?? ereg.matched(0);
+			});
 		} else {
 			null;
 		}
