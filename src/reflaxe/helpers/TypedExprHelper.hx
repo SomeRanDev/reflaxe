@@ -142,6 +142,18 @@ class TypedExprHelper {
 		}
 	}
 
+	public static function isDynamicAccess(expr: TypedExpr): Null<String> {
+		return switch(unwrapParenthesis(expr).expr) {
+			case TField(e, fa): {
+				switch(fa) {
+					case FDynamic(s): s;
+					case _: null;
+				}
+			}
+			case _: null;
+		}
+	}
+
 	public static function getClassField(expr: TypedExpr): Null<ClassField> {
 		return switch(getFieldAccess(expr)) {
 			case FInstance(_, _, cfRef): cfRef.get();
