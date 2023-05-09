@@ -234,6 +234,17 @@ class TypeHelper {
 	}
 
 	// ----------------------------
+	// Checks if the type is Void.
+	public static function isVoid(t: Type): Bool {
+		return switch(t) {
+			case TAbstract(absRef, []): {
+				absRef.get().name == "Void";
+			}
+			case _: false;
+		}
+	}
+
+	// ----------------------------
 	// Checks if the type is the String class.
 	public static function isString(t: Type): Bool {
 		return switch(t) {
