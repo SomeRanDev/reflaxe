@@ -735,18 +735,64 @@ abstract class BaseCompiler {
 	function compileExpressionsIntoLines(exprList: Array<TypedExpr>): String {
 		var currentType = -1;
 		final lines = [];
+
+		injectionAllowed = true;
+
 		for(e in exprList) {
 			final newType = expressionType(e);
 			if(currentType != newType) {
 				if(currentType != -1) lines.push("");
 				currentType = newType;
 			}
+
+			// Compile expression
 			final output = compileExpression(e);
+
+			// Add injections
+			for(c in injectionContent) {
+				lines.push(formatExpressionLine(c));
+			}
+
+			// Add compiled expression
 			if(output != null) {
 				lines.push(formatExpressionLine(output));
 			}
+
+			// Clear injection list
+			if(injectionContent.length > 0) {
+				injectionContent = [];
+			}
 		}
+
+		injectionAllowed = false;
+
 		return lines.join("\n");
+	}
+
+	/**
+		Stores a list of content to be injected between expressions.
+		See `injectExpressionPrefixContent` for implementation.
+	**/
+	var injectionContent: Array<String> = [];
+
+	/**
+		Tracks whether content can be injected while compiling
+		an expression.
+	**/
+	var injectionAllowed: Bool = false;
+
+	/**
+		If called while compiling multiple expressions, this
+		will inject content prior to the expression currently
+		being compiled.
+	**/
+	function injectExpressionPrefixContent(content: String): Bool {
+		return if(injectionAllowed) {
+			injectionContent.push(content);
+			true;
+		} else {
+			false;
+		}
 	}
 
 	/**
