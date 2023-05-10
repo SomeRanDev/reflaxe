@@ -274,12 +274,16 @@ class TypeHelper {
 	}
 
 	// ----------------------------
-	// Checks if the type is an Int or Float.
+	// Checks if the type is an Int, Float, Single, or UInt.
 	public static function isNumberType(t: Type): Bool {
 		return switch(t) {
 			case TAbstract(abTypeRef, []): {
 				final abType = abTypeRef.get();
-				abType.module == "StdTypes" && (abType.name == "Int" || abType.name == "Float");
+				if(abType.module == "StdTypes") {
+					(abType.name == "Int" || abType.name == "Float" || abType.name == "Single");
+				} else {
+					(abType.module == "UInt" && abType.name == "UInt");
+				}
 			}
 			case _: false;
 		}
