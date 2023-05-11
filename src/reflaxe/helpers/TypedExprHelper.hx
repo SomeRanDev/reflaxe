@@ -181,6 +181,94 @@ class TypedExprHelper {
 			case _: null;
 		}
 	}
+
+	/**
+		Returns `false` if it's impossible for the `TypedExpr` to modify
+		the state of the program. For example: it's a number literal
+		or identifier.
+
+		Not guarenteed to modify state if returns `true`, just possible.
+		For example: calls function.
+
+		Helpful for optimizing.
+	**/
+	public static function isMutator(expr: TypedExpr): Bool {
+		return switch(expr.expr) {
+			case TConst(_) |
+				TLocal(_) |
+				TField(_, _) |
+				TTypeExpr(_) |
+				TIdent(_): false;
+
+			case TBinop(_, e1, e2):
+				isMutator(e1) || isMutator(e2);
+
+			case TParenthesis(e) |
+				TCast(e, _) |
+				TMeta(_, e) |
+				TEnumParameter(e, _, _) |
+				TEnumIndex(e): isMutator(e);
+
+			case TObjectDecl(fields): {
+				for(f in fields) {
+					if(isMutator(f.expr)) return true;
+				}
+				false;
+			}
+			case TArrayDecl(el) | TBlock(el): {
+				for(e in el) {
+					if(isMutator(e)) return true;
+				}
+				false;
+			}
+
+			case TCall(_, _) |
+				TNew(_, _, _) |
+				TUnop(OpIncrement | OpDecrement | OpSpread, _, _) |
+				TVar(_, _) |
+				TReturn(_) |
+				TBreak |
+				TContinue |
+				TThrow(_): true;
+
+			case TUnop(_, _, _): false;
+
+			case TFor(_, e1, e2): {
+				isMutator(e1) || isMutator(e2);
+			}
+
+			case TIf(econd, eif, eelse): {
+				isMutator(econd) || isMutator(eif) || (eelse != null && isMutator(eelse));
+			}
+
+			case TWhile(econd, e, _): {
+				isMutator(econd) || isMutator(e);
+			}
+
+			case TSwitch(e, cases, edef): {
+				if(isMutator(e) || (edef != null && isMutator(edef))) {
+					true;
+				} else {
+					for(c in cases) {
+						if(isMutator(c.expr)) return true;
+					}
+					false;
+				}
+			}
+
+			case TTry(e, catches): {
+				if(isMutator(e)) true;
+				else {
+					for(c in catches) {
+						if(isMutator(c.expr)) return true;
+					}
+					false;
+				}
+			}
+
+			case _: false;
+		}
+	}
 }
 
 #end
