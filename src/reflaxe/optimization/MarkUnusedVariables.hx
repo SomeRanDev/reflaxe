@@ -36,7 +36,7 @@ class MarkUnusedVariables {
 	// Returns a modified version of the input expressions with the optimization applied.
 	public function markUnusedLocalVariables(): Array<TypedExpr> {
 		for(e in exprList) {
-			haxe.macro.TypedExprTools.map(e, iter);
+			iter(e);
 		}
 
 		for(id => tvar in tvarMap) {
