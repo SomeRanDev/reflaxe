@@ -16,6 +16,8 @@ package reflaxe.optimization;
 
 import haxe.macro.Type;
 
+import reflaxe.helpers.Context;
+
 using reflaxe.helpers.TypedExprHelper;
 
 class ExprOptimizer {
@@ -24,6 +26,7 @@ class ExprOptimizer {
 		el = UnnecessaryIfRemover.optimize(el);
 		el = UnnecessaryBlockRemover.optimize(el);
 		el = UnnecessaryVarDeclRemover.optimize(el);
+		el = MarkUnusedVariables.mark(el);
 		return el;
 	}
 
