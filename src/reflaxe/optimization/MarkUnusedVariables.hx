@@ -23,25 +23,37 @@ class MarkUnusedVariables {
 
 	public static function mark(list: Array<TypedExpr>): Array<TypedExpr> {
 		final muv = new MarkUnusedVariables(list);
-		return muv.markUnusedLocalVariables();
+		var result = muv.markUnusedLocalVariables();
+		while(muv.foundUnused) {
+			result = muv.markUnusedLocalVariables();
+		}
+		return result;
 	}
 
 	public function new(list: Array<TypedExpr>) {
 		exprList = list;
 	}
 
+	var foundUnused: Bool = false;
 	var tvarMap: Map<Int, Null<TVar>> = [];
 	var tvarPos: Map<Int, Position> = [];
 
 	// Returns a modified version of the input expressions with the optimization applied.
 	public function markUnusedLocalVariables(): Array<TypedExpr> {
+		foundUnused = false;
+		tvarMap = [];
+		tvarPos = [];
+
 		for(e in exprList) {
 			iter(e);
 		}
 
 		for(id => tvar in tvarMap) {
 			if(tvar != null) {
-				tvar.meta.maybeAdd("-reflaxe.unused", [], tvarPos.get(id).trustMe());
+				if(!tvar.meta.maybeHas("-reflaxe.unused")) {
+					tvar.meta.maybeAdd("-reflaxe.unused", [], tvarPos.get(id).trustMe());
+					foundUnused = true;
+				}
 			}
 		}
 
@@ -50,12 +62,18 @@ class MarkUnusedVariables {
 
 	function iter(te: TypedExpr) {
 		switch(te.expr) {
-			case TVar(tvar, _): {
+			case TVar(tvar, maybeExpr): {
 				if(tvarMap.exists(tvar.id)) {
 					throw "Logic error";
 				}
-				tvarMap.set(tvar.id, tvar);
-				tvarPos.set(tvar.id, te.pos);
+				if(tvar.meta.maybeHas("-reflaxe.unused")) {
+					if(maybeExpr != null && !maybeExpr.isMutator()) {
+						return;
+					}
+				} else {
+					tvarMap.set(tvar.id, tvar);
+					tvarPos.set(tvar.id, te.pos);
+				}
 			}
 			case TLocal(tvar): {
 				if(tvarMap.exists(tvar.id)) {
@@ -65,7 +83,7 @@ class MarkUnusedVariables {
 			case _:
 		}
 
-		return haxe.macro.TypedExprTools.map(te, iter);
+		haxe.macro.TypedExprTools.iter(te, iter);
 	}
 }
 
