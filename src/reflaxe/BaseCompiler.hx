@@ -749,8 +749,11 @@ abstract class BaseCompiler {
 			final output = compileExpression(e);
 
 			// Add injections
-			for(c in injectionContent) {
-				lines.push(formatExpressionLine(c));
+			final preExpr = prefixExpressionContent(e, output);
+			if(preExpr != null) {
+				for(e in preExpr) {
+					lines.push(e);
+				}
 			}
 
 			// Add compiled expression
@@ -767,6 +770,14 @@ abstract class BaseCompiler {
 		injectionAllowed = false;
 
 		return lines.join("\n");
+	}
+
+	/**
+		Allows for content to be injected before an expression.
+		Useful for adding call stack information to output.
+	**/
+	function prefixExpressionContent(expr: TypedExpr, output: String): Null<Array<String>> {
+		return injectionContent.length > 0 ? injectionContent : null;
 	}
 
 	/**
