@@ -198,9 +198,12 @@ class TypedExprHelper {
 				TLocal(_) |
 				TField(_, _) |
 				TTypeExpr(_) |
-				TIdent(_): false;
+				TIdent(_) |
+				TFunction(_): false;
 
-			case TBinop(_, e1, e2):
+			case TBinop(OpAssign | OpAssignOp(_) | OpInterval | OpArrow | OpIn, _, _): true;
+
+			case TBinop(_, e1, e2) | TArray(e1, e2):
 				isMutator(e1) || isMutator(e2);
 
 			case TParenthesis(e) |
@@ -265,8 +268,6 @@ class TypedExprHelper {
 					false;
 				}
 			}
-
-			case _: false;
 		}
 	}
 }
