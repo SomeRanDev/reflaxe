@@ -19,6 +19,14 @@ class PositionHelper {
 		return { min: 0, max: 0, file: "(unknown)" };
 		#end
 	}
+
+	public static function line(p: Position): Int {
+		#if macro
+		return haxe.macro.PositionTools.toLocation(p).range.start.line;
+		#else
+		return 0;
+		#end
+	}
 }
 
 #end
