@@ -776,7 +776,7 @@ abstract class BaseCompiler {
 		Allows for content to be injected before an expression.
 		Useful for adding call stack information to output.
 	**/
-	function prefixExpressionContent(expr: TypedExpr, output: String): Null<Array<String>> {
+	function prefixExpressionContent(expr: TypedExpr, output: Null<String>): Null<Array<String>> {
 		return injectionContent.length > 0 ? injectionContent : null;
 	}
 
