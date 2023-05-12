@@ -752,7 +752,7 @@ abstract class BaseCompiler {
 			final preExpr = prefixExpressionContent(e, output);
 			if(preExpr != null) {
 				for(e in preExpr) {
-					lines.push(e);
+					lines.push(formatExpressionLine(e));
 				}
 			}
 
