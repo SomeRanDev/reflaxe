@@ -20,9 +20,25 @@ class PositionHelper {
 		#end
 	}
 
+	public static function getFile(p: Position): String {
+		#if macro
+		return haxe.macro.PositionTools.toLocation(p).file.toString();
+		#else
+		return "<unknown file>";
+		#end
+	}
+
 	public static function line(p: Position): Int {
 		#if macro
 		return haxe.macro.PositionTools.toLocation(p).range.start.line;
+		#else
+		return 0;
+		#end
+	}
+
+	public static function column(p: Position): Int {
+		#if macro
+		return haxe.macro.PositionTools.toLocation(p).range.start.character;
 		#else
 		return 0;
 		#end
