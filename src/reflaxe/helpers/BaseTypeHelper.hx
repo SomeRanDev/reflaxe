@@ -50,6 +50,13 @@ class BaseTypeHelper {
 		}
 	}
 
+	public static function isExprClass(cls: ClassType): Bool {
+		return switch(cls.kind) {
+			case KExpr(_): true;
+			case _: false;
+		}
+	}
+
 	public static function matchesDotPath(cls: BaseType, path: String): Bool {
 		if(cls.pack.length == 0) {
 			return cls.name == path;

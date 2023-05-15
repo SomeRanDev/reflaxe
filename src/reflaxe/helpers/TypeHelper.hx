@@ -380,13 +380,8 @@ class TypeHelper {
 	}
 
 	public static function isExprClass(t: Type): Bool {
-		switch(t) {
-			case TInst(clsRef, _): {
-				switch(clsRef.get().kind) {
-					case KExpr(_): true;
-					case _: false;
-				}
-			}
+		return switch(t) {
+			case TInst(_.get().isExprClass() => true, _): true;
 			case _: false;
 		}
 	}
