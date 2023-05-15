@@ -49,6 +49,18 @@ class TypedExprHelper {
 		}
 	}
 
+	public static function unwrapMeta(expr: TypedExpr): TypedExpr {
+		return switch(expr.expr) {
+			case TParenthesis(e): {
+				unwrapMeta(e);
+			}
+			case TMeta(_, e): {
+				unwrapMeta(e);
+			}
+			case e: expr;
+		}
+	}
+
 	public static function unwrapUnsafeCasts(expr: TypedExpr): TypedExpr {
 		return switch(expr.expr) {
 			case TParenthesis(e): {
@@ -62,6 +74,19 @@ class TypedExprHelper {
 				}
 			}
 			case _: expr;
+		}
+	}
+
+	public static function hasMeta(expr: TypedExpr, name: String): Bool {
+		return switch(expr.expr) {
+			case TParenthesis(e): {
+				hasMeta(e, name);
+			}
+			case TMeta(m, e): {
+				if(m.name == name) true;
+				else hasMeta(e, name);
+			}
+			case e: false;
 		}
 	}
 
