@@ -55,6 +55,37 @@ enum BaseCompilerFileOutputType {
 }
 
 /**
+	Used for `BaseCompilerOptions.wrapFunctionReferences`.
+**/
+enum LambdaWrapType {
+	/**
+		Reflaxe will never wrap function references.
+	**/
+	Never;
+
+	/**
+		Reflaxe will ONLY wrap function fields that use
+		`@:native`, `@:nativeFunctionCode`, or whatever
+		is listed in the `wrapFunctionMetadata` option.
+	**/
+	NativeMetaOnly;
+
+	/**
+		Reflaxe will wrap both extern function references
+		and `wrapFunctionMetadata` metadata fields.
+
+		This includes both functions marked `extern` and
+		functions from `extern` classes.
+	**/
+	ExternOnly;
+
+	/**
+		Reflaxe will wrap all function references.
+	**/
+	Yes;
+}
+
+/**
 	A structure that contains all the options for
 	configuring the BaseCompiler's behavior.
 **/
@@ -154,6 +185,33 @@ class BaseCompilerOptions {
 		the `++` or `--` operators.
 	**/
 	public var convertUnopIncrement: Bool = false;
+
+	/**
+		When enabled, function properties that are referenced
+		as a value will be wrapped in a lambda.
+
+		For example this:
+			var fcc = String.fromCharCode
+		
+		Gets converted to this:
+			var fcc = function(i: Int): String {
+				return String.fromCharCode(i);
+			}
+	**/
+	public var wrapFunctionReferences: LambdaWrapType = ExternOnly;
+
+	/**
+		If `wrapFunctionReferences` is set to either `NativeMetaOnly`
+		or `ExternOnly`, the metadata listed here will trigger a
+		function to be wrapped in a lambda.
+
+		Metadata that will modify the code that's generated for a
+		function at its call-site should be included here.
+	**/
+	public var wrapFunctionMetadata: Array<String> = [
+		":native",
+		":nativeFunctionCode"
+	];
 
 	/**
 		If "true", only the module containing the "main"

@@ -632,7 +632,15 @@ class EverythingIsExprSanitizer {
 	// function values are wrapped in a lambda to enable
 	// complete support.
 	// =======================================================
-	function isFunctionRef(e: TypedExpr) {
+	function isFunctionRef(e: Null<TypedExpr>) {
+		// Check if this feature is disabled
+		final option = compiler.options.wrapFunctionReferences;
+		if(option == Never) {
+			return false;
+		}
+
+		// Ensure this is being referenced, not called!!
+		// If it's being called, it can be treated like normal.
 		final lastExpr = expressionStack[expressionStack.length - 1];
 		if(lastExpr != null) {
 			switch(lastExpr.expr) {
@@ -640,91 +648,121 @@ class EverythingIsExprSanitizer {
 				case _:
 			}
 		}
+
 		if(metaStack.contains(":wrappedInLambda")) {
 			return false;
 		}
-		if(e == null) return false;
-		return switch(e.t) {
-			case TFun(args, ret): switch(e.expr) {
-				case TField(_, fa): {
-					switch(fa) {
-						case FInstance(clsTypeRef, _, cfRef) | FStatic(clsTypeRef, cfRef): {
-							// TODO, add option to decide whether
-							// extern functions should be wrapped
-							// OR maybe all functions should be wrapped?
-							// if(clsTypeRef.get().isExtern || cfRef.get().isExtern) {
-							// 	true;
-							// }
-							final m = cfRef.get().meta;
-							m.maybeHas(":native") || m.maybeHas(":nativeFunctionCode");
+
+		// Do not process nullable expression
+		if(e == null) {
+			return false;
+		}
+
+		// get FieldAccess
+		var fieldAccess = null;
+		switch(e.t) {
+			case TFun(_, _): {
+				switch(e.expr) {
+					case TField(_, fa): {
+						fieldAccess = fa;
+					}
+					case _:
+				}
+			}
+			case _:
+		}
+
+		if(fieldAccess != null) {
+			if(option == Yes) {
+				return true;
+			}
+
+			var clsExtern = false;
+			switch(fieldAccess) {
+				case FInstance(clsTypeRef, _, cfRef) | FStatic(clsTypeRef, cfRef):
+					clsExtern = clsTypeRef.get().isExtern;
+				case _:
+			}
+
+			switch(fieldAccess) {
+				case FInstance(_, _, cfRef) | FStatic(_, cfRef) | FAnon(cfRef) | FClosure(_, cfRef): {
+					final cf = cfRef.get();
+					if(option == ExternOnly && (clsExtern || cf.isExtern)) {
+						return true;
+					}
+
+					final m = cf.meta;
+					for(metaName in compiler.options.wrapFunctionMetadata) {
+						if(m.maybeHas(metaName)) {
+							return true;
 						}
-						case FAnon(cfRef) | FClosure(_, cfRef): {
-							final m = cfRef.get().meta;
-							m.maybeHas(":native") || m.maybeHas(":nativeFunctionCode");
-						}
-						case _: false;
 					}
 				}
-				case _: false;
+				case _:
 			}
-			case _: return false;
 		}
+
+		return false;
 	}
 
 	function standardizeFunctionValue(e: TypedExpr): Null<TypedExpr> {
 		final pos = PositionHelper.unknownPos();
-		final t = TDynamic(null);
 
 		final args = [];
 		final createArgs = [];
-		var retType: Null<Type> = null;
+		var retType: Null<haxe.macro.Type> = null;
 		switch(e.t) {
 			case TFun(tfunArgs, tfunRet): {
 				for(a in tfunArgs) {
 					args.push({
 						expr: TIdent(a.name),
 						pos: pos,
-						t: t
+						t: a.t
 					});
-					createArgs.push(genTVar(a.name, t));
+					createArgs.push(genTVar(a.name, a.t));
 					retType = tfunRet;
 				}
 			}
 			case _: false;
 		}
 
-		#if eval
+		var voidType = #if eval Context.getType("Void") #else null #end;
+		if(voidType == null) throw "Could not find void";
+
+		retType = retType.or(voidType);
+
+		// Expression for TFunction
+		final funcExpr: TypedExpr = {
+			expr: TReturn({
+				expr: TCall({
+					expr: TMeta({ name: ":wrappedInLambda", pos: pos }, e),
+					pos: pos,
+					t: retType.trustMe()
+				}, args),
+				pos: pos,
+				t: voidType
+			}),
+			pos: pos,
+			t: e.t
+		};
+
+		// Wrap in function expression
 		final result = {
 			expr: TBlock([{
 				expr: TFunction({
-					t: retType.or(Context.getType("Void")),
-					expr: {
-						expr: TReturn({
-							expr: TCall({
-								expr: TMeta({ name: ":wrappedInLambda", pos: pos }, e),
-								pos: pos,
-								t: t
-							}, args),
-							pos: pos,
-							t: t
-						}),
-						pos: pos,
-						t: t
-					},
+					t: retType.trustMe(),
+					expr: funcExpr,
 					args: createArgs.map(a -> { value: null, v: a })
 				}),
 				pos: e.pos,
 				t: e.t
 			}]),
 			pos: pos,
-			t: t
+			t: e.t
 		};
 
 		final eiec = new EverythingIsExprSanitizer(result, compiler, null, nameGenerator);
 		return unwrapBlock(eiec.convertedExpr());
-		#else
-		return null;
-		#end
 	}
 
 	function unwrapBlock(e: TypedExpr): TypedExpr {
