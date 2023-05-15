@@ -78,8 +78,19 @@ class ClassFuncData {
 			final arg = args[i];
 			final hasPassedArg = i < passedArgs.length;
 			final useDefault = !hasPassedArg || passedArgs[i].isNullExpr();
-			if(useDefault && arg.expr != null && !arg.hasConflicingDefaultValue()) {
-				result.push(arg.expr);
+			if(useDefault && arg.expr != null) {
+				if(arg.hasConflicingDefaultValue()) {
+					// If there's a conflicting default value, pass `null` anyway.
+					// But we'll mark this `null` with a meta to help track it.
+					final e = passedArgs[i];
+					result.push({
+						expr: TMeta({ name: "-conflicting-default-value", pos: e.pos }, e),
+						pos: e.pos,
+						t: e.t
+					});
+				} else {
+					result.push(arg.expr);
+				}
 			} else if(hasPassedArg) {
 				result.push(passedArgs[i]);
 			}
