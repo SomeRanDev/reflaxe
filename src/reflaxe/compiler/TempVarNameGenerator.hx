@@ -47,7 +47,7 @@ class TempVarNameGenerator {
 	}
 
 	function replaceDisallowedCharacters(s: String): String {
-		return ~/[^0-9a-zA-Z_]+/.split(s).join("");
+		return ~/[^0-9a-zA-Z_]+/g.split(s).join("");
 	}
 
 	// -------------------------------------------------------
