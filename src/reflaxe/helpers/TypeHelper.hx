@@ -379,6 +379,18 @@ class TypeHelper {
 		}
 	}
 
+	public static function isExprClass(t: Type): Bool {
+		switch(t) {
+			case TInst(clsRef, _): {
+				switch(clsRef.get().kind) {
+					case KExpr(_): true;
+					case _: false;
+				}
+			}
+			case _: false;
+		}
+	}
+
 	public static function wrapWithNull(t: Type): Type {
 		return switch(Context.getType("Null")) {
 			case TAbstract(abRef, _): {
