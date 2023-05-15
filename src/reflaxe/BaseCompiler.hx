@@ -1001,7 +1001,7 @@ abstract class BaseCompiler {
 			var result = code;
 
 			if(code.contains("{this}")) {
-				final thisExpr = declaration.thisExpr != null ? compileNFCThisExpression(declaration.thisExpr) : null;
+				final thisExpr = declaration.thisExpr != null ? compileNFCThisExpression(declaration.thisExpr, declaration.meta) : null;
 				if(thisExpr == null) {
 					if(declaration.thisExpr == null) {
 						#if eval
@@ -1063,7 +1063,7 @@ abstract class BaseCompiler {
 			var result = code;
 
 			if(code.contains("{this}")) {
-				final thisExpr = declaration.thisExpr != null ? compileNFCThisExpression(declaration.thisExpr) : null;
+				final thisExpr = declaration.thisExpr != null ? compileNFCThisExpression(declaration.thisExpr, declaration.meta) : null;
 				if(thisExpr == null) {
 					if(declaration.thisExpr == null) {
 						#if eval
@@ -1090,7 +1090,7 @@ abstract class BaseCompiler {
 	/**
 		Compiles the {this} expression for @:nativeFunctionCode.
 	**/
-	public function compileNFCThisExpression(expr: TypedExpr): String {
+	public function compileNFCThisExpression(expr: TypedExpr, meta: Null<MetaAccess>): String {
 		return compileExpressionOrError(expr); 
 	}
 
