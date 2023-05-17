@@ -370,6 +370,9 @@ abstract class BaseCompiler {
 		if(cls.isTypeParameter()) {
 			return false;
 		}
+		if(cls.isExprClass()) {
+			return false;
+		}
 		return !cls.isExtern || !options.ignoreExterns;
 	}
 
