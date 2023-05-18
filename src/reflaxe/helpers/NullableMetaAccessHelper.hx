@@ -39,7 +39,7 @@ class NullableMetaAccessHelper {
 	**/
 	public static function getFirstPosition(m: Null<MetaAccess>, name: String): Null<Position> {
 		final entries = maybeExtract(m, name);
-		return if(entries.length > 0) entires[0];
+		return if(entries.length > 0) entries[0].pos;
 		else null;
 	}
 
