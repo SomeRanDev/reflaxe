@@ -33,8 +33,6 @@ class NullableMetaAccessHelper {
 		}
 	}
 
-	// Extracts and formats content of @:meta metadata.
-	// Can be used as easy method for retrieving metadata that should be generated in output.
 	/**
 		If a meta of `name` exists, the `Position` of the first one
 		is returned.
@@ -45,6 +43,10 @@ class NullableMetaAccessHelper {
 		else null;
 	}
 
+	/**
+		Extracts and formats content of @:meta metadata.
+		Can be used as easy method for retrieving metadata that should be generated in output.
+	**/
 	public static function extractNativeMeta(metaAccess: Null<MetaAccess>, allowMultiParam: Bool = true): Null<Array<String>> {
 		if(metaAccess == null || metaAccess.extract == null) {
 			return null;
