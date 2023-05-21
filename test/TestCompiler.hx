@@ -108,7 +108,7 @@ class TestCompiler extends BaseCompiler {
 	// before finally passing the `TypedExpr` to "compileExpressionImpl".
 	//
 	// https://api.haxe.org/haxe/macro/TypedExpr.html
-	public function compileExpressionImpl(expr: TypedExpr): Null<String> {
+	public function compileExpressionImpl(expr: TypedExpr, topLevel: Bool): Null<String> {
 		var result = "";
 
 		// Compiling the `TypedExpr` is simple. Check the `TypedExprDef` and act accordingly.
