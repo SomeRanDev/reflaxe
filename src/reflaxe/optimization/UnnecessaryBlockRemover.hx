@@ -158,7 +158,7 @@ class UnnecessaryBlockRemover {
 			haxe.macro.TypedExprTools.iter(e, exprIter);
 		}
 		for(e in exprList) {
-			haxe.macro.TypedExprTools.iter(e, exprIter);
+			exprIter(e);
 		}
 		
 		final result = [];
