@@ -36,7 +36,7 @@ class BaseTypeHelper {
 				name = name.substring(0, name.length - FIELDS_SUFFIX.length);
 			}
 		}
-		return (prefix.length > 0 ? (prefix + "_") : "") + name;
+		return (prefix.length > 0 ? (prefix + "_") : "") + (cls.module == cls.name ? "" : ("_" + StringTools.replace(cls.module, ".", "_") + "_")) + name;
 	}
 
 	public static function moduleId(cls: BaseType): String {
