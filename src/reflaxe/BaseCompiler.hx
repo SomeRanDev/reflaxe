@@ -793,7 +793,7 @@ abstract class BaseCompiler {
 		The lines of code are spaced out to make it feel like
 		it was human-written.
 	**/
-	function compileExpressionsIntoLines(exprList: Array<TypedExpr>): String {
+	public function compileExpressionsIntoLines(exprList: Array<TypedExpr>): String {
 		var currentType = -1;
 		final lines = [];
 
