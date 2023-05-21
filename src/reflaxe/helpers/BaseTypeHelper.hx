@@ -25,18 +25,33 @@ class BaseTypeHelper {
 		return moduleMembers.slice(0, moduleMembers.length - 2);
 	}
 
+	public static function uniqueName(cls: BaseType, removeSpecialSuffixes: Bool = true): String {
+		final prefix = namespaces(cls).join("_");
+		var name = cls.name;
+		if(removeSpecialSuffixes) {
+			name = removeNameSpecialSuffixes(name);
+		}
+		return (prefix.length > 0 ? (prefix + "_") : "") + (cls.module == cls.name ? "" : ("_" + StringTools.replace(cls.module, ".", "_") + "_")) + name;
+	}
+
 	public static function globalName(cls: BaseType, removeSpecialSuffixes: Bool = true): String {
 		final prefix = namespaces(cls).join("_");
 		var name = cls.name;
 		if(removeSpecialSuffixes) {
-			if(StringTools.endsWith(cls.name, IMPL_SUFFIX)) {
-				name = name.substring(0, name.length - IMPL_SUFFIX.length);
-			}
-			if(StringTools.endsWith(cls.name, FIELDS_SUFFIX)) {
-				name = name.substring(0, name.length - FIELDS_SUFFIX.length);
-			}
+			name = removeNameSpecialSuffixes(name);
 		}
-		return (prefix.length > 0 ? (prefix + "_") : "") + (cls.module == cls.name ? "" : ("_" + StringTools.replace(cls.module, ".", "_") + "_")) + name;
+		return (prefix.length > 0 ? (prefix + "_") : "") + name;
+	}
+
+	public static function removeNameSpecialSuffixes(name: String): String {
+		var result = name;
+		if(StringTools.endsWith(name, IMPL_SUFFIX)) {
+			result = result.substring(0, result.length - IMPL_SUFFIX.length);
+		}
+		if(StringTools.endsWith(name, FIELDS_SUFFIX)) {
+			result = result.substring(0, result.length - FIELDS_SUFFIX.length);
+		}
+		return result;
 	}
 
 	public static function moduleId(cls: BaseType): String {
