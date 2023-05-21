@@ -1,0 +1,106 @@
+// =======================================================
+// * UnnecessaryBlockRemover
+//
+// Removes unnecessary blocks that do not introduce
+// conflicting variable declarations.
+// =======================================================
+
+package reflaxe.optimization;
+
+#if (macro || reflaxe_runtime)
+
+import reflaxe.helpers.Context;
+import haxe.macro.Type;
+
+using reflaxe.helpers.NameMetaHelper;
+using reflaxe.helpers.TypedExprHelper;
+using reflaxe.helpers.TypeHelper;
+
+class UnnecessaryVarAliasRemover {
+	public static function optimize(el: Array<TypedExpr>): Array<TypedExpr> {
+		final uvar = new UnnecessaryVarAliasRemover(el);
+		return uvar.removeAliases();
+	}
+
+	// ---
+
+	var el: Array<TypedExpr>;
+	var parent: Null<UnnecessaryVarAliasRemover>;
+	var aliases: Map<Int, TypedExpr>;
+
+	public function new(el: Array<TypedExpr>, parent: Null<UnnecessaryVarAliasRemover> = null) {
+		this.el = el;
+		this.parent = parent;
+		aliases = [];
+	}
+
+	/**
+		Types that "copy" (like primitives) should not have aliases erased.
+	**/
+	function isCopyType(t: Type): Bool {
+		final innerType = Context.followWithAbstracts(t);
+		return switch(innerType) {
+			case TAbstract(_.get() => abs, []): abs.hasMeta(":runtimeValue");
+			case _ if(innerType.isString()): true;
+			case _: false;
+		}
+	}
+
+	function removeAliases(): Array<TypedExpr> {
+		final result = [];
+		for(expr in el) {
+			final skipExpr = switch(expr.expr) {
+				case TVar(declTVar, ogVarExpr) if(ogVarExpr != null && !isCopyType(declTVar.t)): {
+					switch(ogVarExpr.unwrapUnsafeCasts().expr) {
+						case TLocal(tvar): {
+							var skip = false;
+							// If both variable declarations have the same type, it's okay we ignored unsafe casts
+							if(declTVar.t.equals(tvar.t)) {
+								// might be worth keeping alias if the alias name is significantly smaller?
+								final ogNameLen = tvar.name.length;
+								final aliasNameLen = declTVar.name.length;
+								if(ogNameLen <= aliasNameLen + 10) {
+									final newVarExpr = if(aliases.exists(tvar.id)) {
+										aliases.get(tvar.id);
+									} else {
+										ogVarExpr;
+									}
+									aliases.set(declTVar.id, newVarExpr);
+									skip = true;
+								}
+							}
+							skip; // skip if alias set
+						}
+						case _: false;
+					}
+				}
+				case TBlock(blockExprs): {
+					result.push(expr.copy(TBlock(optimize(blockExprs))));
+					true; // skip since we supplied our own version of TBlock
+				}
+				case _: false;
+			}
+
+			if(!skipExpr) {
+				result.push(expr);
+			}
+		}
+
+		return result.map(replaceAliases);
+	}
+
+	function replaceAliases(e: TypedExpr) {
+		switch(e.expr) {
+			case TLocal(tvar): {
+				final newExpr = aliases.get(tvar.id);
+				if(newExpr != null) {
+					return newExpr;
+				}
+			}
+			case _:
+		}
+		return haxe.macro.TypedExprTools.map(e, replaceAliases);
+	}
+}
+
+#end

@@ -26,6 +26,7 @@ class ExprOptimizer {
 		el = UnnecessaryIfRemover.optimize(el);
 		el = UnnecessaryBlockRemover.optimize(el);
 		el = UnnecessaryVarDeclRemover.optimize(el);
+		el = UnnecessaryVarAliasRemover.optimize(el);
 		el = MarkUnusedVariables.mark(el);
 		return el;
 	}
