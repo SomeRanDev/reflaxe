@@ -13,6 +13,7 @@ import reflaxe.helpers.Context;
 import haxe.macro.Type;
 
 using reflaxe.helpers.NameMetaHelper;
+using reflaxe.helpers.NullHelper;
 using reflaxe.helpers.TypedExprHelper;
 using reflaxe.helpers.TypeHelper;
 
@@ -47,7 +48,7 @@ class UnnecessaryVarAliasRemover {
 	}
 
 	function removeAliases(): Array<TypedExpr> {
-		final result = [];
+		final result: Array<TypedExpr> = [];
 		for(expr in el) {
 			final skipExpr = switch(expr.expr) {
 				case TVar(declTVar, ogVarExpr) if(ogVarExpr != null && !isCopyType(declTVar.t)): {
@@ -61,9 +62,9 @@ class UnnecessaryVarAliasRemover {
 								final aliasNameLen = declTVar.name.length;
 								if(ogNameLen <= aliasNameLen + 10) {
 									final newVarExpr = if(aliases.exists(tvar.id)) {
-										aliases.get(tvar.id);
+										aliases.get(tvar.id).trustMe();
 									} else {
-										ogVarExpr;
+										ogVarExpr.trustMe();
 									}
 									aliases.set(declTVar.id, newVarExpr);
 									skip = true;
@@ -89,7 +90,7 @@ class UnnecessaryVarAliasRemover {
 		return result.map(replaceAliases);
 	}
 
-	function replaceAliases(e: TypedExpr) {
+	function replaceAliases(e: TypedExpr): TypedExpr {
 		switch(e.expr) {
 			case TLocal(tvar): {
 				final newExpr = aliases.get(tvar.id);
