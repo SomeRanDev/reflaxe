@@ -160,8 +160,9 @@ class TypedExprHelper {
 		}
 	}
 
-	public static function getFieldAccess(expr: TypedExpr): Null<FieldAccess> {
+	public static function getFieldAccess(expr: TypedExpr, unwrapCall: Bool = false): Null<FieldAccess> {
 		return switch(unwrapParenthesis(expr).expr) {
+			case TCall(e, _) if(unwrapCall): getFieldAccess(e);
 			case TField(_, fa): fa;
 			case _: null;
 		}
@@ -179,8 +180,8 @@ class TypedExprHelper {
 		}
 	}
 
-	public static function getClassField(expr: TypedExpr): Null<ClassField> {
-		return switch(getFieldAccess(expr)) {
+	public static function getClassField(expr: TypedExpr, unwrapCall: Bool = false): Null<ClassField> {
+		return switch(getFieldAccess(expr, unwrapCall)) {
 			case FInstance(_, _, cfRef): cfRef.get();
 			case FStatic(_, cfRef): cfRef.get();
 			case FAnon(cfRef): cfRef.get();
