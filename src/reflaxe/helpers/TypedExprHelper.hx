@@ -162,7 +162,7 @@ class TypedExprHelper {
 
 	public static function getFieldAccess(expr: TypedExpr): Null<FieldAccess> {
 		return switch(unwrapParenthesis(expr).expr) {
-			case TField(e, fa): fa;
+			case TField(_, fa): fa;
 			case _: null;
 		}
 	}
