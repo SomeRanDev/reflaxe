@@ -17,6 +17,7 @@ import haxe.macro.Context;
 import haxe.macro.Expr;
 import haxe.macro.Type;
 
+using reflaxe.helpers.NameMetaHelper;
 using reflaxe.helpers.NullableMetaAccessHelper;
 using reflaxe.helpers.NullHelper;
 using reflaxe.helpers.PositionHelper;
@@ -218,10 +219,25 @@ class EverythingIsExprSanitizer {
 				TArrayDecl(handleValueExprList(el));
 			}
 			case TCall(e, el): {
-				TCall(
-					handleValueExpr(e),
-					handleValueExprList(el)
-				);
+				final dontSanitize = switch(e.expr) {
+					case TField(_, fa): {
+						switch(fa) {
+							case FInstance(c, _, _) | FStatic(c, _): {
+								c.get().hasMeta(":noReflaxeSanitize");
+							}
+							case _: false;
+						}
+					}
+					case _: false;
+				}
+				if(dontSanitize) {
+					expr.expr;
+				} else {
+					TCall(
+						handleValueExpr(e),
+						handleValueExprList(el)
+					);
+				}
 			}
 			case TNew(c, params, el): {
 				TNew(c, params, handleValueExprList(el));
