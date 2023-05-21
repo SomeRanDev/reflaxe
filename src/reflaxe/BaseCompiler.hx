@@ -359,7 +359,7 @@ abstract class BaseCompiler {
 	// =======================================================
 	public abstract function compileClassImpl(classType: ClassType, varFields: Array<ClassVarData>, funcFields: Array<ClassFuncData>): Null<String>;
 	public abstract function compileEnumImpl(enumType: EnumType, options: Array<EnumOptionData>): Null<String>;
-	public abstract function compileExpressionImpl(expr: TypedExpr): Null<String>;
+	public abstract function compileExpressionImpl(expr: TypedExpr, topLevel: Bool): Null<String>;
 
 	// =======================================================
 	// * Conditional Overridables
@@ -732,7 +732,7 @@ abstract class BaseCompiler {
 		Compiles the provided expression.
 		Override compileExpressionImpl to configure the behavior.
 	**/
-	public function compileExpression(expr: TypedExpr): Null<String> {
+	public function compileExpression(expr: TypedExpr, topLevel: Bool = false): Null<String> {
 		if(options.targetCodeInjectionName != null) {
 			final result = TargetCodeInjection.checkTargetCodeInjection(options.targetCodeInjectionName, expr, this);
 			if(result != null) {
@@ -740,7 +740,7 @@ abstract class BaseCompiler {
 			}
 		}
 
-		return compileExpressionImpl(expr);
+		return compileExpressionImpl(expr, topLevel);
 	}
 
 	/**
@@ -759,7 +759,7 @@ abstract class BaseCompiler {
 		Generates an error using `Context.error` if unsuccessful.
 	**/
 	public function compileExpressionOrError(expr: TypedExpr): String {
-		final result = compileExpression(expr);
+		final result = compileExpression(expr, false);
 		if(result == null) {
 			onExpressionUnsuccessful(expr.pos);
 			return "";
@@ -807,7 +807,7 @@ abstract class BaseCompiler {
 			}
 
 			// Compile expression
-			final output = compileExpression(e);
+			final output = compileExpression(e, true);
 
 			// Add injections
 			final preExpr = prefixExpressionContent(e, output);

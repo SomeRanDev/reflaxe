@@ -26,7 +26,7 @@ abstract class PluginCompiler<T: BaseCompiler> extends BaseCompiler {
 	public var compileEnumHook = new PluginHook3<T, EnumType, Array<EnumOptionData>>();
 	public var compileTypedefHook = new PluginHook2<T, DefType>();
 	public var compileAbstractHook = new PluginHook2<T, AbstractType>();
-	public var compileExpressionHook = new PluginHook2<T, TypedExpr>();
+	public var compileExpressionHook = new PluginHook3<T, TypedExpr, Bool>();
 
 	public override function compileClass(classType: ClassType, varFields: Array<ClassVarData>, funcFields: Array<ClassFuncData>): Null<String> {
 		final result = super.compileClass(classType, varFields, funcFields);
@@ -48,9 +48,9 @@ abstract class PluginCompiler<T: BaseCompiler> extends BaseCompiler {
 		return compileAbstractHook.call(result, cast this, classType);
 	}
 
-	public override function compileExpression(expr: TypedExpr): Null<String> {
-		final result = super.compileExpression(expr);
-		return compileExpressionHook.call(result, cast this, expr);
+	public override function compileExpression(expr: TypedExpr, topLevel: Bool = false): Null<String> {
+		final result = super.compileExpression(expr, topLevel);
+		return compileExpressionHook.call(result, cast this, expr, topLevel);
 	}
 }
 
