@@ -121,7 +121,7 @@ class MyLangCompiler extends reflaxe.BaseCompiler {
       // ...
    }
 
-   public function compileExpressionImpl(expr: TypedExpr): Null<String> {
+   public function compileExpressionImpl(expr: TypedExpr, topLevel: Bool): Null<String> {
       // ...
    }
 }
