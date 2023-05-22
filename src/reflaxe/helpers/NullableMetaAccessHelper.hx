@@ -156,6 +156,28 @@ class NullableMetaAccessHelper {
 			null;
 		}
 	}
+
+	private static function extractIdentifierFromEntry(entry: MetadataEntry, index: Int = 0): Null<Dynamic> {
+		if(entry.params == null) return null;
+		return if(entry.params.length > index) {
+			switch(entry.params[index].expr) {
+				case EConst(CIdent(s)): s;
+				case _: null;
+			}
+		} else {
+			null;
+		}
+	}
+
+	public static function extractIdentifierFromFirstMeta(metaAccess: Null<MetaAccess>, metaName: String, index: Int = 0): Null<String> {
+		if(metaAccess == null) return null;
+		final metaList = maybeExtract(metaAccess, metaName);
+		for(m in metaList) {
+			final result = extractIdentifierFromEntry(m, index);
+			if(result != null) return result;
+		}
+		return null;
+	}
 }
 
 #end
