@@ -992,7 +992,7 @@ abstract class BaseCompiler {
 		This function is for compiling the result of functions
 		using the @:nativeFunctionCode meta.
 	**/
-	public function compileNativeFunctionCodeMeta(callExpr: TypedExpr, arguments: Array<TypedExpr>, typeParams: Null<Array<() -> String>> = null): Null<String> {
+	public function compileNativeFunctionCodeMeta(callExpr: TypedExpr, arguments: Array<TypedExpr>, typeParams: Null<Array<() -> String>> = null, custom: Null<(String) -> String> = null): Null<String> {
 		final declaration = callExpr.getDeclarationMeta(arguments);
 		if(declaration == null) {
 			return null;
@@ -1042,6 +1042,10 @@ abstract class BaseCompiler {
 						result = result.replace(key, typeParams[i]());
 					}
 				}
+			}
+
+			if(custom != null) {
+				result = custom(result);
 			}
 
 			return result;
