@@ -245,6 +245,33 @@ class TypeHelper {
 	}
 
 	// ----------------------------
+	// Checks if the type is Bool.
+	public static function isBool(t: Type): Bool {
+		return switch(t) {
+			case TAbstract(_.get() => abs, []) if(abs.module == "StdTypes" && abs.name == "Bool"): true;
+			case _: false;
+		}
+	}
+
+	// ----------------------------
+	// Checks if the type is Int.
+	public static function isInt(t: Type): Bool {
+		return switch(t) {
+			case TAbstract(_.get() => abs, []) if(abs.module == "StdTypes" && abs.name == "Int"): true;
+			case _: false;
+		}
+	}
+
+	// ----------------------------
+	// Checks if the type is Float.
+	public static function isFloat(t: Type): Bool {
+		return switch(t) {
+			case TAbstract(_.get() => abs, []) if(abs.module == "StdTypes" && abs.name == "Float"): true;
+			case _: false;
+		}
+	}
+
+	// ----------------------------
 	// Checks if the type is the String class.
 	public static function isString(t: Type): Bool {
 		return switch(t) {
