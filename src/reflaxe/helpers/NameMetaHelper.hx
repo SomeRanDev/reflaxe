@@ -99,6 +99,13 @@ class NameMetaHelper {
 	public static function setNativeNameOverride(id: String, overrideValue: String) {
 		nativeNameOverrides.set(id, overrideValue);
 	}
+
+	/**
+		Call to override all `@:nativeName` values with a certain ID.
+	**/
+	public static function getNativeNameOverride(id: String): Null<String> {
+		return nativeNameOverrides.get(id);
+	}
 }
 
 #end
