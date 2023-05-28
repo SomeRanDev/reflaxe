@@ -19,6 +19,7 @@ import haxe.macro.Expr;
 import haxe.macro.Type;
 
 using reflaxe.helpers.NullableMetaAccessHelper;
+using reflaxe.helpers.NullHelper;
 
 typedef NameAndMeta = {
 	var name(default, never): String;
@@ -70,7 +71,7 @@ class NameMetaHelper {
 			if(result != null && result.length > 1) {
 				final id = result[1];
 				if(nativeNameOverrides.exists(id)) {
-					return nativeNameOverrides.get(id);
+					return nativeNameOverrides.get(id).trustMe();
 				}
 			}
 		}
