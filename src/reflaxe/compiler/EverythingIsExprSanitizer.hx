@@ -137,8 +137,8 @@ class EverythingIsExprSanitizer {
 					throw "Unexpected null encountered.";
 				}
 
-				// If there's a return statement at the end,
-				// we don't want to assign from it.
+				// If there's a return, throw, continue, or break statement
+				// at the end, we don't want to assign from it.
 				// 
 				// Convert:
 				// var a = { return 123; };
@@ -146,12 +146,15 @@ class EverythingIsExprSanitizer {
 				// To:
 				// var a;
 				// { return 123; }
-				final isReturn = switch(old.expr) {
+				final isNonAssignable = switch(old.expr) {
 					case TReturn(_): true;
+					case TThrow(_): true;
+					case TBreak: true;
+					case TContinue: true;
 					case _: false;
 				}
 
-				if(!isReturn && !isBlocklikeExpr(old)) {
+				if(!isNonAssignable && !isBlocklikeExpr(old)) {
 					topScopeArray[index] = {
 						expr: TBinop(OpAssign, assigneeExpr, old),
 						pos: assigneeExpr.pos,
