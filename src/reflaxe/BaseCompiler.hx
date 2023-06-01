@@ -858,7 +858,7 @@ abstract class BaseCompiler {
 		will inject content prior to the expression currently
 		being compiled.
 	**/
-	function injectExpressionPrefixContent(content: String): Bool {
+	public function injectExpressionPrefixContent(content: String): Bool {
 		return if(injectionAllowed) {
 			injectionContent.push(content);
 			true;
