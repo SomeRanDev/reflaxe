@@ -53,13 +53,17 @@ class ExpressionModifier {
 	}
 
 	static function applyModsToExpr(e: Expr): Expr {
-
+		var wasModded = false;
 		var currentExpr = e;
 		for(mod in modifications) {
 			final result = mod(e);
 			if(result != null) {
 				currentExpr = result;
+				wasModded = true;
 			}
+		}
+		if(wasModded) {
+			return currentExpr;
 		}
 		return haxe.macro.ExprTools.map(currentExpr, applyModsToExpr);
 	}
