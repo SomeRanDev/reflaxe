@@ -27,6 +27,7 @@ abstract class PluginCompiler<T: BaseCompiler> extends BaseCompiler {
 	public var compileTypedefHook = new PluginHook2<T, DefType>();
 	public var compileAbstractHook = new PluginHook2<T, AbstractType>();
 	public var compileExpressionHook = new PluginHook3<T, TypedExpr, Bool>();
+	public var compileBeforeExpressionHook = new PluginHook3<T, TypedExpr, Bool>();
 
 	public override function compileClass(classType: ClassType, varFields: Array<ClassVarData>, funcFields: Array<ClassFuncData>): Null<String> {
 		final result = super.compileClass(classType, varFields, funcFields);
@@ -49,6 +50,10 @@ abstract class PluginCompiler<T: BaseCompiler> extends BaseCompiler {
 	}
 
 	public override function compileExpression(expr: TypedExpr, topLevel: Bool = false): Null<String> {
+		final result = compileBeforeExpressionHook.call(null, cast this, expr, topLevel);
+		if(result != null) {
+			return result;
+		}
 		final result = super.compileExpression(expr, topLevel);
 		return compileExpressionHook.call(result, cast this, expr, topLevel);
 	}
