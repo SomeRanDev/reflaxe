@@ -99,9 +99,9 @@ class TypedExprHelper {
 				// In that case, the "this" expression would be the first argument.
 				if(arguments != null) {
 					switch(fa) {
-						case FStatic(clsRef, fieldRef): {
+						case FStatic(_, fieldRef): {
 							switch(fieldRef.get().type) {
-								case TFun(args, ret): {
+								case TFun(args, _): {
 									// If a static function, and the first argument is "this",
 									// we can assume it's an abstract function.
 									if(args.length > 0 && args[0].name == "this") {
