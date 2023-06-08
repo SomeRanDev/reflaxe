@@ -30,6 +30,15 @@ class TempVarNameGenerator {
 	}
 
 	// -------------------------------------------------------
+	// Reserve names for generation
+	public function reserveNames(names: Array<String>) {
+		for(n in names) {
+			final count = variableNameCounts.exists(n) ? variableNameCounts.get(n).or(0) : 0;
+			variableNameCounts.set(n, count + 1);
+		}
+	}
+
+	// -------------------------------------------------------
 	// Generate variable name based on the type
 	public function generateName(t: Null<Type>, baseNameOverride: Null<String> = null) {
 		final baseName = baseNameOverride != null ? baseNameOverride : replaceDisallowedCharacters(generateBaseName(t));

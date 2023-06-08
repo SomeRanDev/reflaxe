@@ -119,6 +119,18 @@ class ClassFieldHelper {
 			case _: null;
 		}
 	}
+
+	public static function getAllVariableNames(data: ClassFuncData, compiler: BaseCompiler) {
+		final fields = data.classType.fields.get();
+		final fieldNames = [];
+		for(f in fields) {
+			switch(f.kind) {
+				case FVar(_, _): fieldNames.push(compiler.compileVarName(f.name, null, f));
+				case _: {}
+			}
+		}
+		return fieldNames;
+	}
 }
 
 #end
