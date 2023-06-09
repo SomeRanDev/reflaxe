@@ -24,7 +24,9 @@ class SyntaxHelper {
 
 		final lines = s.split("\n");
 		for(i in 0...lines.length) {
-			lines[i] = tabStr + lines[i];
+			if(lines[i].length > 0) {
+				lines[i] = tabStr + lines[i];
+			}
 		}
 		return lines.join("\n");
 	}
