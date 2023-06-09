@@ -24,11 +24,20 @@ class SyntaxHelper {
 
 		final lines = s.split("\n");
 		for(i in 0...lines.length) {
-			if(lines[i].length > 0 && !~/^\s*$/.match(lines[i])) {
+			if(lines[i].length > 0 && !isOnlySpaces(lines[i])) {
 				lines[i] = tabStr + lines[i];
 			}
 		}
 		return lines.join("\n");
+	}
+
+	static function isOnlySpaces(s: String): Bool {
+		for(i in 0...s.length) {
+			if(!StringTools.isSpace(s, i)) {
+				return false;
+			}
+		}
+		return true;
 	}
 }
 
