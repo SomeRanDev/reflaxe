@@ -79,7 +79,8 @@ class RepeatVariableFixer {
 					if(name != tvar.name) {
 						final copyTVar = tvar.copy(name);
 						varReplacements.set(copyTVar.id, copyTVar);
-						final temp = expr.copy(TVar(copyTVar, maybeExpr));
+						final modifiedExpr = maybeExpr != null ? handleExpression(maybeExpr) : null;
+						final temp = expr.copy(TVar(copyTVar, modifiedExpr));
 						result.push(temp);
 						continue;
 					} else {
