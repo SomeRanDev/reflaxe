@@ -74,6 +74,20 @@ class NullableMetaAccessHelper {
 	}
 
 	// ------------------------
+	// Expression extractors
+	// ------------------------
+
+	public static function extractExpressionsFromFirstMeta(metaAccess: Null<MetaAccess>, metaName: String): Null<Array<Expr>> {
+		if(metaAccess != null) {
+			final entries = metaAccess.extract(metaName);
+			if(entries.length > 0) {
+				return entries[0].params;
+			}
+		}
+		return null;
+	}
+
+	// ------------------------
 	// String paramter extractors
 	// ------------------------
 
