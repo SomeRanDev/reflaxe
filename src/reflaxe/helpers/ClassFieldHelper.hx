@@ -14,6 +14,8 @@ import reflaxe.data.ClassFuncArg;
 import reflaxe.data.ClassFuncData;
 import reflaxe.data.ClassVarData;
 
+using reflaxe.helpers.NameMetaHelper;
+
 class ClassFieldHelper {
 	public static function equals(field: ClassField, other: ClassField): Bool {
 		return Std.string(field) == Std.string(other);
@@ -130,6 +132,10 @@ class ClassFieldHelper {
 			}
 		}
 		return fieldNames;
+	}
+
+	public static function hasDefaultValue(field: ClassField): Bool {
+		return field.hasMeta(":value");
 	}
 }
 
