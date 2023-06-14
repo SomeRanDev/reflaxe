@@ -12,6 +12,7 @@ import haxe.macro.Context;
 import haxe.macro.Type;
 
 using reflaxe.helpers.BaseTypeHelper;
+using reflaxe.helpers.ClassTypeHelper;
 using reflaxe.helpers.ModuleTypeHelper;
 using reflaxe.helpers.NameMetaHelper;
 using reflaxe.helpers.NullHelper;

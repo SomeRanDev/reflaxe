@@ -8,8 +8,6 @@ package reflaxe.helpers;
 
 #if (macro || reflaxe_runtime)
 
-import reflaxe.helpers.ModuleTypeHelper;
-
 import haxe.macro.Type;
 
 class BaseTypeHelper {
@@ -56,20 +54,6 @@ class BaseTypeHelper {
 
 	public static function moduleId(cls: BaseType): String {
 		return StringTools.replace(cls.module, ".", "_");
-	}
-
-	public static function isTypeParameter(cls: ClassType): Bool {
-		return switch(cls.kind) {
-			case KTypeParameter(_): true;
-			case _: false;
-		}
-	}
-
-	public static function isExprClass(cls: ClassType): Bool {
-		return switch(cls.kind) {
-			case KExpr(_): true;
-			case _: false;
-		}
 	}
 
 	public static function matchesDotPath(cls: BaseType, path: String): Bool {

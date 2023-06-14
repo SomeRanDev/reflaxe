@@ -20,12 +20,12 @@ import reflaxe.output.OutputPath;
 using StringTools;
 
 using reflaxe.helpers.BaseTypeHelper;
+using reflaxe.helpers.ClassTypeHelper;
 using reflaxe.helpers.ModuleTypeHelper;
 using reflaxe.helpers.NullableMetaAccessHelper;
 using reflaxe.helpers.PositionHelper;
 using reflaxe.helpers.TypedExprHelper;
 using reflaxe.helpers.TypeHelper;
-
 
 /**
 	An enum for dictating how the compiler outputs the
