@@ -69,8 +69,9 @@ class ClassTypeHelper {
 			case _: return null;
 		}
 
+		final exprList = exprList.trustMe();
+
 		var remainingExprsIndex = 0;
-		
 		final expressions: Array<TypedExpr> = [];
 		final result: Map<ClassField, TypedExpr> = [];
 		for(expr in exprList.trustMe()) {
