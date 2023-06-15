@@ -6,6 +6,7 @@ import haxe.macro.Expr;
 import haxe.macro.Type;
 
 using reflaxe.helpers.ClassFieldHelper;
+using reflaxe.helpers.NullHelper;
 
 /**
 	Helper functions for `ClassType`.
@@ -31,26 +32,50 @@ class ClassTypeHelper {
 		instead to the field at the start of the constructor.
 		
 		This function checks the constructor expression for assignments
-		that could POSSIBLY be the result of this process.
+		that almost certainly are the result of this process.
+
+		The resulting value contains two properties:
+			- `assignments` is a map of the fields to their default values
+			as `TypedExpr`.
+
+			- `expressions` is a list of the original `TypedExpr`s.
+
+			- `modifiedConstructor` is a modified `TypedExpr` from the
+			constructor with the assignments removed. It can be used to
+			generate a constructor with the assignments if desired.
 	**/
-	public static function extractPreconstructorFieldAssignments(cls: ClassType): Map<ClassField, TypedExpr> {
+	public static function extractPreconstructorFieldAssignments(cls: ClassType): Null<{
+		assignments: Map<ClassField, TypedExpr>,
+		expressions: Array<TypedExpr>,
+		modifiedConstructor: TypedExpr
+	}> {
 		if(cls.constructor == null) {
-			return [];
+			return null;
 		}
 
 		final constructor = cls.constructor.get();
 		final constructorExpr = constructor.expr();
 		if(constructorExpr == null) {
-			return [];
+			return null;
 		}
 
-		final exprList = switch(constructorExpr.expr) {
-			case TBlock(exprList): exprList;
-			case _: return [];
+		final exprList: Null<Array<TypedExpr>> = switch(constructorExpr.expr) {
+			case TFunction(tfunc): {
+				switch(tfunc.expr.expr) {
+					case TBlock(exprList): exprList;
+					case _: return null;
+				}
+			}
+			case _: return null;
 		}
 
+		var remainingExprsIndex = 0;
+		
+		final expressions: Array<TypedExpr> = [];
 		final result: Map<ClassField, TypedExpr> = [];
-		for(expr in exprList) {
+		for(expr in exprList.trustMe()) {
+			remainingExprsIndex++;
+
 			var fieldExpr = null;
 
 			final defaultExpr = switch(expr.expr) {
@@ -62,11 +87,11 @@ class ClassTypeHelper {
 			}
 
 			if(defaultExpr == null || fieldExpr == null) {
-				return result;
+				break;
 			}
 
 			final classField = switch(fieldExpr.expr) {
-				case TField({ expr: TConst(TThis) }, FInstance(_.get() == cls => true, _, cf)): {
+				case TField({ expr: TConst(TThis) }, FInstance(_.get() => fieldClass, _, cf)) if(Std.string(fieldClass) == Std.string(cls)): {
 					final classField = cf.get();
 					if(classField.hasDefaultValue()) {
 						classField;
@@ -78,13 +103,22 @@ class ClassTypeHelper {
 			}
 
 			if(classField == null) {
-				return result;
+				break;
 			}
 			
+			expressions.push(expr);
 			result.set(classField, defaultExpr);
 		}
 
-		return result;
+		return {
+			assignments: result,
+			expressions: expressions,
+			modifiedConstructor: {
+				expr: TBlock(exprList.slice(remainingExprsIndex - 1)),
+				pos: constructorExpr.pos,
+				t: constructorExpr.t
+			}
+		}
 	}
 }
 

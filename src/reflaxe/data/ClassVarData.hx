@@ -49,10 +49,12 @@ class ClassVarData {
 	**/
 	public function findDefaultExpr(): Null<TypedExpr> {
 		if(hasDefaultValue()) {
-			final assignments = classType.extractPreconstructorFieldAssignments();
-			for(assignField => expr in assignments) {
-				if(field.name == assignField.name) {
-					return expr;
+			final data = classType.extractPreconstructorFieldAssignments();
+			if(data != null) {
+				for(assignField => expr in data.assignments) {
+					if(field.name == assignField.name) {
+						return expr;
+					}
 				}
 			}
 		}
