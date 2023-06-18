@@ -50,8 +50,11 @@ class ClassFuncArg {
 		are subsequent arguments that are not.
 	**/
 	public function isFrontOptional() {
+		if(!opt) {
+			return false;
+		}
 		final args = funcData.trustMe().args;
-		for(i in index...args.length) {
+		for(i in (index + 1)...args.length) {
 			if(!args[i].opt) {
 				return true;
 			}
