@@ -190,21 +190,32 @@ class TypedExprHelper {
 		}
 	}
 
-	public static function isStaticCall(expr: TypedExpr, classPath: String, funcName: String): Null<Array<TypedExpr>> {
+	public static function isStaticCall(expr: TypedExpr, classPath: String, funcName: String, allowNoCall: Bool = false): Null<Array<TypedExpr>> {
 		return switch(unwrapParenthesis(expr).expr) {
 			case TCall(callExpr, callArgs): {
-				switch(getFieldAccess(callExpr)) {
-					case FStatic(clsRef, cfRef): {
-						if(clsRef.get().matchesDotPath(classPath) && cfRef.get().name == funcName) {
-							callArgs;
-						} else {
-							null;
-						}
-					}
-					case _: null;
+				if(isStaticField(callExpr, classPath, funcName)) {
+					callArgs;
+				} else {
+					null;
 				}
 			}
+			case _ if(allowNoCall && isStaticField(expr, classPath, funcName)): {
+				[];
+			}
 			case _: null;
+		}
+	}
+
+	public static function isStaticField(expr: TypedExpr, classPath: String, funcName: String): Bool {
+		return switch(getFieldAccess(unwrapParenthesis(expr))) {
+			case FStatic(clsRef, cfRef): {
+				if(clsRef.get().matchesDotPath(classPath) && cfRef.get().name == funcName) {
+					true;
+				} else {
+					false;
+				}
+			}
+			case _: false;
 		}
 	}
 
