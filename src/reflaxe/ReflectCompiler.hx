@@ -275,7 +275,9 @@ class ReflectCompiler {
 
 		for(clsRef in classDecls) {
 			final cls = clsRef.get();
-			NullTypeEnforcer.checkClass(cls);
+			if(compiler.options.enforceNullTyping) {
+				NullTypeEnforcer.checkClass(cls);
+			}
 			compiler.setupModule(TClassDecl(clsRef));
 			if(compiler.shouldGenerateClass(cls)) {
 				compiler.addClassOutput(cls, transpileClass(cls, compiler));
