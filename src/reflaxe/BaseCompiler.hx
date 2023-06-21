@@ -143,7 +143,7 @@ class BaseCompilerOptions {
 		compiled to the target. Useful for ensuring null is only
 		used on types explicitly marked as nullable.
 	**/
-	public var enforceNullTyping: Bool = true;
+	public var enforceNullTyping: Bool = false;
 
 	/**
 		If "true", typedefs will be converted to their internal
