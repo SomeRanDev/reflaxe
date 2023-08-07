@@ -228,12 +228,22 @@ class ReflectCompiler {
 		}
 	}
 
+	static function getAllKeepTypes(compiler: BaseCompiler): Array<ModuleType> {
+		final types = moduleTypes != null ? moduleTypes : [];
+		final tracker = new ModuleUsageTracker(types, compiler);
+		return tracker.nonStdTypes().filter(m -> m.getCommonData().meta.has(":keep"));
+	}
+
 	static function addClassesToCompiler(compiler: BaseCompiler) {
 		if(isDynamicDce(compiler)) {
 			if(compiler.getMainExpr() == null) {
 				for(m in getAllModulesTypesForCompiler(compiler)) {
 					compiler.addModuleTypeForCompilation(m);
 				}
+			}
+
+			for(m in getAllKeepTypes(compiler)) {
+				compiler.addModuleTypeForCompilation(m);
 			}
 
 			dynamicallyAddModulesToCompiler(compiler);
