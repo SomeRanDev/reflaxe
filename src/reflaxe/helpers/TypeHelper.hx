@@ -194,6 +194,15 @@ class TypeHelper {
 		}
 	}
 
+	public static function mapParams(t: Type, callback: (Type, Int) -> Type): Null<Type> {
+		final params = getParams(t);
+		final newParams = [];
+		for(i in 0...params.length) {
+			newParams.push(callback(params[i], i));
+		}
+		return withParams(t, newParams);
+	}
+
 	static function extractParamTypes(params: Array<TypeParameter>): Array<Type> {
 		return params.map(tp -> tp.t);
 	}
