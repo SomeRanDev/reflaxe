@@ -196,6 +196,7 @@ class TypeHelper {
 
 	public static function mapParams(t: Type, callback: (Type, Int) -> Type): Null<Type> {
 		final params = getParams(t);
+		if(params == null) return null;
 		final newParams = [];
 		for(i in 0...params.length) {
 			newParams.push(callback(params[i], i));
