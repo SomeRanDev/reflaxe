@@ -13,6 +13,7 @@ import haxe.macro.Type;
 
 using reflaxe.helpers.TypedExprHelper;
 using reflaxe.helpers.NameMetaHelper;
+using reflaxe.helpers.NullHelper;
 using reflaxe.helpers.ModuleTypeHelper;
 
 class UnnecessaryBlockRemover {
@@ -20,22 +21,24 @@ class UnnecessaryBlockRemover {
 
 	var requiredNames: Array<String>;
 	var declaredVars: Array<String>; 
-	var multiUseVarNames: Array<String>;
+	var multiUseVarNames: Null<Array<String>>;
 
 	public static function optimize(list: Array<TypedExpr>): Array<TypedExpr> {
 		final ubr = new UnnecessaryBlockRemover(list);
 		return ubr.removeUnnecessaryBlocks();
 	}
 
-	public function new(list: Array<TypedExpr>) {
+	public function new(list: Array<TypedExpr>, parentMultiUseVarNames: Null<Array<String>> = null) {
 		exprList = list;
 		requiredNames = [];
 		declaredVars = [];
-		multiUseVarNames = [];
+		multiUseVarNames = parentMultiUseVarNames;
 	}
 
 	public function removeUnnecessaryBlocks(): Array<TypedExpr> {
-		multiUseVarNames = findMultiUseVarNames();
+		if(multiUseVarNames == null) {
+			multiUseVarNames = findMultiUseVarNames();
+		}
 
 		for(e in exprList) {
 			trackExpr(e);
@@ -84,7 +87,7 @@ class UnnecessaryBlockRemover {
 				case TBlock([]): {}
 				case TBlock(el): {
 					// Merge the possible sub-expression blocks for this sub-block.
-					final ubr = new UnnecessaryBlockRemover(el);
+					final ubr = new UnnecessaryBlockRemover(el, multiUseVarNames);
 					final newExprList = ubr.removeUnnecessaryBlocks();
 
 					// Check if merge should occur
@@ -92,7 +95,7 @@ class UnnecessaryBlockRemover {
 					for(name in ubr.declaredVars) {
 						// If a variable is used in multiple blocks, or this this
 						// variable name is required elsewhere, we do not merge.
-						if(multiUseVarNames.contains(name) || requiredNames.contains(name)) {
+						if(multiUseVarNames.trustMe().contains(name) || requiredNames.contains(name)) {
 							shouldMerge = false;
 							break;
 						}
@@ -146,7 +149,7 @@ class UnnecessaryBlockRemover {
 
 		function exprIter(e: TypedExpr) {
 			switch(e.expr) {
-				case TVar(tvar, maybeExpr): {
+				case TVar(tvar, _): {
 					if(!varInstanceCount.exists(tvar.name)) varInstanceCount.set(tvar.name, []);
 					final count = varInstanceCount.get(tvar.name);
 					if(count != null) {
