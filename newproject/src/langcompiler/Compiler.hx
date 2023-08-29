@@ -52,7 +52,7 @@ class Compiler extends PluginCompiler<Compiler> {
 		
 		https://api.haxe.org/haxe/macro/TypedExpr.html
 	**/
-	public function compileExpressionImpl(expr: TypedExpr): Null<String> {
+	public function compileExpressionImpl(expr: TypedExpr, topLevel: Bool): Null<String> {
 		// TODO: implement
 		return null;
 	}
