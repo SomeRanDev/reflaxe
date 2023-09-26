@@ -195,192 +195,249 @@ This is the list of options that can be passed to `ReflectCompiler.AddCompiler` 
 While these all have default values, it is recommended `fileOutputExtension` and `outputDirDefineName` are defined for your language at the bare minimum.
 
 ```haxe
-// -------------------------------------------------------
-// How the source code files are outputted.
-// There are four options: 
-//  * SingleFile - all output is combined into single file
-//  * FilePerModule - all module output is organized into files
-//  * FilePerClass - each Haxe class is output into its own file
-//  * Manual - nothing is generated and BaseCompiler.generateFilesManually is called
+/**
+	How the source code files are outputted.
+**/
 public var fileOutputType: BaseCompilerFileOutputType = FilePerClass;
 
-// -------------------------------------------------------
-// This String is appended to the filename for each output file.
+/**
+	This `String` is appended to the filename for each output file.
+**/
 public var fileOutputExtension: String = ".hxoutput";
 
-// -------------------------------------------------------
-// This is the define that decides where the output is placed.
-// For example, this define will place the output in the "out" directory.
-//
-// -D hxoutput=out
-//
+/**
+	This is the define that decides where the output is placed.
+	For example, this define will place the output in the "out" directory.
+
+	-D hxoutput=out
+**/
 public var outputDirDefineName: String = "hxoutput";
 
-// -------------------------------------------------------
-// If "fileOutputType" is SingleFile, this is the name of
-// the file generated if a directory is provided.
+/**
+	If "fileOutputType" is `SingleFile`, this is the name of
+	the file generated if a directory is provided.
+**/
 public var defaultOutputFilename: String = "output";
 
-// -------------------------------------------------------
-// A list of type paths that will be ignored and not generated.
-// Useful in cases where you can optimize the generation of
-// certain Haxe classes to your target's native syntax.
-//
-// For example, ignoring `haxe.iterators.ArrayIterator` and
-// generating to the target's native for-loop.
+/**
+	A list of type paths that will be ignored and not generated.
+	Useful in cases where you can optimize the generation of
+	certain Haxe classes to your target's native syntax.
+
+	For example, ignoring `haxe.iterators.ArrayIterator` and
+	generating to the target's native for-loop.
+**/
 public var ignoreTypes: Array<String> = [];
 
-// -------------------------------------------------------
-// A list of variable names that cannot be used in the
-// generated output. If these are used in the Haxe source,
-// an underscore is appended to the name in the output.
+/**
+	A list of variable names that cannot be used in the
+	generated output. If these are used in the Haxe source,
+	an underscore is appended to the name in the output.
+**/
 public var reservedVarNames: Array<String> = [];
 
-// -------------------------------------------------------
-// The name of the function used to inject code directly
-// to the target. Set to `null` to disable this feature.
+/**
+	The name of the function used to inject code directly
+	to the target. Set to `null` to disable this feature.
+**/
 public var targetCodeInjectionName: Null<String> = null;
 
-// -------------------------------------------------------
-// If "true", null safety will be enforced for all the code
-// compiled to the target. Useful for ensuring null is only
-// used on types explicitly marked as nullable.
-public var enforceNullTyping: Bool = true;
+/**
+	If `true`, null-safety will be enforced for all the code
+	compiled to the target. Useful for ensuring null is only
+	used on types explicitly marked as nullable.
+**/
+public var enforceNullTyping: Bool = false;
 
-// -------------------------------------------------------
-// If "true", typedefs will be converted to their internal
-// class or enum type before being processed and generated.
+/**
+	If `true`, typedefs will be converted to their internal
+	class or enum type before being processed and generated.
+**/
 public var unwrapTypedefs: Bool = true;
 
-// -------------------------------------------------------
-// Whether Haxe's "Everything is an Expression" is normalized.
+/**
+	Whether Haxe's "Everything is an Expression" is normalized.
+**/
 public var normalizeEIE: Bool = true;
 
-// -------------------------------------------------------
-// Whether variables of the same name are allowed to be
-// redeclarated in the same scope or a subscope.
+/**
+	Whether variables of the same name are allowed to be
+	redeclarated in the same scope or a subscope.
+**/
 public var preventRepeatVars: Bool = true;
 
-// -------------------------------------------------------
-// Whether variables captured by lambdas are wrapped in
-// an Array. Useful as certain targets can't capture and
-// modify a value unless stored by reference.
+/**
+	Whether variables captured by lambdas are wrapped in
+	an `Array`. Useful as certain targets can't capture and
+	modify a value unless stored by reference.
+**/
 public var wrapLambdaCaptureVarsInArray: Bool = false;
 
-// -------------------------------------------------------
-// If "true", during the EIE normalization phase, all
-// instances of null coalescence are converted to a
-// null-check if statement.
+/**
+	If `true`, during the EIE normalization phase, all
+	instances of null coalescence are converted to a
+	null-check if statement.
+**/
 public var convertNullCoal: Bool = false;
 
-// -------------------------------------------------------
-// If "true", during the EIE normalization phase, all
-// instances of prefix/postfix increment and decrement
-// are converted to a Binop form.
-//
-// Helpful on Python-like targets that do not support
-// the `++` or `--` operators.
+/**
+	If `true`, during the EIE normalization phase, all
+	instances of prefix/postfix increment and decrement
+	are converted to a Binop form.
+
+	Helpful on Python-like targets that do not support
+	the `++` or `--` operators.
+**/
 public var convertUnopIncrement: Bool = false;
 
-// -------------------------------------------------------
-// If "true", only the module containing the "main"
-// function and any classes it references are compiled.
-// Otherwise, Haxe's less restrictive output type list is used.
+/**
+	When enabled, function properties that are referenced
+	as a value will be wrapped in a lambda.
+
+	For example this:
+		```haxe
+		var fcc = String.fromCharCode
+		```
+	
+	Gets converted to this:
+		```haxe
+		var fcc = function(i: Int): String {
+			return String.fromCharCode(i);
+		}
+		```
+**/
+public var wrapFunctionReferences: LambdaWrapType = ExternOnly;
+
+/**
+	If `wrapFunctionReferences` is set to either `NativeMetaOnly`
+	or `ExternOnly`, the metadata listed here will trigger a
+	function to be wrapped in a lambda.
+
+	Metadata that will modify the code that's generated for a
+	function at its call-site should be included here.
+**/
+public var wrapFunctionMetadata: Array<String> = [
+	":native",
+	":nativeFunctionCode"
+];
+
+/**
+	If `true`, only the module containing the "main"
+	function and any classes it references are compiled.
+	Otherwise, Haxe's less restrictive output type list is used.
+**/
 public var smartDCE: Bool = false;
 
-// -------------------------------------------------------
-// If "true", any std module is only compiled if explicitly
-// added during compilation using:
-// `BaseCompiler.addModuleTypeForCompilation(ModuleType)`
-//
-// Helpful for projects that want to be extremely
-// precise with what modules are compiled.
-//
-// By default, no modules are compiled when this is enabled,
-// `onCompileStart` must be used to decide what will be
-// compiled first.
+/**
+	If `true`, any std module is only compiled if explicitly
+	added during compilation using:
+	`BaseCompiler.addModuleTypeForCompilation(ModuleType)`
+
+	Helpful for projects that want to be extremely
+	precise with what modules are compiled.
+
+	By default, no modules are compiled when this is enabled,
+	`onCompileStart` must be used to decide what will be
+	compiled first.
+**/
 public var dynamicDCE: Bool = false;
 
-// -------------------------------------------------------
-// A list of meta attached to "std" classes for the
-// custom target. Used to filter these std classes
-// for the "Smart DCE" option.
+/**
+	A list of meta attached to "std" classes for the
+	custom target. Used to filter these std classes
+	for the "Smart DCE" option.
+**/
 public var customStdMeta: Array<String> = [];
 
-// -------------------------------------------------------
-// If "true", a map of all the ModuleTypes mapped by their
-// relevence to the implementation are provided to
-// BaseCompiler's compileClass and compileEnum.
-// Useful for generating "import-like" content.
+/**
+	If `true`, a map of all the ModuleTypes mapped by their
+	relevence to the implementation are provided to
+	BaseCompiler's compileClass and compileEnum.
+	Useful for generating "import-like" content.
+**/
 public var trackUsedTypes: Bool = false;
 
-// -------------------------------------------------------
-// If "true", functions from `ClassHierarchyTracker` will
-// be available for use. This requires some processing
-// prior to the start of compilation, so opting out is an option.
+/**
+	If `true`, functions from `ClassHierarchyTracker` will
+	be available for use. This requires some processing
+	prior to the start of compilation, so opting out is an option.
+**/
 public var trackClassHierarchy: Bool = true;
 
-// -------------------------------------------------------
-// If "true", any old output files that are not generated
-// in the most recent compilation will be deleted.
-// A text file containing all the current output files is
-// saved in the output directory to help keep track. 
-//
-// This feature is ignored when "fileOutputType" is SingleFile.
+/**
+	If `true`, any old output files that are not generated
+	in the most recent compilation will be deleted.
+	A text file containing all the current output files is
+	saved in the output directory to help keep track. 
+
+	This feature is ignored when "fileOutputType" is SingleFile.
+**/
 public var deleteOldOutput: Bool = true;
 
-// -------------------------------------------------------
-// If "false", an error is thrown if a function without
-// a body is encountered. Typically this occurs when
-// an umimplemented Haxe API function is encountered.
+/**
+	If `false`, an error is thrown if a function without
+	a body is encountered. Typically this occurs when
+	an umimplemented Haxe API function is encountered.
+**/
 public var ignoreBodilessFunctions: Bool = false;
 
-// -------------------------------------------------------
-// If "true", extern classes and fields are not passed to BaseCompiler.
+/**
+	If `true`, extern classes and fields are not passed to BaseCompiler.
+**/
 public var ignoreExterns: Bool = true;
 
-// -------------------------------------------------------
-// If "true", properties that are not physical properties
-// are not passed to BaseCompiler. (i.e. both their
-// read and write rules are "get", "set", or "never").
+/**
+	If `true`, properties that are not physical properties
+	are not passed to BaseCompiler. (i.e. both their
+	read and write rules are "get", "set", or "never").
+**/
 public var ignoreNonPhysicalFields: Bool = true;
 
-// -------------------------------------------------------
-// If "true", the @:meta will be automatically handled
-// for classes, enums, and class fields. This meta works
-// like it does for Haxe/C#, allowing users to define
-// metadata/annotations/attributes in the target output.
-//
-// @:meta(my_meta) var field = 123;
-//
-// For example, the above Haxe code converts to the below
-// output code. Use "autoNativeMetaFormat" to configure
-// how the native metadata is formatted.
-//
-// [my_meta]
-// let field = 123;
+/**
+	If `true`, the `@:meta` will be automatically handled
+	for classes, enums, and class fields. This meta works
+	like it does for Haxe/C#, allowing users to define
+	metadata/annotations/attributes in the target output.
+
+	```haxe
+	@:meta(my_meta) var field = 123;
+	```
+
+	For example, the above Haxe code converts to the below
+	output code. Use "autoNativeMetaFormat" to configure
+	how the native metadata is formatted.
+
+	```
+	[my_meta]
+	let field = 123;
+	```
+**/
 public var allowMetaMetadata: Bool = true;
 
-// -------------------------------------------------------
-// If "allowMetaMetadata" is enabled, this configures
-// how the metadata is generated for the output.
-// Use "{}" to represent the metadata content.
-//
-// autoNativeMetaFormat: "[[@{}]]"
-//
-// For example, setting this option to the String above
-// would cause Haxe @:meta to be converted like below:
-//
-// @:meta(my_meta)   -->   [[@my_meta]]
+/**
+	If "allowMetaMetadata" is enabled, this configures
+	how the metadata is generated for the output.
+	Use "{}" to represent the metadata content.
+
+	```haxe
+	autoNativeMetaFormat: "[[@{}]]"
+	```
+
+	For example, setting this option to the String above
+	would cause Haxe `@:meta` to be converted like below:
+
+	`@:meta(my_meta)`   -->   `[[@my_meta]]`
+**/
 public var autoNativeMetaFormat: Null<String> = null;
 
-// -------------------------------------------------------
-// A list of metadata unique for the target.
-//
-// It's not necessary to fill this out as metadata can
-// just be read directly from the AST. However, supplying
-// it here allows Reflaxe to validate the meta automatically,
-// ensuring the correct number/type of arguments are used.
+/**
+	A list of metadata unique for the target.
+
+	It's not necessary to fill this out as metadata can
+	just be read directly from the AST. However, supplying
+	it here allows Reflaxe to validate the meta automatically,
+	ensuring the correct number/type of arguments are used.
+**/
 public var metadataTemplates: Array<{
 	meta: haxe.macro.Compiler.MetadataDescription,
 	disallowMultiple: Bool,
