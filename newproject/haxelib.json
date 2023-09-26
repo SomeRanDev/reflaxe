@@ -5,7 +5,7 @@
   "url": "http://example.com",
   "tags": [],
   "dependencies": {
-    "reflaxe": "git:https://github.com/RobertBorghese/reflaxe"
+    "reflaxe": "git:https://github.com/SomeRanDev/reflaxe"
   },
   "classPath": "src/",
   "releasenote": "Initial release.",

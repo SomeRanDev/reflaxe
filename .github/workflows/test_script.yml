@@ -22,7 +22,7 @@ jobs:
         run: haxe -version
 
       - name: Install Reflaxe
-        run: haxelib git reflaxe https://github.com/RobertBorghese/reflaxe.git
+        run: haxelib git reflaxe https://github.com/SomeRanDev/reflaxe.git
 
       - name: Make New Folder
         run: mkdir _Temp

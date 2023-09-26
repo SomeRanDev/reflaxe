@@ -1,6 +1,6 @@
 <img src="https://i.imgur.com/oZkCZ2C.png" alt="I made a reflaxe logo thingy look at it LOOK AT IT" width="400"/>
 
-[![Test Workflow](https://github.com/RobertBorghese/reflaxe/actions/workflows/test.yml/badge.svg)](https://github.com/RobertBorghese/reflaxe/actions)
+[![Test Workflow](actions/workflows/test.yml/badge.svg)](https://github.com/SomeRanDev/reflaxe/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 <a href="https://discord.com/channels/162395145352904705/1052688097592225904"><img src="https://discordapp.com/api/guilds/162395145352904705/widget.png?style=shield" alt="Reflaxe Thread"/></a>
 
@@ -17,16 +17,16 @@ All you need to worry about is programming the conversion from Haxe's typed AST 
 
 | Topic | Description |
 | --- | --- |
-| [Automatic Installation](https://github.com/RobertBorghese/reflaxe#automatic-installation) | How to generate a Reflaxe project using the "new" command. |
-| [Manual Installation](https://github.com/RobertBorghese/reflaxe#manual-installation) | How to install into your library manually. |
-| [Building](https://github.com/RobertBorghese/reflaxe#building) | How to build for library for submission. |
-| [Reflaxe Properties](https://github.com/RobertBorghese/reflaxe#reflaxe-properties) | How to configure unique properties for your Reflaxe project. |
-| [Compiler Code Sample](https://github.com/RobertBorghese/reflaxe/#compiler-code-sample) | How to code the compiler. |
-| [CompilerInit Code Sample](https://github.com/RobertBorghese/reflaxe/#compiler-init-code-sample) | How to code the init macro call. |
-| [extraParams.hxml Sample](https://github.com/RobertBorghese/reflaxe/#extraparamshxml-sample) | How to configure your library. |
-| [compile.hxml Sample](https://github.com/RobertBorghese/reflaxe/#compilerhxml-sample) | How to use your library on other Haxe projects. |
-| [BaseCompiler Functions](https://github.com/RobertBorghese/reflaxe/#basecompiler-functions) | The functions used to configure your compiler's behavior and code output. |
-| [BaseCompiler Options](https://github.com/RobertBorghese/reflaxe/#basecompiler-options) | Various options passed to Reflaxe for controlling your compiler's input/output. |
+| [Automatic Installation](#automatic-installation) | How to generate a Reflaxe project using the "new" command. |
+| [Manual Installation](#manual-installation) | How to install into your library manually. |
+| [Building](#building) | How to build for library for submission. |
+| [Reflaxe Properties](#reflaxe-properties) | How to configure unique properties for your Reflaxe project. |
+| [Compiler Code Sample](/#compiler-code-sample) | How to code the compiler. |
+| [CompilerInit Code Sample](/#compiler-init-code-sample) | How to code the init macro call. |
+| [extraParams.hxml Sample](/#extraparamshxml-sample) | How to configure your library. |
+| [compile.hxml Sample](/#compilerhxml-sample) | How to use your library on other Haxe projects. |
+| [BaseCompiler Functions](/#basecompiler-functions) | The functions used to configure your compiler's behavior and code output. |
+| [BaseCompiler Options](/#basecompiler-options) | Various options passed to Reflaxe for controlling your compiler's input/output. |
 
 &nbsp;
 &nbsp;
@@ -41,7 +41,7 @@ First install Reflaxe using one of the commands below:
 haxelib install reflaxe
 
 # install nightly (recommended!)
-haxelib git reflaxe https://github.com/RobertBorghese/reflaxe.git
+haxelib git reflaxe https://github.com/SomeRanDev/reflaxe.git
 ```
 
 Then run the following command to generate a new Reflaxe project:
@@ -62,7 +62,7 @@ haxelib run reflaxe test
 ## Manual Installation
 | # | What to do | What to write |
 | - | ------ | ------ |
-| 1 | Install via haxelib git. | <pre>haxelib git reflaxe https://github.com/RobertBorghese/reflaxe.git</pre> |
+| 1 | Install via haxelib git. | <pre>haxelib git reflaxe https://github.com/SomeRanDev/reflaxe.git</pre> |
 | 2 | Add the lib to your `.hxml` file or compile command. | <pre lang="hxml">-lib reflaxe</pre> |
 | 3 | Extend your compiler class from `BaseCompiler`. | <pre lang="haxe">class MyLangCompiler extends reflaxe.BaseCompiler</pre> |
 

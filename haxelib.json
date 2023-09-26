@@ -2,7 +2,7 @@
 	"name": "reflaxe",
 	"version": "3.0.0",
 	"description": "A framework for creating Haxe language compilation targets using macros.",
-	"url": "https://github.com/RobertBorghese/reflaxe",
+	"url": "https://github.com/SomeRanDev/reflaxe",
 	"license": "MIT",
 	"tags": [
 		"macro",
@@ -14,6 +14,6 @@
 		"extension"
 	],
 	"classPath": "src/",
-	"releasenote": "17 new features + bug fixes. https://github.com/RobertBorghese/reflaxe/releases/tag/v2.0.0",
-	"contributors": ["RobertBorghese"]
+	"releasenote": "17 new features + bug fixes. https://github.com/SomeRanDev/reflaxe/releases/tag/v2.0.0",
+	"contributors": ["SomeRanDev"]
 }
