@@ -1,14 +1,5 @@
 // =======================================================
 // * NameMetaHelper
-//
-// This is a static extension for all objects with a
-// "String name" and a "MetaAccess meta". This is a 
-// common pattern in ModuleType types and TVar.
-//
-// To allow compiler developers to easily grab
-// either the name or the contents of the correlating
-// @:native meta from one of these classes, this helper
-// class exists.
 // =======================================================
 
 package reflaxe.helpers;
@@ -26,6 +17,16 @@ typedef NameAndMeta = {
 	var meta(default, never): Null<MetaAccess>;
 };
 
+/**
+	This is a static extension for all objects with a
+	`name: String` and a `meta: MetaAccess`. This is a 
+	common pattern in ModuleType types and TVar.
+
+	To allow compiler developers to easily grab
+	either the name or the contents of the correlating
+	`@:native` meta from one of these classes, this helper
+	class exists.
+**/
 class NameMetaHelper {
 	static var nativeNameOverrides: Map<String, String> = [];
 
