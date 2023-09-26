@@ -41,7 +41,7 @@ jobs:
         run: haxe GenDocs.hxml
         working-directory: ./documentation
       - name: Build Website
-        run: GenSite.bat
+        run: ./GenSite.bat
         working-directory: ./documentation
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v2
