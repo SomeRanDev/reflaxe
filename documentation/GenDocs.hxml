@@ -1,6 +1,6 @@
---cwd ../test
-Test.hxml
--xml ../documentation/doc.xml
+--cwd ../
+DevEnv.hxml
+-xml ./documentation/doc.xml
 -D reflaxe_runtime
 -D doc-gen
 -dce no
