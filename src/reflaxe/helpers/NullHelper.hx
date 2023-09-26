@@ -7,9 +7,9 @@ package reflaxe.helpers;
 #if (macro || reflaxe_runtime)
 
 /**
-	MetaAccess can be annoying sometimes because the
+	`MetaAccess` can be annoying sometimes because the
 	functions themselves may be null. These helper
-	functions wrap around the normal MetaAccess functions
+	functions wrap around the normal `MetaAccess` functions
 	and ensure they are not null before calling.
 **/
 class NullHelper {
