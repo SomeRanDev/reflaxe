@@ -14,6 +14,6 @@
 		"extension"
 	],
 	"classPath": "src/",
-	"releasenote": "17 new features + bug fixes. https://github.com/SomeRanDev/reflaxe/releases/tag/v2.0.0",
+	"releasenote": "https://github.com/SomeRanDev/reflaxe/releases/tag/v3.0.0",
 	"contributors": ["SomeRanDev"]
 }
