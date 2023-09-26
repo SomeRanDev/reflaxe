@@ -87,7 +87,7 @@ enum LambdaWrapType {
 
 /**
 	A structure that contains all the options for
-	configuring the BaseCompiler's behavior.
+	configuring the `BaseCompiler`'s behavior.
 **/
 @:structInit
 class BaseCompilerOptions {
@@ -97,7 +97,7 @@ class BaseCompilerOptions {
 	public var fileOutputType: BaseCompilerFileOutputType = FilePerClass;
 
 	/**
-		This String is appended to the filename for each output file.
+		This `String` is appended to the filename for each output file.
 	**/
 	public var fileOutputExtension: String = ".hxoutput";
 
@@ -110,7 +110,7 @@ class BaseCompilerOptions {
 	public var outputDirDefineName: String = "hxoutput";
 
 	/**
-		If "fileOutputType" is SingleFile, this is the name of
+		If "fileOutputType" is `SingleFile`, this is the name of
 		the file generated if a directory is provided.
 	**/
 	public var defaultOutputFilename: String = "output";
@@ -139,14 +139,14 @@ class BaseCompilerOptions {
 	public var targetCodeInjectionName: Null<String> = null;
 
 	/**
-		If "true", null safety will be enforced for all the code
+		If `true`, null-safety will be enforced for all the code
 		compiled to the target. Useful for ensuring null is only
 		used on types explicitly marked as nullable.
 	**/
 	public var enforceNullTyping: Bool = false;
 
 	/**
-		If "true", typedefs will be converted to their internal
+		If `true`, typedefs will be converted to their internal
 		class or enum type before being processed and generated.
 	**/
 	public var unwrapTypedefs: Bool = true;
@@ -164,20 +164,20 @@ class BaseCompilerOptions {
 
 	/**
 		Whether variables captured by lambdas are wrapped in
-		an Array. Useful as certain targets can't capture and
+		an `Array`. Useful as certain targets can't capture and
 		modify a value unless stored by reference.
 	**/
 	public var wrapLambdaCaptureVarsInArray: Bool = false;
 
 	/**
-		If "true", during the EIE normalization phase, all
+		If `true`, during the EIE normalization phase, all
 		instances of null coalescence are converted to a
 		null-check if statement.
 	**/
 	public var convertNullCoal: Bool = false;
 
 	/**
-		If "true", during the EIE normalization phase, all
+		If `true`, during the EIE normalization phase, all
 		instances of prefix/postfix increment and decrement
 		are converted to a Binop form.
 
@@ -191,12 +191,16 @@ class BaseCompilerOptions {
 		as a value will be wrapped in a lambda.
 
 		For example this:
+			```haxe
 			var fcc = String.fromCharCode
+			```
 		
 		Gets converted to this:
+			```haxe
 			var fcc = function(i: Int): String {
 				return String.fromCharCode(i);
 			}
+			```
 	**/
 	public var wrapFunctionReferences: LambdaWrapType = ExternOnly;
 
@@ -214,14 +218,14 @@ class BaseCompilerOptions {
 	];
 
 	/**
-		If "true", only the module containing the "main"
+		If `true`, only the module containing the "main"
 		function and any classes it references are compiled.
 		Otherwise, Haxe's less restrictive output type list is used.
 	**/
 	public var smartDCE: Bool = false;
 
 	/**
-		If "true", any std module is only compiled if explicitly
+		If `true`, any std module is only compiled if explicitly
 		added during compilation using:
 		`BaseCompiler.addModuleTypeForCompilation(ModuleType)`
 
@@ -242,7 +246,7 @@ class BaseCompilerOptions {
 	public var customStdMeta: Array<String> = [];
 
 	/**
-		If "true", a map of all the ModuleTypes mapped by their
+		If `true`, a map of all the ModuleTypes mapped by their
 		relevence to the implementation are provided to
 		BaseCompiler's compileClass and compileEnum.
 		Useful for generating "import-like" content.
@@ -250,14 +254,14 @@ class BaseCompilerOptions {
 	public var trackUsedTypes: Bool = false;
 
 	/**
-		If "true", functions from `ClassHierarchyTracker` will
+		If `true`, functions from `ClassHierarchyTracker` will
 		be available for use. This requires some processing
 		prior to the start of compilation, so opting out is an option.
 	**/
 	public var trackClassHierarchy: Bool = true;
 
 	/**
-		If "true", any old output files that are not generated
+		If `true`, any old output files that are not generated
 		in the most recent compilation will be deleted.
 		A text file containing all the current output files is
 		saved in the output directory to help keep track. 
@@ -267,26 +271,26 @@ class BaseCompilerOptions {
 	public var deleteOldOutput: Bool = true;
 
 	/**
-		If "false", an error is thrown if a function without
+		If `false`, an error is thrown if a function without
 		a body is encountered. Typically this occurs when
 		an umimplemented Haxe API function is encountered.
 	**/
 	public var ignoreBodilessFunctions: Bool = false;
 
 	/**
-		If "true", extern classes and fields are not passed to BaseCompiler.
+		If `true`, extern classes and fields are not passed to BaseCompiler.
 	**/
 	public var ignoreExterns: Bool = true;
 
 	/**
-		If "true", properties that are not physical properties
+		If `true`, properties that are not physical properties
 		are not passed to BaseCompiler. (i.e. both their
 		read and write rules are "get", "set", or "never").
 	**/
 	public var ignoreNonPhysicalFields: Bool = true;
 
 	/**
-		If "true", the `@:meta` will be automatically handled
+		If `true`, the `@:meta` will be automatically handled
 		for classes, enums, and class fields. This meta works
 		like it does for Haxe/C#, allowing users to define
 		metadata/annotations/attributes in the target output.
@@ -299,8 +303,10 @@ class BaseCompilerOptions {
 		output code. Use "autoNativeMetaFormat" to configure
 		how the native metadata is formatted.
 
+		```
 		[my_meta]
 		let field = 123;
+		```
 	**/
 	public var allowMetaMetadata: Bool = true;
 
@@ -338,7 +344,7 @@ class BaseCompilerOptions {
 
 /**
 	The metadata argument type that can be configured
-	in "metadataTemplates" for BaseCompilerOptions.
+	in "metadataTemplates" for `BaseCompilerOptions`.
 **/
 enum abstract MetaArgumentType(String) to String {
 	var Bool = "bool";

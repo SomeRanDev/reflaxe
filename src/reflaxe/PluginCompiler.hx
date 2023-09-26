@@ -15,10 +15,10 @@ import reflaxe.data.EnumOptionData;
 import reflaxe.output.PluginHook;
 
 /**
-	This class extends from BaseCompiler and should be
-	treated as a drop-in replacement for BaseCompiler.
+	This class extends from `BaseCompiler` and should be
+	treated as a drop-in replacement for `BaseCompiler`.
 
-	This version of the BaseCompiler adds hooks in
+	This version of the `BaseCompiler` adds hooks in
 	relevant functions to allow users of your compiler
 	to modify and create plugins for it.
 **/
