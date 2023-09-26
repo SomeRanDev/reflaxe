@@ -15,7 +15,7 @@ import haxe.macro.Expr;
 	before the Haxe typing phase for your target.
 
 	This class can be used in an initialization macro
-	to set up @:build macros to modify a desired function.
+	to set up` @:build` macros to modify a desired function.
 **/
 class ClassModifier {
 	static var modifications: Map<String, Map<String, Expr>> = [];

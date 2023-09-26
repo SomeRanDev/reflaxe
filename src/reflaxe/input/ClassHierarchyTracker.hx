@@ -78,7 +78,7 @@ class ClassHierarchyTracker {
 
 	/**
 		Returns an array that recursively finds every class that descends
-		from the provided ClassType. This includes all the direct children,
+		from the provided `ClassType`. This includes all the direct children,
 		the children of the children, and the children of those, etc.
 	**/
 	public static function getAllChildClasses(cls: ClassType): Array<ClassType> {
@@ -119,9 +119,11 @@ class ClassHierarchyTracker {
 		example is provided, this function will return the equivalent of:
 		`[ Base<Child.T>, TopClass<String> ]`
 		
+		```haxe
 		class TopClass<A> {}
 		class Base<B> extends TopClass<String> {}
 		class Child<T> extends Base<T> {}
+		```
 	**/
 	public static function getAllParentTypes(cls: ClassType, params: Null<Array<Type>> = null): Array<Type> {
 		return #if macro if(cls.superClass != null) {

@@ -9,7 +9,7 @@ package reflaxe.helpers;
 import haxe.macro.Expr;
 
 /**
-	Quick static extensions to help with Expr.
+	Quick static extensions to help with `Expr`.
 **/
 class ExprHelper {
 	public static function getConstString(e: Expr): String {

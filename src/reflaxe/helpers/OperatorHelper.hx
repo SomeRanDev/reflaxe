@@ -9,7 +9,7 @@ package reflaxe.helpers;
 import haxe.macro.Expr;
 
 /**
-	Helpful functions when using Haxe's Binop and Unop classes.
+	Helpful functions when using Haxe's `Binop` and `Unop` classes.
 **/
 class OperatorHelper {
 

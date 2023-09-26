@@ -10,7 +10,7 @@ import haxe.macro.Context;
 import haxe.macro.Expr;
 
 /**
-	Helpful functions for generating Position objects.
+	Helpful functions for generating `Position` objects.
 **/
 class PositionHelper {
 	public static function unknownPos(): Position {

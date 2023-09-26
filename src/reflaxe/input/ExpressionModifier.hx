@@ -16,7 +16,7 @@ import haxe.macro.Expr;
 	the compiler target.
 
 	This class can be used in an initialization macro
-	to set up @:build macros to modify the desired expression.
+	to set up `@:build` macros to modify the desired expression.
 **/
 class ExpressionModifier {
 	static var modifications: Array<(Expr) -> Null<Expr>> = [];

@@ -7,7 +7,7 @@ package reflaxe.helpers;
 #if (macro || reflaxe_runtime)
 
 /**
-	Quick static extensions to help with Dynamic.
+	Quick static extensions to help with `Dynamic`.
 **/
 class DynamicHelper {
 	public static function isString(d: Dynamic): Bool {

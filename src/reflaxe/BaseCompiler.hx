@@ -286,12 +286,14 @@ class BaseCompilerOptions {
 	public var ignoreNonPhysicalFields: Bool = true;
 
 	/**
-		If "true", the @:meta will be automatically handled
+		If "true", the `@:meta` will be automatically handled
 		for classes, enums, and class fields. This meta works
 		like it does for Haxe/C#, allowing users to define
 		metadata/annotations/attributes in the target output.
 
+		```haxe
 		@:meta(my_meta) var field = 123;
+		```
 
 		For example, the above Haxe code converts to the below
 		output code. Use "autoNativeMetaFormat" to configure
@@ -307,12 +309,14 @@ class BaseCompilerOptions {
 		how the metadata is generated for the output.
 		Use "{}" to represent the metadata content.
 
+		```haxe
 		autoNativeMetaFormat: "[[@{}]]"
+		```
 
 		For example, setting this option to the String above
-		would cause Haxe @:meta to be converted like below:
+		would cause Haxe `@:meta` to be converted like below:
 
-		@:meta(my_meta)   -->   [[@my_meta]]
+		`@:meta(my_meta)`   -->   `[[@my_meta]]`
 	**/
 	public var autoNativeMetaFormat: Null<String> = null;
 
@@ -990,7 +994,7 @@ abstract class BaseCompiler {
 
 	/**
 		This function is for compiling the result of functions
-		using the @:nativeFunctionCode meta.
+		using the `@:nativeFunctionCode` meta.
 	**/
 	public function compileNativeFunctionCodeMeta(callExpr: TypedExpr, arguments: Array<TypedExpr>, typeParams: Null<Array<() -> String>> = null, custom: Null<(String) -> String> = null): Null<String> {
 		final declaration = callExpr.getDeclarationMeta(arguments);
@@ -1056,7 +1060,7 @@ abstract class BaseCompiler {
 
 	/**
 		This function is for compiling the result of functions
-		using the @:nativeVariableCode meta.
+		using the `@:nativeVariableCode` meta.
 	**/
 	public function compileNativeVariableCodeMeta(fieldExpr: TypedExpr, varCpp: Null<String> = null): Null<String> {
 		final declaration = fieldExpr.getDeclarationMeta();
@@ -1095,7 +1099,7 @@ abstract class BaseCompiler {
 	}
 
 	/**
-		Compiles the {this} expression for @:nativeFunctionCode.
+		Compiles the {this} expression for `@:nativeFunctionCode`.
 	**/
 	public function compileNFCThisExpression(expr: TypedExpr, meta: Null<MetaAccess>): String {
 		return compileExpressionOrError(expr); 
@@ -1103,7 +1107,7 @@ abstract class BaseCompiler {
 
 	/**
 		This function is for compiling the result of functions
-		using the @:nativeTypeCode meta.
+		using the `@:nativeTypeCode` meta.
 	**/
 	public function compileNativeTypeCodeMeta(type: Type, typeParams: Null<Array<() -> String>> = null): Null<String> {
 		final meta = type.getMeta();

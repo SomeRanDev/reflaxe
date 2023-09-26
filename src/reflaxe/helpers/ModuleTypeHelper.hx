@@ -14,7 +14,7 @@ using reflaxe.helpers.NameMetaHelper;
 
 /**
 	Class for extracting common data shared between the
-	ModuleType declaration classes.
+	`ModuleType` declaration classes.
 **/
 class ModuleTypeHelper {
 	public static function getCommonData(type: ModuleType): BaseType {

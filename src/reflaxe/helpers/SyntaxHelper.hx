@@ -7,7 +7,7 @@ package reflaxe.helpers;
 #if (macro || reflaxe_runtime)
 
 /**
-	Helpful functions for quick-formatting Strings.
+	Helpful functions for quick-formatting `String`s.
 	i.e. Shifting all lines in a string over with a tab.
 **/
 class SyntaxHelper {
