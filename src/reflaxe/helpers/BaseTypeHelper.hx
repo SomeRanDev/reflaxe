@@ -1,7 +1,5 @@
 // =======================================================
 // * BaseTypeHelper
-//
-// Quick static extensions to help with naming.
 // =======================================================
 
 package reflaxe.helpers;
@@ -10,6 +8,9 @@ package reflaxe.helpers;
 
 import haxe.macro.Type;
 
+/**
+	Quick static extensions to help with naming.
+**/
 class BaseTypeHelper {
 	static final IMPL_SUFFIX = "_Impl_";
 	static final FIELDS_SUFFIX = "_Fields_";

@@ -1,7 +1,5 @@
 // =======================================================
 // * ClassFieldHelper
-//
-// Quick static extensions to help with ClassField.
 // =======================================================
 
 package reflaxe.helpers;
@@ -16,6 +14,9 @@ import reflaxe.data.ClassVarData;
 
 using reflaxe.helpers.NameMetaHelper;
 
+/**
+	Quick static extensions to help with `ClassField`.
+**/
 class ClassFieldHelper {
 	public static function equals(field: ClassField, other: ClassField): Bool {
 		return Std.string(field) == Std.string(other);

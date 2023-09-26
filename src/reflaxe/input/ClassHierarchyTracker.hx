@@ -1,17 +1,5 @@
 // =======================================================
 // * ClassHiearchyTracker
-//
-// Class used to track the hiearchy of classes.
-//
-// Provides a bunch of helpful functions to move up or
-// down the class hierarchy that aren't usually possible
-// from a normal `ClassType`.
-//
-// For example, given a `ClassType`, all of the child
-// classes that extend or implement it can be found.
-//
-// The `trackClassHierarchy` option must be enabled in the
-// `BaseCompiler` for this class's functions to work.
 // =======================================================
 
 package reflaxe.input;
@@ -30,8 +18,10 @@ using reflaxe.helpers.ClassTypeHelper;
 using reflaxe.helpers.ModuleTypeHelper;
 using reflaxe.helpers.TypeHelper;
 
-// Private helper class to store information
-// for `ClassType`s when necessary.
+/**
+	Private helper class to store information
+	for `ClassType`s when necessary.
+**/
 final class ClassHierarchyClassData {
 	public var cls: ClassType;
 	public var children: Array<ClassType>;
@@ -48,13 +38,28 @@ final class ClassHierarchyClassData {
 	}
 }
 
+/**
+	Class used to track the hiearchy of classes.
+
+	Provides a bunch of helpful functions to move up or
+	down the class hierarchy that aren't usually possible
+	from a normal `ClassType`.
+
+	For example, given a `ClassType`, all of the child
+	classes that extend or implement it can be found.
+
+	The `trackClassHierarchy` option must be enabled in the
+	`BaseCompiler` for this class's functions to work.
+**/
 class ClassHierarchyTracker {
 	public static var initialized(default, null): Bool = false;
 
 	static var classData: Map<String, ClassHierarchyClassData> = [];
 
-	// Returns an array of all the class types that directly "extends"
-	// or "implements" the provided `ClassType` cls.
+	/**
+		Returns an array of all the class types that directly "extends"
+		or "implements" the provided `ClassType` cls.
+	**/
 	public static function getAllDirectChildClasses(cls: Null<ClassType>): Array<ClassType> {
 		if(!initialized)
 			throw "The `trackClassHierarchy` option must be enabled to use this `ClassHierarchyTracker` function.";
@@ -71,9 +76,11 @@ class ClassHierarchyTracker {
 		}
 	}
 
-	// Returns an array that recursively finds every class that descends
-	// from the provided ClassType. This includes all the direct children,
-	// the children of the children, and the children of those, etc.
+	/**
+		Returns an array that recursively finds every class that descends
+		from the provided ClassType. This includes all the direct children,
+		the children of the children, and the children of those, etc.
+	**/
 	public static function getAllChildClasses(cls: ClassType): Array<ClassType> {
 		final result = [];
 		for(c in getAllDirectChildClasses(cls)) {
@@ -89,9 +96,11 @@ class ClassHierarchyTracker {
 		return result;
 	}
 
-	// Returns the chain of parent classes from the ClassType.
-	// The array is ordered by distance. The first element is the super
-	// class of `cls`, the second the super class of that, etc.
+	/**
+		Returns the chain of parent classes from the ClassType.
+		The array is ordered by distance. The first element is the super
+		class of `cls`, the second the super class of that, etc.
+	**/
 	public static function getAllParentClasses(cls: ClassType): Array<ClassType> {
 		return if(cls.superClass != null) {
 			final superClass = cls.superClass.t.get();
@@ -101,17 +110,19 @@ class ClassHierarchyTracker {
 		}
 	}
 
-	// Similar to `getAllParentClasses`, but returns the parent classes as `Type`s.
-	// The `Type`s are guarenteed to be `TInst`.
-	//
-	// The advantage to this function is it retains type parameter data relative to
-	// the input class' `TypeParameter`s. For example, if "Child" from the following
-	// example is provided, this function will return the equivalent of:
-	// `[ Base<Child.T>, TopClass<String> ]`
-	//
-	// class TopClass<A> {}
-	// class Base<B> extends TopClass<String> {}
-	// class Child<T> extends Base<T> {}
+	/**
+		Similar to `getAllParentClasses`, but returns the parent classes as `Type`s.
+		The `Type`s are guarenteed to be `TInst`.
+		
+		The advantage to this function is it retains type parameter data relative to
+		the input class' `TypeParameter`s. For example, if "Child" from the following
+		example is provided, this function will return the equivalent of:
+		`[ Base<Child.T>, TopClass<String> ]`
+		
+		class TopClass<A> {}
+		class Base<B> extends TopClass<String> {}
+		class Child<T> extends Base<T> {}
+	**/
 	public static function getAllParentTypes(cls: ClassType, params: Null<Array<Type>> = null): Array<Type> {
 		return #if macro if(cls.superClass != null) {
 			final clsRef = cls.superClass.t;
@@ -126,8 +137,10 @@ class ClassHierarchyTracker {
 		}
 	}
 
-	// Returns every interface implemented to this class and all parent classes.
-	// Repeats are ignored.
+	/**
+		Returns every interface implemented to this class and all parent classes.
+		Repeats are ignored.
+	**/
 	public static function getAllParentInterfaces(cls: ClassType): Array<ClassType> {
 		final result = cls.interfaces.map(int -> int.t.get());
 		if(cls.superClass != null) {
@@ -140,8 +153,10 @@ class ClassHierarchyTracker {
 		return result;
 	}
 
-	// Same as `getAllParentTypes`, only works on the interfaces for the class'
-	// hierarchy.
+	/**
+		Same as `getAllParentTypes`, only works on the interfaces for the class'
+		hierarchy.
+	**/
 	public static function getAllParentInterfaceTypes(cls: ClassType, params: Null<Array<Type>> = null): Array<Type> {
 		if(params == null) {
 			params = cls.params.map(c -> c.t);
@@ -166,12 +181,14 @@ class ClassHierarchyTracker {
 		return result;
 	}
 
-	// Given a super class `ClassType`, checks all the children to
-	// see if the given function field `superClassField` is ever
-	// overriden.
-	//
-	// Useful for cases where a function must be explicitly marked
-	// as overridable in the parent.
+	/**
+		Given a super class `ClassType`, checks all the children to
+		see if the given function field `superClassField` is ever
+		overriden.
+		
+		Useful for cases where a function must be explicitly marked
+		as overridable in the parent.
+	**/
 	public static function funcHasChildOverride(superClass: ClassType, superClassField: ClassField, isStatic: Bool): Bool {
 		for(child in getAllChildClasses(superClass)) {
 			for(field in (isStatic ? child.statics.get() : child.fields.get())) {
@@ -183,24 +200,30 @@ class ClassHierarchyTracker {
 		return false;
 	}
 
-	// Given a child class `ClassType` and its function `ClassField`, return true if
-	// the return type of the function is covariant. (aka. the return type is a child
-	// of the return type of the equivalent function in a super class or interface).
+	/**
+		Given a child class `ClassType` and its function `ClassField`, return true if
+		the return type of the function is covariant. (aka. the return type is a child
+		of the return type of the equivalent function in a super class or interface).
+	**/
 	public static function childFuncIsCovariant(childClass: ClassType, childClassField: ClassField, isStatic: Bool): Bool {
 		return funcGetCovariantBaseType(childClass, childClassField, isStatic) != null;
 	}
 
-	// Returns every super class and implemented interface of this class as a `Type`.
+	/**
+		Returns every super class and implemented interface of this class as a `Type`.
+	**/
 	public static function getAllParentTypesAndInterfaces(childClass: ClassType): Array<Type> {
 		final parents = getAllParentTypes(childClass);
 		parents.reverse();
 		return parents.concat(getAllParentInterfaceTypes(childClass));
 	}
 
-	// If the return type of `ClassField` "childClassField" is covariant (aka. the
-	// function is overriding a parent's function but using a child of the parent's
-	// function's return type), then this function returns the parent function's
-	// return type.
+	/**
+		If the return type of `ClassField` "childClassField" is covariant (aka. the
+		function is overriding a parent's function but using a child of the parent's
+		function's return type), then this function returns the parent function's
+		return type.
+	**/
 	public static function funcGetCovariantBaseType(childClass: ClassType, childClassField: ClassField, isStatic: Bool): Null<Type> {
 		for(p in getAllParentTypesAndInterfaces(childClass)) {
 			final decl = switch(p) {
@@ -222,15 +245,20 @@ class ClassHierarchyTracker {
 		return null;
 	}
 
-	// Given a child class' type and field information, returns `true` if
-	// the provided `childClassField` is a covariant field.
+	/**
+		Given a child class' type and field information, returns `true` if
+		the provided `childClassField` is a covariant field.
+	**/
 	public static function funcIsCovariant(childClass: ClassType, childClassField: ClassField, isStatic: Bool): Bool {
 		return funcGetCovariantBaseType(childClass, childClassField, isStatic) != null;
 	}
 
-	// Does the same as `childFuncIsCovariant`, but checks "downwards".
-	// Checks if any children of the supplied "superClass" `ClassType` override
-	// this class's functions and use a covariant return type.
+	/**
+		Does the same as `childFuncIsCovariant`, but checks "downwards".
+
+		Checks if any children of the supplied "superClass" `ClassType` override
+		this class's functions and use a covariant return type.
+	**/
 	public static function superFuncIsCovariant(superClass: ClassType, superClassField: ClassField, isStatic: Bool): Bool {
 		for(child in getAllChildClasses(superClass)) {
 			for(field in (isStatic ? child.statics.get() : child.fields.get())) {
@@ -242,8 +270,10 @@ class ClassHierarchyTracker {
 		return false;
 	}
 
-	// Given a field and its equivalent child version, returns true if it's
-	// a function with a covariant return type.
+	/**
+		Given a field and its equivalent child version, returns true if it's
+		a function with a covariant return type.
+	**/
 	static function isCovariant(superField: Null<ClassFuncData>, childField: Null<ClassFuncData>): Bool {
 		if(superField == null || childField == null) {
 			return false;
@@ -266,8 +296,10 @@ class ClassHierarchyTracker {
 		return Std.string(superFieldRet) != Std.string(childFieldRet);
 	}
 
-	// Given a field and its equivalent child version, returns true if the
-	// child field overrides the super field.
+	/**
+		Given a field and its equivalent child version, returns true if the
+		child field overrides the super field.
+	**/
 	static function isOverride(superField: ClassFuncData, childField: ClassFuncData): Bool {
 		if(superField.field.name != childField.field.name) {
 			return false;
@@ -281,8 +313,10 @@ class ClassHierarchyTracker {
 		return superField.argumentsMatch(childField);
 	}
 
-	// Given a `ClassFuncData` superField, this function finds all the functions
-	// contained within children that override this field.
+	/**
+		Given a `ClassFuncData` superField, this function finds all the functions
+		contained within children that override this field.
+	**/
 	public static function findAllChildOverrides(superField: ClassFuncData): Array<ClassFuncData> {
 		final result: Array<ClassFuncData> = [];
 		for(child in getAllChildClasses(superField.classType)) {
@@ -296,8 +330,10 @@ class ClassHierarchyTracker {
 		return result;
 	}
 
-	// Given a `ClassFuncData` childField, this function returns the chain of
-	// super class functions this field overrides.
+	/**
+		Given a `ClassFuncData` childField, this function returns the chain of
+		super class functions this field overrides.
+	**/
 	public static function getParentOverrideChain(childField: ClassFuncData): Array<ClassFuncData> {
 		final result: Array<ClassFuncData> = [];
 		for(parent in getAllParentTypesAndInterfaces(childField.classType)) {
@@ -316,19 +352,23 @@ class ClassHierarchyTracker {
 		return result;
 	}
 
-	// Returns a combined list of `findAllChildOverrides` and `getParentOverrideChain`.
+	/**
+		Returns a combined list of `findAllChildOverrides` and `getParentOverrideChain`.
+	**/
 	public static function findAllOverrides(field: ClassFuncData): Array<ClassFuncData> {
 		return getParentOverrideChain(field).concat(findAllChildOverrides(field));
 	}
 
-	// In Haxe, it's possible a base class and child class may implement
-	// the same interface. Depending how the interface is implemented in
-	// the output language, it may be desirable to only have the base
-	// class implement the interface.
-	//
-	// To help with this, this function returns all the interfaces that
-	// are not already implemented by any base classes in the provided
-	// class's hierarchy.
+	/**
+		In Haxe, it's possible a base class and child class may implement
+		the same interface. Depending how the interface is implemented in
+		the output language, it may be desirable to only have the base
+		class implement the interface.
+		
+		To help with this, this function returns all the interfaces that
+		are not already implemented by any base classes in the provided
+		class's hierarchy.
+	**/
 	public static function getNonRepeatInterfaces(cls: ClassType): Array<{t: Ref<ClassType>, params: Array<Type>}> {
 		if(cls.superClass == null || cls.interfaces.length == 0) {
 			return cls.interfaces;
@@ -357,8 +397,10 @@ class ClassHierarchyTracker {
 		return result;
 	}
 
-	// Processes all possible `ModuleType`s to be used for compilation.
-	// Called at the start of compilation to map everything out.
+	/**
+		Processes all possible `ModuleType`s to be used for compilation.
+		Called at the start of compilation to map everything out.
+	**/
 	public static function processAllClasses(modules: Null<Array<ModuleType>>) {
 		if(modules != null) {
 			for(mt in modules) {

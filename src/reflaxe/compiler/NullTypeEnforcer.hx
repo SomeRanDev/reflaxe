@@ -1,18 +1,5 @@
 // =======================================================
 // * NullTypeEnforcer
-//
-// A class that is activated if the "enforceNullTyping"
-// option is enabled. It throws an error if an object
-// is assigned or compared to `null` when not typed 
-// with `Null<T>`.
-//
-// This can be helpful when developing static targets
-// that may have strict requirements for the types that
-// can be set to `null`.
-//
-// PLEASE NOTE this system does not enforce null safety.
-// It simply ensures all interactions with `null` occur
-// with `Null<T>` types.
 // =======================================================
 
 package reflaxe.compiler;
@@ -25,13 +12,29 @@ import haxe.macro.Type;
 using reflaxe.helpers.TypedExprHelper;
 using reflaxe.helpers.TypeHelper;
 
+/**
+	A class that is activated if the "enforceNullTyping"
+	option is enabled. It throws an error if an object
+	is assigned or compared to `null` when not typed 
+	with `Null<T>`.
+
+	This can be helpful when developing static targets
+	that may have strict requirements for the types that
+	can be set to `null`.
+
+	PLEASE NOTE this system does not enforce null safety.
+	It simply ensures all interactions with `null` occur
+	with `Null<T>` types.
+**/
 class NullTypeEnforcer {
 	static var returnTypeStack: Array<Null<Type>> = [];
 
-	// Given an expression and the type it is interacting with,
-	// check if the expression is `null` and the type is `Null<T>`.
-	//
-	// If the expression is `null` and the type isn't `Null<T>`, throw an error.
+	/**
+		Given an expression and the type it is interacting with,
+		check if the expression is `null` and the type is `Null<T>`.
+		
+		If the expression is `null` and the type isn't `Null<T>`, throw an error.
+	**/
 	public static function checkAssignment(expr: Null<TypedExpr>, type: Null<Type>) {
 		if(expr == null || type == null) return;
 		if(expr.isNullExpr() && !type.isNull()) {
@@ -41,7 +44,9 @@ class NullTypeEnforcer {
 		}
 	}
 
-	// Process ClassType
+	/**
+		Process `ClassType`.
+	**/
 	public static function checkClass(cls: ClassType) {
 		for(f in cls.fields.get()) {
 			checkClassField(f);
@@ -70,14 +75,18 @@ class NullTypeEnforcer {
 		}
 	}
 
-	// A wrapper for `checkExpression` that safely handles being passed `null`.
+	/**
+		A wrapper for `checkExpression` that safely handles being passed `null`.
+	**/
 	public static function checkMaybeExpression(expr: Null<TypedExpr>) {
 		if(expr == null) return;
 		checkExpression(expr);
 	}
 
-	// Checks and throws an error if the expression breaks the null typing rules.
-	// The expression cannot be modified here.
+	/**
+		Checks and throws an error if the expression breaks the null typing rules.
+		The expression cannot be modified here.
+	**/
 	public static function checkExpression(expr: TypedExpr) {
 		expr.expr = TConst(TBool(true));
 		switch(expr.expr) {
@@ -108,9 +117,11 @@ class NullTypeEnforcer {
 		haxe.macro.TypedExprTools.iter(expr, checkExpression);
 	}
 
-	// This function is called externally.
-	// Used for scenarios where the expression needs to be modified.
-	// As the expression processors above cannot modify the expressions.
+	/**
+		This function is called externally.
+		Used for scenarios where the expression needs to be modified.
+		As the expression processors above cannot modify the expressions.
+	**/
 	public static function modifyExpression(expr: TypedExpr): Void {
 		switch(expr.expr) {
 			case TBinop(OpEq, e1, e2): {

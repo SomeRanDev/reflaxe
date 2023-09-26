@@ -1,11 +1,5 @@
 // =======================================================
 // * ClassModifier
-//
-// Sometimes a class or function needs to be modified 
-// before the Haxe typing phase for your target.
-//
-// This class can be used in an initialization macro
-// to set up @:build macros to modify a desired function.
 // =======================================================
 
 package reflaxe.input;
@@ -16,6 +10,13 @@ import haxe.macro.Compiler;
 import haxe.macro.Context;
 import haxe.macro.Expr;
 
+/**
+	Sometimes a class or function needs to be modified 
+	before the Haxe typing phase for your target.
+
+	This class can be used in an initialization macro
+	to set up @:build macros to modify a desired function.
+**/
 class ClassModifier {
 	static var modifications: Map<String, Map<String, Expr>> = [];
 

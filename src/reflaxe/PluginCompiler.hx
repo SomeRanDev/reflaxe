@@ -1,12 +1,5 @@
 // =======================================================
 // * PluginCompiler
-//
-// This class extends from BaseCompiler and should be
-// treated as a drop-in replacement for BaseCompiler.
-//
-// This version of the BaseCompiler adds hooks in
-// relevant functions to allow users of your compiler
-// to modify and create plugins for it.
 // =======================================================
 
 package reflaxe;
@@ -21,6 +14,14 @@ import reflaxe.data.ClassVarData;
 import reflaxe.data.EnumOptionData;
 import reflaxe.output.PluginHook;
 
+/**
+	This class extends from BaseCompiler and should be
+	treated as a drop-in replacement for BaseCompiler.
+
+	This version of the BaseCompiler adds hooks in
+	relevant functions to allow users of your compiler
+	to modify and create plugins for it.
+**/
 abstract class PluginCompiler<T: BaseCompiler> extends BaseCompiler {
 	public var compileClassHook = new PluginHook4<T, ClassType, Array<ClassVarData>, Array<ClassFuncData>>();
 	public var compileEnumHook = new PluginHook3<T, EnumType, Array<EnumOptionData>>();

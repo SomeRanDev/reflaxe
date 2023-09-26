@@ -1,8 +1,5 @@
 // =======================================================
 // * ModuleTypeHelper
-//
-// Class for extracting common data shared between the
-// ModuleType declaration classes.
 // =======================================================
 
 package reflaxe.helpers;
@@ -15,6 +12,10 @@ import haxe.macro.Type;
 using reflaxe.helpers.BaseTypeHelper;
 using reflaxe.helpers.NameMetaHelper;
 
+/**
+	Class for extracting common data shared between the
+	ModuleType declaration classes.
+**/
 class ModuleTypeHelper {
 	public static function getCommonData(type: ModuleType): BaseType {
 		return switch(type) {

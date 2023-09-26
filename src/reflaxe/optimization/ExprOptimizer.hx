@@ -1,13 +1,5 @@
 // =======================================================
 // * ExprOptimizer
-//
-// Converts block-like expressions to a list of expressions.
-// Non block-like expressions are returned as an array
-// of expressions only containing themselves.
-//
-// Useful for quickly converting the single expression
-// of a function to a list of expressions which is how
-// most non-Haxe languages handle function content.
 // =======================================================
 
 package reflaxe.optimization;
@@ -20,6 +12,15 @@ import reflaxe.helpers.Context;
 
 using reflaxe.helpers.TypedExprHelper;
 
+/**
+	Converts block-like expressions to a list of expressions.
+	Non block-like expressions are returned as an array
+	of expressions only containing themselves.
+
+	Useful for quickly converting the single expression
+	of a function to a list of expressions which is how
+	most non-Haxe languages handle function content.
+**/
 class ExprOptimizer {
 	public static function optimizeAndUnwrap(expr: TypedExpr): Array<TypedExpr> {
 		var el = unwrapBlock(flattenSingleExprBlocks(expr));

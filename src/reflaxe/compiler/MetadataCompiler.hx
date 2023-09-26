@@ -1,7 +1,5 @@
 // =======================================================
 // * MetadataCompiler
-//
-// A class containing the code for compiling metadata.
 // =======================================================
 
 package reflaxe.compiler;
@@ -17,6 +15,9 @@ import haxe.macro.Type;
 using reflaxe.helpers.NullableMetaAccessHelper;
 using reflaxe.helpers.NullHelper;
 
+/**
+	A class containing the code for compiling metadata.
+**/
 class MetadataCompiler {
 	public static function compileMetadata(options: BaseCompilerOptions, metaAccess: Null<MetaAccess>, target: haxe.display.Display.MetadataTarget): Null<String> {
 		if(metaAccess == null) {

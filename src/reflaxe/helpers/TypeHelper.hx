@@ -1,7 +1,5 @@
 // =======================================================
 // * TypeHelper
-//
-// Helpful for converting between ModuleTypes and Types.
 // =======================================================
 
 package reflaxe.helpers;
@@ -17,6 +15,9 @@ using reflaxe.helpers.ModuleTypeHelper;
 using reflaxe.helpers.NameMetaHelper;
 using reflaxe.helpers.NullHelper;
 
+/**
+	Helpful for converting between ModuleTypes and Types.
+**/
 class TypeHelper {
 	public static function findResolvedTypeParams(t: Type, cf: ClassField): Null<Array<Type>> {
 		if(cf.params.length == 0) {
@@ -208,8 +209,9 @@ class TypeHelper {
 		return params.map(tp -> tp.t);
 	}
 
-	// ----------------------------
-	// Checks if the type is TMono.
+	/**
+		Checks if the type is TMono.
+	**/
 	public static function isMonomorph(t: Type): Bool {
 		return switch(t) {
 			case TMono(_): true;
@@ -217,8 +219,9 @@ class TypeHelper {
 		}
 	}
 
-	// ----------------------------
-	// Checks if the type is TType.
+	/**
+		Checks if the type is TType.
+	**/
 	public static function isTypedef(t: Type): Bool {
 		return switch(t) {
 			case TType(_, _): true;
@@ -226,8 +229,9 @@ class TypeHelper {
 		}
 	}
 
-	// ----------------------------
-	// Checks if the type is TAnonymous.
+	/**
+		Checks if the type is TAnonymous.
+	**/
 	public static function isAnonStruct(t: Type): Bool {
 		return switch(t) {
 			case TAnonymous(_): true;
@@ -235,8 +239,9 @@ class TypeHelper {
 		}
 	}
 
-	// ----------------------------
-	// Checks if the type is TDynamic.
+	/**
+		Checks if the type is TDynamic.
+	**/
 	public static function isDynamic(t: Type): Bool {
 		return switch(t) {
 			case TDynamic(_): true;
@@ -244,8 +249,9 @@ class TypeHelper {
 		}
 	}
 
-	// ----------------------------
-	// Checks if the type is Void.
+	/**
+		Checks if the type is Void.
+	**/
 	public static function isVoid(t: Type): Bool {
 		return switch(t) {
 			case TAbstract(absRef, []): {
@@ -255,8 +261,9 @@ class TypeHelper {
 		}
 	}
 
-	// ----------------------------
-	// Checks if the type is Bool.
+	/**
+		Checks if the type is Bool.
+	**/
 	public static function isBool(t: Type): Bool {
 		return switch(t) {
 			case TAbstract(_.get() => abs, []) if(abs.module == "StdTypes" && abs.name == "Bool"): true;
@@ -264,8 +271,9 @@ class TypeHelper {
 		}
 	}
 
-	// ----------------------------
-	// Checks if the type is Int.
+	/**
+		Checks if the type is Int.
+	**/
 	public static function isInt(t: Type): Bool {
 		return switch(t) {
 			case TAbstract(_.get() => abs, []) if(abs.module == "StdTypes" && abs.name == "Int"): true;
@@ -273,8 +281,9 @@ class TypeHelper {
 		}
 	}
 
-	// ----------------------------
-	// Checks if the type is Float.
+	/**
+		Checks if the type is Float.
+	**/
 	public static function isFloat(t: Type): Bool {
 		return switch(t) {
 			case TAbstract(_.get() => abs, []) if(abs.module == "StdTypes" && abs.name == "Float"): true;
@@ -282,8 +291,9 @@ class TypeHelper {
 		}
 	}
 
-	// ----------------------------
-	// Checks if the type is the String class.
+	/**
+		Checks if the type is the String class.
+	**/
 	public static function isString(t: Type): Bool {
 		return switch(t) {
 			case TInst(clsTypeRef, []): {
@@ -299,8 +309,9 @@ class TypeHelper {
 		}
 	}
 
-	// ----------------------------
-	// Checks if the type is an Int, Float, or Bool.
+	/**
+		Checks if the type is an Int, Float, or Bool.
+	**/
 	public static function isPrimitive(t: Type): Bool {
 		return switch(t) {
 			case TAbstract(abTypeRef, []): {
@@ -311,8 +322,9 @@ class TypeHelper {
 		}
 	}
 
-	// ----------------------------
-	// Checks if the type is an Int, Float, Single, or UInt.
+	/**
+		Checks if the type is an Int, Float, Single, or UInt.
+	**/
 	public static function isNumberType(t: Type): Bool {
 		return switch(t) {
 			case TAbstract(abTypeRef, []): {
@@ -327,8 +339,9 @@ class TypeHelper {
 		}
 	}
 
-	// ----------------------------
-	// Checks if the type is the Any abstract.
+	/**
+		Checks if the type is the Any abstract.
+	**/
 	public static function isAny(t: Type): Bool {
 		return switch(t) {
 			case TAbstract(absRef, []): {
@@ -338,8 +351,9 @@ class TypeHelper {
 		}
 	}
 
-	// ----------------------------
-	// Checks if the type is a Null<T>.
+	/**
+		Checks if the type is a Null<T>.
+	**/
 	public static function isNull(t: Type): Bool {
 		return switch(t) {
 			case TAbstract(absRef, params) if(params.length == 1): {
@@ -349,16 +363,18 @@ class TypeHelper {
 		}
 	}
 
-	// ----------------------------
-	// Checks if the type is Class<T>.
+	/**
+		Checks if the type is Class<T>.
+	**/
 	public static function isClass(t: Type): Bool {
 		return getClassParameter(t) != null;
 	}
 
-	// ----------------------------
-	// Checks if this is a variable whose type could
-	// not be resolved. Probably because it was never
-	// assigned.
+	/**
+		Checks if this is a variable whose type could
+		not be resolved. Probably because it was never
+		assigned.
+	**/
 	public static function isUnresolvedMonomorph(t: Type): Bool {
 		return switch(t) {
 			case TMono(tRef): {
@@ -368,14 +384,14 @@ class TypeHelper {
 		}
 	}
 
-	// ----------------------------
 	public static function isTypeParameter(t: Type): Bool {
 		return getTypeParameterName(t) != null;
 	}
 
-	// ----------------------------
-	// If this is a placeholder type for a type parameter,
-	// this returns the name of the type parameter.
+	/**
+		If this is a placeholder type for a type parameter,
+		this returns the name of the type parameter.
+	**/
 	public static function getTypeParameterName(t: Type): Null<String> {
 		return switch(t) {
 			case TInst(clsRef, params): {
@@ -388,8 +404,9 @@ class TypeHelper {
 		}
 	}
 
-	// ----------------------------
-	// If the type is Class<T>, this returns T.
+	/**
+		If the type is Class<T>, this returns T.
+	**/
 	public static function getClassParameter(t: Type): Null<ModuleType> {
 		return switch(t) {
 			case TAbstract(absRef, [param]): {
@@ -482,7 +499,9 @@ class TypeHelper {
 		}
 	}
 
-	// Returns true if an abstract (or typedef to an abstract) with @:multiType.
+	/**
+		Returns true if an abstract (or typedef to an abstract) with @:multiType.
+	**/
 	public static function isMultitype(t: Type): Bool {
 		return switch(t) {
 			#if eval

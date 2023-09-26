@@ -1,20 +1,21 @@
 // =======================================================
 // * PluginHook
-//
-// These classes can be used to add hooks to the
-// compilation process. That way, users can add their
-// own modular modifications to your target.
-//
-// Each hook takes a function that receives and returns
-// a String. To add additional parameters to the hook,
-// the generic PluginHook1, PluginHook2, etc. classes
-// can be used based on the number of parameters required.
 // =======================================================
 
 package reflaxe.output;
 
 #if (macro || reflaxe_runtime)
 
+/**
+	The `PluginHook` classes can be used to add hooks to the
+	compilation process. That way, users can add their
+	own modular modifications to your target.
+
+	Each hook takes a function that receives and returns
+	a String. To add additional parameters to the hook,
+	the generic PluginHook1, PluginHook2, etc. classes
+	can be used based on the number of parameters required.
+**/
 class PluginHook {
 	var hooks: Array<(Null<String>) -> Null<String>>;
 

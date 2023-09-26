@@ -1,7 +1,5 @@
 // =======================================================
 // * CaptureVariableFixer
-//
-// Wraps a variable in an array when accessed from a lambda.
 // =======================================================
 
 package reflaxe.compiler;
@@ -17,6 +15,9 @@ using reflaxe.helpers.TVarHelper;
 using reflaxe.helpers.TypedExprHelper;
 using reflaxe.helpers.TypeHelper;
 
+/**
+	Wraps a variable in an array when accessed from a lambda.
+**/
 class CaptureVariableFixer {
 	// The original expression passed
 	var expr: TypedExpr;
@@ -70,8 +71,10 @@ class CaptureVariableFixer {
 		};
 	}
 
-	// Finds all variables declared outside a lambda but referenced within one.
-	// The IDs of all these variables are stored in "arrayWrapVarIds".
+	/**
+		Finds all variables declared outside a lambda but referenced within one.
+		The IDs of all these variables are stored in "arrayWrapVarIds".
+	**/
 	function fixCaptureExpr(e: TypedExpr) {
 		switch(e.expr) {
 			case TFunction(tfunc): {
@@ -96,7 +99,9 @@ class CaptureVariableFixer {
 		haxe.macro.TypedExprTools.iter(e, fixCaptureExpr);
 	}
 
-	// Add @:arrayWrap meta to all instances of "arrayWrapVarIds" TVars.
+	/**
+		Add `@:arrayWrap` meta to all instances of "arrayWrapVarIds" `TVar`s.
+	**/
 	function addMetaToLocals(e: TypedExpr) {
 		final typeAndTVar = switch(e.expr) {
 			case TLocal(tvar): { type: e.t, tvar: tvar };

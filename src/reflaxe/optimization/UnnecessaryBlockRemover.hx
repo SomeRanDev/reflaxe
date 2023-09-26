@@ -1,8 +1,5 @@
 // =======================================================
 // * UnnecessaryBlockRemover
-//
-// Removes unnecessary blocks that do not introduce
-// conflicting variable declarations.
 // =======================================================
 
 package reflaxe.optimization;
@@ -16,6 +13,10 @@ using reflaxe.helpers.NameMetaHelper;
 using reflaxe.helpers.NullHelper;
 using reflaxe.helpers.ModuleTypeHelper;
 
+/**
+	Removes unnecessary blocks that do not introduce
+	conflicting variable declarations.
+**/
 class UnnecessaryBlockRemover {
 	var exprList: Array<TypedExpr>;
 
@@ -47,7 +48,9 @@ class UnnecessaryBlockRemover {
 		return handleBlockList(exprList);
 	}
 
-	// Track all variable declarations and uses for future use
+	/**
+		Track all variable declarations and uses for future use
+	**/
 	function trackExpr(e: TypedExpr) {
 		switch(e.expr) {
 			case TBlock(_): return;
@@ -64,21 +67,27 @@ class UnnecessaryBlockRemover {
 		haxe.macro.TypedExprTools.iter(e, trackExpr);
 	}
 
-	// Add variable name that is used in this block.
+	/**
+		Add variable name that is used in this block.
+	**/
 	function addRequiredName(n: String) {
 		if(!requiredNames.contains(n)) {
 			requiredNames.push(n);
 		}
 	}
 
-	// Add variable name that is declared in this block.
+	/**
+		Add variable name that is declared in this block.
+	**/
 	function addDeclaredVars(n: String) {
 		if(!declaredVars.contains(n)) {
 			declaredVars.push(n);
 		}
 	}
 
-	// Take a list of expressions and merge any possible blocks.
+	/**
+		Take a list of expressions and merge any possible blocks.
+	**/
 	function handleBlockList(exprList: Array<TypedExpr>): Array<TypedExpr> {
 		final result = [];
 		for(i in 0...exprList.length) {
@@ -120,8 +129,10 @@ class UnnecessaryBlockRemover {
 		return result;
 	}
 
-	// If the expression isn't a block, iterate
-	// through the sub-expressions to find one.
+	/**
+		If the expression isn't a block, iterate
+		through the sub-expressions to find one.
+	**/
 	function findNewBlock(e: TypedExpr): TypedExpr {
 		return switch(e.expr) {
 			// Find a new block to act as our "base".
@@ -137,13 +148,15 @@ class UnnecessaryBlockRemover {
 		}
 	}
 
-	// We need to be careful when merging blocks since this optimization runs after
-	// the "RepeatVariableFixer". It's possible a block may be merged containing
-	// a variable declaration with the same name as another declaration in a
-	// subsequent block.
-	//
-	// To prevent this, this code searches for variable declarations that share
-	// the same name and returns a list of names that are declared multiple times.
+	/**
+		We need to be careful when merging blocks since this optimization runs after
+		the "RepeatVariableFixer". It's possible a block may be merged containing
+		a variable declaration with the same name as another declaration in a
+		subsequent block.
+
+		To prevent this, this code searches for variable declarations that share
+		the same name and returns a list of names that are declared multiple times.
+	**/
 	function findMultiUseVarNames(): Array<String> {
 		final varInstanceCount: Map<String, Array<Int>> = [];
 

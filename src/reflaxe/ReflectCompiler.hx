@@ -1,7 +1,5 @@
 // =======================================================
 // * ReflectCompiler
-//
-// Manages everything.
 // =======================================================
 
 package reflaxe;
@@ -35,6 +33,12 @@ using reflaxe.helpers.ModuleTypeHelper;
 using reflaxe.helpers.NullableMetaAccessHelper;
 using reflaxe.helpers.TypeHelper;
 
+/**
+	The heart of Reflaxe.
+
+	This singleton implements the generation by calling
+	functions at various compiler phases.
+**/
 class ReflectCompiler {
 	// =======================================================
 	// * Public Members
@@ -98,8 +102,10 @@ class ReflectCompiler {
 	// =======================================================
 	static var initCallbacks: Null<Array<Dynamic>> = null;
 
-	// Call this to access the BaseCompiler that's about to be used.
-	// This can be used to add callbacks to the hooks if desired.
+	/**
+		Call this to access the BaseCompiler that's about to be used.
+		This can be used to add callbacks to the hooks if desired.
+	**/
 	public static function onCompileBegin<T: BaseCompiler>(callback: (T) -> Void) {
 		if(initCallbacks == null) initCallbacks = [];
 		initCallbacks.push(callback);

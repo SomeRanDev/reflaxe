@@ -1,12 +1,5 @@
 // =======================================================
 // * EverythingIsExprSanitizer
-//
-// Converts block-like expressions that return a value into
-// an equivalent expression that does not rely on Haxe's
-// "Everything is an Expression" feature.
-//
-// View this page for more info on Haxe's "Everything is an Expression".
-// https://code.haxe.org/category/principles/everything-is-an-expression.html
 // =======================================================
 
 package reflaxe.compiler;
@@ -23,56 +16,73 @@ using reflaxe.helpers.NullHelper;
 using reflaxe.helpers.PositionHelper;
 using reflaxe.helpers.TypedExprHelper;
 
+/**
+	Converts block-like expressions that return a value into
+	an equivalent expression that does not rely on Haxe's
+	"Everything is an Expression" feature.
+
+	View this page for more info on Haxe's "Everything is an Expression".
+	https://code.haxe.org/category/principles/everything-is-an-expression.html
+**/
 class EverythingIsExprSanitizer {
-	// -------------------------------------------------------
-	// Whether a variable that will be initialized regardless
-	// should be initialized with `null`. I'm not sure what the
-	// default behavior should be, so I'll just control with
-	// a constant for now.
+	/**
+		Whether a variable that will be initialized regardless
+		should be initialized with `null`. I'm not sure what the
+		default behavior should be, so I'll just control with
+		a constant for now.
+	**/
 	public static final INIT_NULL = false;
 
-	// -------------------------------------------------------
-	// Stores the original, provided expression
+	/**
+		Stores the original, provided expression
+	**/
 	public var haxeExpr: TypedExpr;
 
-	// -------------------------------------------------------
-	// Stores the sub-expression list if the original is a TBlock
-	// Otherwise, is an array of length one containing "haxeExpr"
+	/**
+		Stores the sub-expression list if the original is a TBlock
+		Otherwise, is an array of length one containing "haxeExpr"
+	**/
 	public var topScopeArray: Array<TypedExpr>;
 	var index: Int = 0;
 
-	// -------------------------------------------------------
-	// Reference to the BaseCompiler that using this sanitizer.
+	/**
+		Reference to the BaseCompiler that using this sanitizer.
+	**/
 	public var compiler(default, null): BaseCompiler;
 
-	// -------------------------------------------------------
-	// If this expression is not null, the final expression of
-	// "topScopeArray" needs to be modified into an assignment
-	// expression assigning the final expression to "assigneeExpr"
-	//
-	// Used to convert `var a = { 123; }` into `var a; { a = 123 }`
-	// the latter being the standard syntax most languages use.
+	/**
+		If this expression is not null, the final expression of
+		"topScopeArray" needs to be modified into an assignment
+		expression assigning the final expression to "assigneeExpr"
+
+		Used to convert `var a = { 123; }` into `var a; { a = 123 }`
+		the latter being the standard syntax most languages use.
+	**/
 	public var assigneeExpr: Null<TypedExpr>;
 
-	// -------------------------------------------------------
-	// If this "EverythingIsExprSanitizer" was created from another
-	// "EverythingIsExprSanitizer", this is a reference to that
-	// original object.
-	//
-	// This is so we have one consistent object to manage the 
-	// new temporary variables names that are being created.
+	/**
+		If this "EverythingIsExprSanitizer" was created from another
+		"EverythingIsExprSanitizer", this is a reference to that
+		original object.
+
+		This is so we have one consistent object to manage the 
+		new temporary variables names that are being created.
+	**/
 	public var parent: Null<EverythingIsExprSanitizer> = null;
 
-	// -------------------------------------------------------
-	// TODO, write overly eloborate comment here
+	/**
+		TODO, write overly eloborate comment here
+	**/
 	public var nameGenerator: TempVarNameGenerator;
 
-	// -------------------------------------------------------
-	// Expression stack.
+	/**
+		Expression stack.
+	**/
 	var expressionStack: Array<TypedExpr>;
 
-	// -------------------------------------------------------
-	// Meta stack.
+	/**
+		Meta stack.
+	**/
 	var metaStack: Array<String>;
 
 	static var variableId = 0;
@@ -173,13 +183,14 @@ class EverythingIsExprSanitizer {
 		return index == (topScopeArray.length - 1);
 	}
 
-	// -------------------------------------------------------
-	// Depending on the expression, we can determine
-	// which expressions are treated like "values" in
-	// the Haxe code.
-	//
-	// An infinite while loop is used to locally replicate
-	// a recursive-like system when necessary.
+	/**
+		Depending on the expression, we can determine
+		which expressions are treated like "values" in
+		the Haxe code.
+
+		An infinite while loop is used to locally replicate
+		a recursive-like system when necessary.
+	**/
 	function processExpr(expr: TypedExpr): Null<TypedExprDef> {
 		if(expr == null) return null;
 
@@ -331,14 +342,14 @@ class EverythingIsExprSanitizer {
 		return result;
 	}
 
-	// =======================================================
-	// * Handle Non-Value Expression
-	//
-	// If a top-level, "block-like" expression is encountered
-	// that is not expected to provide a value, we can simply
-	// recursively use our "EverythingIsExprSanitizer" class
-	// to tranverse it and handle its sub-expressions.
-	// =======================================================
+	/**
+		Handle Non-Value Expression
+
+		If a top-level, "block-like" expression is encountered
+		that is not expected to provide a value, we can simply
+		recursively use our "EverythingIsExprSanitizer" class
+		to tranverse it and handle its sub-expressions.
+	**/
 	function handleNonValueBlock(e: TypedExpr): TypedExpr {
 		if(compiler.options.convertUnopIncrement && isUnopExpr(e)) {
 			final newExpr = standardizeUnopValue(e, false);
@@ -351,32 +362,32 @@ class EverythingIsExprSanitizer {
 		return eiec.convertedExpr();
 	}
 
-	// =======================================================
-	// * Handle Value Expression
-	//
-	// Private function that is called on expressions that
-	// are expected to return a value no matter what.
-	//
-	// If the expression is a "block-like" expression,
-	// we call "standardizeSubscopeValue" to transform it
-	// into a variable declaraion and scoped block that
-	// modifies the aforementioned variable.
-	//
-	// There are also various transformations we need to
-	// look out for when an expression is used as a value.
-	//
-	// [isNullCoalExpr/standardizeNullCoalValue]
-	// Converts (a ?? b) => (a != null ? a : b)
-	//
-	// [isUnopExpr/standardizeUnopValue]
-	// Converts (a++) => (a += 1)
-	//
-	// [isFunctionRef/standardizeFunctionValue]
-	// Wraps functions passed as a variable in a lambda.
-	//
-	// [isAssignExpr/standardizeAssignValue]
-	// Converts (a = b = 1) => (b = 1; a = b)
-	// =======================================================
+	/**
+		Handle Value Expression
+
+		Private function that is called on expressions that
+		are expected to return a value no matter what.
+
+		If the expression is a "block-like" expression,
+		we call "standardizeSubscopeValue" to transform it
+		into a variable declaraion and scoped block that
+		modifies the aforementioned variable.
+
+		There are also various transformations we need to
+		look out for when an expression is used as a value.
+
+		[isNullCoalExpr/standardizeNullCoalValue]
+		Converts (a ?? b) => (a != null ? a : b)
+
+		[isUnopExpr/standardizeUnopValue]
+		Converts (a++) => (a += 1)
+
+		[isFunctionRef/standardizeFunctionValue]
+		Wraps functions passed as a variable in a lambda.
+
+		[isAssignExpr/standardizeAssignValue]
+		Converts (a = b = 1) => (b = 1; a = b)
+	**/
 	function handleValueExpr(e: TypedExpr, varNameOverride: Null<String> = null): TypedExpr {
 		if(e == null) return { expr: TIdent("null"), pos: PositionHelper.unknownPos(), t: TDynamic(null) };
 		if(compiler.options.convertNullCoal && isNullCoalExpr(e)) {
@@ -419,8 +430,9 @@ class EverythingIsExprSanitizer {
 		return e.copy();
 	}
 
-	// -------------------------------------------------------
-	// Same as handleValueExpr, but works on Array of TypedExpr.
+	/**
+		Same as handleValueExpr, but works on Array of TypedExpr.
+	**/
 	function handleValueExprList(el: Array<TypedExpr>): Array<TypedExpr> {
 		final newExprs = [];
 		for(e in el) {
@@ -429,13 +441,13 @@ class EverythingIsExprSanitizer {
 		return newExprs;
 	}
 
-	// =======================================================
-	// * Assignment Expression Value
-	//
-	// If the expression is an assignment, it is transformed
-	// into two separate statements. The assignment is placed
-	// outside and the assigned expression is used afterward.
-	// =======================================================
+	/**
+		Assignment Expression Value
+
+		If the expression is an assignment, it is transformed
+		into two separate statements. The assignment is placed
+		outside and the assigned expression is used afterward.
+	**/
 	function isAssignExpr(e: TypedExpr) {
 		if(e == null) return false;
 		return switch(e.expr) {
@@ -458,17 +470,17 @@ class EverythingIsExprSanitizer {
 		return left != null ? left.copy() : null;
 	}
 
-	// =======================================================
-	// * Block-Like Values
-	//
-	// If the expression is a type of syntax that is typically
-	// not an expression in other languages, but instead an
-	// "expression holder", this returns true.
-	//
-	// The following couple of functions convert these
-	// block-like expressions into a standardized syntax
-	// if they're being treated like values.
-	// =======================================================
+	/**
+		Block-Like Values
+
+		If the expression is a type of syntax that is typically
+		not an expression in other languages, but instead an
+		"expression holder", this returns true.
+
+		The following couple of functions convert these
+		block-like expressions into a standardized syntax
+		if they're being treated like values.
+	**/
 	public static function isBlocklikeExpr(e: TypedExpr) {
 		if(e == null) return false;
 		return switch(e.expr) {
@@ -481,7 +493,9 @@ class EverythingIsExprSanitizer {
 		}
 	}
 
-	// Generates a TVar object given a name and Type.
+	/**
+		Generates a TVar object given a name and Type.
+	**/
 	function genTVar(name: String, t: Type): TVar {
 		// Let's construct the TVar using an expression.
 		final ct = haxe.macro.TypeTools.toComplexType(t);
@@ -552,11 +566,11 @@ class EverythingIsExprSanitizer {
 		return e.copy(tvarExprDef);
 	}
 
-	// =======================================================
-	// * Null Coalesce Rewrite
-	//
-	// Converts `a ?? b` to `{ var _a = a; _a != null ? _a : b; }`
-	// =======================================================
+	/**
+		Null Coalesce Rewrite
+
+		Converts `a ?? b` to `{ var _a = a; _a != null ? _a : b; }`
+	**/
 	function isNullCoalExpr(e: TypedExpr) {
 		return switch(e.expr) {
 			case TBinop(OpNullCoal, _, _): true;
@@ -597,14 +611,14 @@ class EverythingIsExprSanitizer {
 		}
 	}
 
-	// =======================================================
-	// * Prefix/Postfix Increment/Decrement Rewrite
-	//
-	// Certain targets don't support a++ or ++a.
-	// This converts the syntax into an assignment or
-	// block expression that is subsequently converted
-	// with later transformations.
-	// =======================================================
+	/**
+		Prefix/Postfix Increment/Decrement Rewrite
+
+		Certain targets don't support a++ or ++a.
+		This converts the syntax into an assignment or
+		block expression that is subsequently converted
+		with later transformations.
+	**/
 	function isUnopExpr(e: TypedExpr) {
 		return switch(e.expr) {
 			case TUnop(OpIncrement | OpDecrement, _, _): true;
@@ -642,15 +656,15 @@ class EverythingIsExprSanitizer {
 		}
 	}
 
-	// =======================================================
-	// * Inline Function Wrapping
-	//
-	// Functions that are extern or use syntax injecting 
-	// metadata like @:native or @:nativeFunctionCode cannot
-	// be referenced at runtime. To help fix this, uncalled
-	// function values are wrapped in a lambda to enable
-	// complete support.
-	// =======================================================
+	/**
+		Inline Function Wrapping
+
+		Functions that are extern or use syntax injecting 
+		metadata like @:native or @:nativeFunctionCode cannot
+		be referenced at runtime. To help fix this, uncalled
+		function values are wrapped in a lambda to enable
+		complete support.
+	**/
 	function isFunctionRef(e: Null<TypedExpr>) {
 		// Check if this feature is disabled
 		final option = compiler.options.wrapFunctionReferences;
@@ -791,15 +805,15 @@ class EverythingIsExprSanitizer {
 		}
 	}
 
-	// =======================================================
-	// * Preprocessing while
-	// The conditional expression within a while is executed
-	// multiple times, so it must be placed within the while.
-	//
-	// This collection of preprocessing functions helps fix
-	// this issue.
-	// =======================================================
+	/**
+		Preprocessing while
 
+		The conditional expression within a while is executed
+		multiple times, so it must be placed within the while.
+
+		This collection of preprocessing functions helps fix
+		this issue.
+	**/
 	function fixWhile(e: TypedExpr): TypedExpr {
 		switch(e.expr) {
 			case TWhile(econd, e, normalWhile): {

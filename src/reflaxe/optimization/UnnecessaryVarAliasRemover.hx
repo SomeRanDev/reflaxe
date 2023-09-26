@@ -1,8 +1,5 @@
 // =======================================================
 // * UnnecessaryBlockRemover
-//
-// Removes unnecessary blocks that do not introduce
-// conflicting variable declarations.
 // =======================================================
 
 package reflaxe.optimization;
@@ -17,6 +14,10 @@ using reflaxe.helpers.NullHelper;
 using reflaxe.helpers.TypedExprHelper;
 using reflaxe.helpers.TypeHelper;
 
+/**
+	Removes unnecessary blocks that do not introduce
+	conflicting variable declarations.
+**/
 class UnnecessaryVarAliasRemover {
 	public static function optimize(el: Array<TypedExpr>): Array<TypedExpr> {
 		final uvar = new UnnecessaryVarAliasRemover(el);

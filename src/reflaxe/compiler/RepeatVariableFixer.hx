@@ -1,12 +1,5 @@
 // =======================================================
 // * RepeatVariableFixer
-//
-// Scans an expression, presumably a block containing
-// multiple expressions, and ensures not a single variable
-// name is repeated or redeclared.
-//
-// Whether variables of the same name are allowed to be
-// redeclarated in the same scope or a subscope.
 // =======================================================
 
 package reflaxe.compiler;
@@ -18,21 +11,39 @@ import haxe.macro.Type;
 using reflaxe.helpers.TVarHelper;
 using reflaxe.helpers.TypedExprHelper;
 
+/**
+	Scans an expression, presumably a block containing
+	multiple expressions, and ensures not a single variable
+	name is repeated or redeclared.
+
+	Whether variables of the same name are allowed to be
+	redeclarated in the same scope or a subscope.
+**/
 class RepeatVariableFixer {
-	// The original expression passed
+	/**
+		The original expression passed
+	**/
 	var expr: TypedExpr;
 
-	// The original expression extracted as a TBlock list
+	/**
+		The original expression extracted as a TBlock list
+	**/
 	var exprList: Array<TypedExpr>;
 
-	// If another instance of RepeatVariableFixer created
-	// this one, it can be referenced from here.
+	/**
+		If another instance of RepeatVariableFixer created
+		this one, it can be referenced from here.
+	**/
 	var parent: Null<RepeatVariableFixer>;
 
-	// A list of all the already declared variable names.
+	/**
+		A list of all the already declared variable names.
+	**/
 	var varNames: Map<String, Bool>;
 
-	// A map of newly generated TVars, referenced by their id.
+	/**
+		A map of newly generated TVars, referenced by their id.
+	**/
 	var varReplacements: Map<Int, TVar>;
 
 	public function new(expr: TypedExpr, parent: Null<RepeatVariableFixer> = null, initVarNames: Null<Array<String>> = null) {

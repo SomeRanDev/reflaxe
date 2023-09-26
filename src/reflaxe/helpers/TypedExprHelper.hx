@@ -1,7 +1,5 @@
 // =======================================================
 // * TypedExprHelper
-//
-// Helpful functions for TypedExpr class.
 // =======================================================
 
 package reflaxe.helpers;
@@ -15,6 +13,9 @@ using reflaxe.helpers.BaseTypeHelper;
 using reflaxe.helpers.NameMetaHelper;
 using reflaxe.helpers.TypeHelper;
 
+/**
+	Helpful functions for `TypedExpr` class.
+**/
 class TypedExprHelper {
 	public static function equals(e: TypedExpr, other: TypedExpr): Bool {
 		#if macro
@@ -136,8 +137,10 @@ class TypedExprHelper {
 		}
 	}
 
-	// If this is an expression that is being called, this function
-	// checks if it has any type parameters applied and returns them.
+	/**
+		If this is an expression that is being called, this function
+		checks if it has any type parameters applied and returns them.
+	**/
 	public static function getFunctionTypeParams(e: TypedExpr, overrideReturnType: Null<Type> = null): Null<Array<Type>> {
 		final classField = getClassField(e);
 		return if(classField != null) {

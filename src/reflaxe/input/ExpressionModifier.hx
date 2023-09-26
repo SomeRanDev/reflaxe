@@ -1,12 +1,5 @@
 // =======================================================
 // * ExpressionModifier
-//
-// Sometimes a specific expression or expression pattern
-// needs to be modified pre-typing to function with
-// the compiler target.
-//
-// This class can be used in an initialization macro
-// to set up @:build macros to modify the desired expression.
 // =======================================================
 
 package reflaxe.input;
@@ -17,6 +10,14 @@ import haxe.macro.Compiler;
 import haxe.macro.Context;
 import haxe.macro.Expr;
 
+/**
+	Sometimes a specific expression or expression pattern
+	needs to be modified pre-typing to function with
+	the compiler target.
+
+	This class can be used in an initialization macro
+	to set up @:build macros to modify the desired expression.
+**/
 class ExpressionModifier {
 	static var modifications: Array<(Expr) -> Null<Expr>> = [];
 

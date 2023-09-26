@@ -1,8 +1,5 @@
 // =======================================================
 // * OutputManager
-//
-// Class containing all code related to generating the
-// output files from the compiled classes.
 // =======================================================
 
 package reflaxe.output;
@@ -17,6 +14,10 @@ import reflaxe.BaseCompiler;
 using reflaxe.helpers.BaseTypeHelper;
 using reflaxe.helpers.NullHelper;
 
+/**
+	Class containing all code related to generating the
+	output files from the compiled classes.
+**/
 class OutputManager {
 	// -------------------------------------------------------
 	// constants
@@ -84,8 +85,9 @@ class OutputManager {
 		}
 	}
 
-	// -------------------------------------------------------
-	// generating files stuff
+	/**
+		Generates the output files.
+	**/
 	public function generateFiles() {
 		switch(options.fileOutputType) {
 			case Manual: {
@@ -190,8 +192,10 @@ class OutputManager {
 		return filename + options.fileOutputExtension;
 	}
 
-	// -------------------------------------------------------
-	// saveFile
+	/**
+		Internal helper function for saving content to a path
+		relative to the output folder.
+	**/
 	public function saveFile(path: String, content: String) {
 		// Get full path
 		final p = outputDir != null ? joinPaths(outputDir, path) : path;
@@ -216,8 +220,10 @@ class OutputManager {
 		}
 	}
 
-	// -------------------------------------------------------
-	// record and delete output files
+	/**
+		Records a path for a file that was generated.
+		Ensures it will not be deleted when the rest of the old source files are removed.
+	**/
 	function recordOutputFile(path: String) {
 		if(outputDir == null) return;
 		final dir = StringTools.endsWith(outputDir, "/") ? outputDir : (outputDir + "/");
@@ -232,11 +238,12 @@ class OutputManager {
 		}
 	}
 
-	// -------------------------------------------------------
-	// We've removed elements from this array if we saved
-	// a new file with the same path, so we can safely assume
-	// all the remaining elements are old file paths we
-	// want to delete.
+	/**
+		We've removed elements from this array if we saved
+		a new file with the same path, so we can safely assume
+		all the remaining elements are old file paths we
+		want to delete.
+	**/
 	function deleteOldOutputFiles() {
 		if(oldOutputFiles != null && outputDir != null) {
 			for(file in oldOutputFiles) {

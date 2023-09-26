@@ -1,8 +1,5 @@
 // =======================================================
 // * UnnecessaryBlockRemover
-//
-// Removes unnecessary blocks that do not introduce
-// conflicting variable declarations.
 // =======================================================
 
 package reflaxe.optimization;
@@ -13,6 +10,10 @@ import haxe.macro.Type;
 
 using reflaxe.helpers.TypedExprHelper;
 
+/**
+	Removes unnecessary blocks that do not introduce
+	conflicting variable declarations.
+**/
 class UnnecessaryIfRemover {
 	public static function optimize(el: Array<TypedExpr>): Array<TypedExpr> {
 		final result = [];

@@ -1,11 +1,5 @@
 // =======================================================
 // * ModuleUsageTracker
-//
-// Class required for Reflaxe's "Smart DCE" feature.
-//
-// This class attempts to parse through the list of "to be compiled"
-// module types Haxe produces post-typing, and cuts them down
-// to a smaller selection for cleaner output.
 // =======================================================
 
 package reflaxe.input;
@@ -21,6 +15,13 @@ using reflaxe.helpers.ModuleTypeHelper;
 using reflaxe.helpers.NameMetaHelper;
 using reflaxe.helpers.TypeHelper;
 
+/**
+	Class required for Reflaxe's "Smart DCE" feature.
+
+	This class attempts to parse through the list of "to be compiled"
+	module types Haxe produces post-typing, and cuts them down
+	to a smaller selection for cleaner output.
+**/
 class ModuleUsageTracker {
 	var allModuleTypes: Array<ModuleType>;
 	var compiler: BaseCompiler;
@@ -179,9 +180,10 @@ class ModuleUsageTracker {
 		}
 	}
 
-	// -------------------------------------------------------
-	// Checks whether a ModuleType is a member of either the Haxe standard library
-	// or the standard library of the target (using the `customStdMeta` option).
+	/**
+		Checks whether a ModuleType is a member of either the Haxe standard library
+		or the standard library of the target (using the `customStdMeta` option).
+	**/
 	static function isStdType(type: ModuleType, stdMeta: Null<Array<String>> = null): Bool {
 		final cd = type.getCommonData();
 		if(cd.hasMeta(":coreApi") || cd.hasMeta(":pseudoCoreApi")) {

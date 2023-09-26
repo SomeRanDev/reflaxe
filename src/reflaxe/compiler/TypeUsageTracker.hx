@@ -19,25 +19,39 @@ enum TypeOrModuleType {
 typedef TypeUsageMap = Map<TypeUsageLevel, Array<TypeOrModuleType>>;
 
 enum abstract TypeUsageLevel(Int) from Int to Int {
-	// An expression of this type exists.
+	/**
+		An expression of this type exists.
+	**/
 	var Expression = 1;
 
-	// A local variable declaration with this type exists in an expression.
+	/**
+		A local variable declaration with this type exists in an expression.
+	**/
 	var VariableType = 2;
 
-	// A static variable or function from this type is used.
+	/**
+		A static variable or function from this type is used.
+	**/
 	var StaticAccess = 4;
 
-	// This type is constructed in an expression (i.e. "new ThisType").
+	/**
+		This type is constructed in an expression (i.e. "new ThisType").
+	**/
 	var Constructed = 8;
 
-	// This type is used as a parameter or return type for a function in the class. 
+	/**
+		This type is used as a parameter or return type for a function in the class. 
+	**/
 	var FunctionDeclaration = 16;
 
-	// A variable field with this type exists.
+	/**
+		A variable field with this type exists.
+	**/
 	var VariableDeclaration = 32;
 
-	// This type is extended or implemented from.
+	/**
+		This type is extended or implemented from.
+	**/
 	var ExtendedFrom = 64;
 
 	public static function LevelCount() return 7;
@@ -49,16 +63,20 @@ enum abstract TypeUsageLevel(Int) from Int to Int {
 }
 
 class TypeUsageTracker {
-	// We want to track instances where an explicit "function type" needs to be declared.
-	// This can be helpful in cases where an import is required for a function wrapper object.
-	//
-	// For example, `#include <functional>` is required when using `std::function` in C++.
-	//
-	// For this purpose, we use haxe.Function in the result Maps. Obtaining a reference
-	// to `haxe.Function` is not easy, so we obtain it once in `init` and store here.
+	/**
+		We want to track instances where an explicit "function type" needs to be declared.
+		This can be helpful in cases where an import is required for a function wrapper object.
+		
+		For example, `#include <functional>` is required when using `std::function` in C++.
+		
+		For this purpose, we use haxe.Function in the result Maps. Obtaining a reference
+		to `haxe.Function` is not easy, so we obtain it once in `init` and store here.
+	**/
 	static var functionType: Null<Type>;
 
-	// Called at start of Reflaxe
+	/**
+		Called at start of Reflaxe
+	**/
 	public static function init() {
 		#if eval
 		// Store `haxe.Function` Type in "functionType"
@@ -75,7 +93,9 @@ class TypeUsageTracker {
 		#end
 	}
 
-	// Get all the ModuleTypes by a single ModuleType.
+	/**
+		Get all the ModuleTypes by a single ModuleType.
+	**/
 	public static function trackTypesInModuleType(moduleType: ModuleType): TypeUsageMap {
 		final modules: Map<String, { m: TypeOrModuleType, level: Int }> = [];
 

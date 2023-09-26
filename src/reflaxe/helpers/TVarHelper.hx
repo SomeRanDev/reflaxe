@@ -1,7 +1,5 @@
 // =======================================================
 // * TVarHelper
-//
-// Helpful functions for TVar class.
 // =======================================================
 
 package reflaxe.helpers;
@@ -10,6 +8,9 @@ package reflaxe.helpers;
 
 import haxe.macro.Type;
 
+/**
+	Helpful functions for `TVar` class.
+**/
 class TVarHelper {
 	public static function copy(tvar: TVar, newName: Null<String> = null): TVar {
 		var result: Dynamic = Reflect.copy(tvar);

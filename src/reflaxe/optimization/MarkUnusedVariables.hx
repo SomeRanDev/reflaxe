@@ -2,9 +2,6 @@ package reflaxe.optimization;
 
 // =======================================================
 // * UnnecessaryVarDeclRemover
-//
-// Removes unnecessary variable declarations for variables
-// that are unused until a reassignment later in the same scope.
 // =======================================================
 
 #if (macro || reflaxe_runtime)
@@ -18,6 +15,10 @@ using reflaxe.helpers.NullHelper;
 using reflaxe.helpers.NullableMetaAccessHelper;
 using reflaxe.helpers.TypedExprHelper;
 
+/**
+	Removes unnecessary variable declarations for variables
+	that are unused until a reassignment later in the same scope.
+**/
 class MarkUnusedVariables {
 	var exprList: Array<TypedExpr>;
 
@@ -38,7 +39,9 @@ class MarkUnusedVariables {
 	var tvarMap: Map<Int, Null<TVar>> = [];
 	var tvarPos: Map<Int, Position> = [];
 
-	// Returns a modified version of the input expressions with the optimization applied.
+	/**
+		Returns a modified version of the input expressions with the optimization applied.
+	**/
 	public function markUnusedLocalVariables(): Array<TypedExpr> {
 		foundUnused = false;
 		tvarMap = [];

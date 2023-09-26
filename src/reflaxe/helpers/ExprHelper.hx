@@ -1,7 +1,5 @@
 // =======================================================
 // * ExprHelper
-//
-// Quick static extensions to help with Expr.
 // =======================================================
 
 package reflaxe.helpers;
@@ -10,6 +8,9 @@ package reflaxe.helpers;
 
 import haxe.macro.Expr;
 
+/**
+	Quick static extensions to help with Expr.
+**/
 class ExprHelper {
 	public static function getConstString(e: Expr): String {
 		return switch(e.expr) {

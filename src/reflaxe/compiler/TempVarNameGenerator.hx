@@ -1,15 +1,5 @@
 // =======================================================
 // * TempVarNameGenerator
-//
-// When converting from "Everything is an Expression" syntax,
-// new variables need to be introduced. 
-//
-// In an attempt to keep the variables names unique/consistent
-// (but also look like they were written by a human), this class
-// is used to construct and manage the variable names.
-//
-// It is used exclusively in "compiler/EverythingIsExprSanitizer.hx"
-// So check out that file for more information.
 // =======================================================
 
 package reflaxe.compiler;
@@ -20,17 +10,30 @@ import haxe.macro.Type;
 
 using reflaxe.helpers.NullHelper;
 
+/**
+	When converting from "Everything is an Expression" syntax,
+	new variables need to be introduced. 
+
+	In an attempt to keep the variables names unique/consistent
+	(but also look like they were written by a human), this class
+	is used to construct and manage the variable names.
+
+	It is used exclusively in "compiler/EverythingIsExprSanitizer.hx"
+	So check out that file for more information.
+**/
 class TempVarNameGenerator {
-	// -------------------------------------------------------
-	// Count how many times a variable name is used so if it's
-	// used again we can append a "2", "3", etc. to keep it unique.
+	/**
+		Count how many times a variable name is used so if it's
+		used again we can append a "2", "3", etc. to keep it unique.
+	**/
 	var variableNameCounts: Map<String, Int> = [];
 
 	public function new() {
 	}
 
-	// -------------------------------------------------------
-	// Reserve names for generation
+	/**
+		Reserve names for generation
+	**/
 	public function reserveNames(names: Array<String>) {
 		for(n in names) {
 			final count = variableNameCounts.exists(n) ? variableNameCounts.get(n).or(0) : 0;
@@ -38,8 +41,9 @@ class TempVarNameGenerator {
 		}
 	}
 
-	// -------------------------------------------------------
-	// Generate variable name based on the type
+	/**
+		Generate variable name based on the type
+	**/
 	public function generateName(t: Null<Type>, baseNameOverride: Null<String> = null) {
 		final baseName = baseNameOverride != null ? baseNameOverride : replaceDisallowedCharacters(generateBaseName(t));
 		final count = if(variableNameCounts.exists(baseName)) {
@@ -59,14 +63,16 @@ class TempVarNameGenerator {
 		return ~/[^0-9a-zA-Z_]+/g.split(s).join("");
 	}
 
-	// -------------------------------------------------------
-	// The "base" name if the type cannot be determined
+	/**
+		The "base" name if the type cannot be determined
+	**/
 	public function unknownBaseTypeName(): String {
 		return "var";
 	}
 
-	// -------------------------------------------------------
-	// Generate name from the base and number of uses
+	/**
+		Generate name from the base and number of uses
+	**/
 	public function makeName(baseName: String, count: Int) {
 		final base = capatalize(baseName);
 		final suffix = (count > 0 ? Std.string(count) : "");
@@ -77,9 +83,11 @@ class TempVarNameGenerator {
 		return s.substring(0, 1).toUpperCase() + s.substring(1);
 	}
 
-	// -------------------------------------------------------
-	// Get the "base" name of the variable using type.
-	// tempTYPENAME123 - etc: tempNum, tempString3, tempFunction2
+	/**
+		Get the "base" name of the variable using type.
+
+		tempTYPENAME123 - etc: tempNum, tempString3, tempFunction2
+	**/
 	function generateBaseName(t: Null<Type>) {
 		return switch(t) {
 			case null: unknownBaseTypeName();

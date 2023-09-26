@@ -1,7 +1,5 @@
 // =======================================================
 // * OperatorHelper
-//
-// Helpful functions when using Haxe's Binop and Unop classes.
 // =======================================================
 
 package reflaxe.helpers;
@@ -10,6 +8,9 @@ package reflaxe.helpers;
 
 import haxe.macro.Expr;
 
+/**
+	Helpful functions when using Haxe's Binop and Unop classes.
+**/
 class OperatorHelper {
 
 	// Binop

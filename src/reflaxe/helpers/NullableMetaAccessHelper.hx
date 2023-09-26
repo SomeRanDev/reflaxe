@@ -1,10 +1,5 @@
 // =======================================================
 // * NullableMetaAccessHelper
-//
-// MetaAccess can be annoying sometimes because the
-// functions themselves may be null. These helper
-// functions wrap around the normal MetaAccess functions
-// and ensure they are not null before calling.
 // =======================================================
 
 package reflaxe.helpers;
@@ -17,6 +12,12 @@ import haxe.macro.Expr;
 
 using reflaxe.helpers.DynamicHelper;
 
+/**
+	MetaAccess can be annoying sometimes because the
+	functions themselves may be null. These helper
+	functions wrap around the normal MetaAccess functions
+	and ensure they are not null before calling.
+**/
 class NullableMetaAccessHelper {
 	public static function maybeHas(m: Null<MetaAccess>, name: String): Bool {
 		return m != null && m.has != null && m.has(name);

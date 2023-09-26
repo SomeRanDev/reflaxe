@@ -1,8 +1,5 @@
 // =======================================================
 // * UnnecessaryVarDeclRemover
-//
-// Removes unnecessary variable declarations for variables
-// that are unused until a reassignment later in the same scope.
 // =======================================================
 
 package reflaxe.optimization;
@@ -15,6 +12,10 @@ using reflaxe.helpers.TypedExprHelper;
 using reflaxe.helpers.NameMetaHelper;
 using reflaxe.helpers.ModuleTypeHelper;
 
+/**
+	Removes unnecessary variable declarations for variables
+	that are unused until a reassignment later in the same scope.
+**/
 class UnnecessaryVarDeclRemover {
 	var exprList: Array<TypedExpr>;
 
@@ -27,7 +28,9 @@ class UnnecessaryVarDeclRemover {
 		exprList = list;
 	}
 
-	// Returns a modified version of the input expressions with the optimization applied.
+	/**
+		Returns a modified version of the input expressions with the optimization applied.
+	**/
 	public function removeUnnecessaryVarDecls(): Array<TypedExpr> {
 		final result = [];
 
@@ -93,8 +96,10 @@ class UnnecessaryVarDeclRemover {
 		}
 	}
 
-	// Check the provided expression for any usage of the supplied list of declared variables.
-	// If any are found, remove them from the list.
+	/**
+		Check the provided expression for any usage of the supplied list of declared variables.
+		If any are found, remove them from the list.
+	**/
 	function filterRemovableVars(expr: TypedExpr, removableVars: Array<{tvar: TVar, index: Int}>) {
 		function exprIter(e: TypedExpr) {
 			switch(e.expr) {
@@ -111,8 +116,10 @@ class UnnecessaryVarDeclRemover {
 		return removableVars;
 	}
 
-	// Check if the expression has any possible effects.
-	// If not, it should be safe to remove.
+	/**
+		Check if the expression has any possible effects.
+		If not, it should be safe to remove.
+	**/
 	function isModifyingExpr(e: Null<TypedExpr>): Bool {
 		if(e == null) {
 			return false;
