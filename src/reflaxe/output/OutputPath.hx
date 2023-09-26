@@ -7,7 +7,7 @@ package reflaxe.output;
 #if (macro || reflaxe_runtime)
 
 /**
-	A class created from either a String or an Array to
+	A class created from either a `String` or an `Array` to
 	represent a file path.
 **/
 abstract OutputPath(Array<String>) from Array<String> {

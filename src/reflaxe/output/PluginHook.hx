@@ -12,7 +12,7 @@ package reflaxe.output;
 	own modular modifications to your target.
 
 	Each hook takes a function that receives and returns
-	a String. To add additional parameters to the hook,
+	a `String`. To add additional parameters to the hook,
 	the generic `PluginHook1`, `PluginHook2`, etc. classes
 	can be used based on the number of parameters required.
 **/

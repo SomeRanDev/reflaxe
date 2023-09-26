@@ -20,7 +20,7 @@ typedef NameAndMeta = {
 /**
 	This is a static extension for all objects with a
 	`name: String` and a `meta: MetaAccess`. This is a 
-	common pattern in ModuleType types and TVar.
+	common pattern in `ModuleType` types and `TVar`.
 
 	To allow compiler developers to easily grab
 	either the name or the contents of the correlating

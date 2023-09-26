@@ -16,7 +16,7 @@ using reflaxe.helpers.NameMetaHelper;
 using reflaxe.helpers.NullHelper;
 
 /**
-	Helpful for converting between ModuleTypes and Types.
+	Helpful for converting between `ModuleType`s and `Type`s.
 **/
 class TypeHelper {
 	public static function findResolvedTypeParams(t: Type, cf: ClassField): Null<Array<Type>> {
