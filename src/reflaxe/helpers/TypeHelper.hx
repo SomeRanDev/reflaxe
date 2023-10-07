@@ -405,6 +405,38 @@ class TypeHelper {
 	}
 
 	/**
+		Extracts the constraints from the type parameter.
+	**/
+	public static function extractTypeParameterConstraints(t: Type): Null<Array<Type>> {
+		return switch(t) {
+			case TInst(clsRef, params): {
+				switch(clsRef.get().kind) {
+					case KTypeParameter(constraints): constraints;
+					case _: null;
+				}
+			}
+			case _: null;
+		}
+	}
+
+	/**
+		If the type is a type parameter with the `@:const` metadata,
+		this will return the first constraint if it exists.
+	**/
+	public static function extractTypeParameterConstType(t: Type): Null<Type> {
+		return switch(t) {
+			case TInst(_.get() => {
+				kind: KTypeParameter(constraints),
+				meta: meta,
+				pos: pos
+			}, _) if(constraints.length == 1 && meta.has(":const")): {
+				constraints[0];
+			}
+			case _: null;
+		}
+	}
+
+	/**
 		If the type is Class<T>, this returns T.
 	**/
 	public static function getClassParameter(t: Type): Null<ModuleType> {
