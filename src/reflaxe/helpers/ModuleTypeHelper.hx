@@ -55,7 +55,8 @@ class ModuleTypeHelper {
 			case TAbstract(_): "A";
 		}
 
-		return prefix + "|" + getCommonData(type).globalName(false);
+		final d = getCommonData(type);
+		return prefix + "|" + d.pack.join("_") + d.globalName(false);
 	}
 
 	public static function equals(type: Null<ModuleType>, other: Null<ModuleType>): Bool {
