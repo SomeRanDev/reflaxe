@@ -428,7 +428,10 @@ class ReflectCompiler {
 	// =======================================================
 	static function transpileEnum(enm: EnumType, compiler: BaseCompiler): Null<String> {
 		final options = [];
-		for(name => field in enm.constructs) {
+		for(name in enm.names) {
+			final field = enm.constructs[name];
+			if(field == null) continue;
+
 			final args = switch(field.type) {
 				case TFun(args, ret): args;
 				case _: [];
