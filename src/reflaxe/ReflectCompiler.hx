@@ -6,12 +6,16 @@ package reflaxe;
 
 #if (macro || reflaxe_runtime)
 
+// avoid conflict with haxe.macro.Type after https://github.com/HaxeFoundation/haxe/pull/11168
+import Type as HaxeType;
+
 import haxe.display.Display.MetadataTarget;
 import haxe.display.Display.Platform;
 
 import haxe.macro.Compiler;
 import haxe.macro.Context;
 import haxe.macro.Expr;
+
 import haxe.macro.Type;
 
 import reflaxe.BaseCompiler;
@@ -170,7 +174,7 @@ class ReflectCompiler {
 				validCompilers.push(compiler);
 			#end
 			} else {
-				final compilerName = Type.getClassName(Type.getClass(compiler));
+				final compilerName = HaxeType.getClassName(HaxeType.getClass(compiler));
 				final pos = Context.currentPos();
 				final msg = 'The $compilerName compiler is enabled; however, the output directory (-D $outputDirDef) is not defined.';
 				Context.error(msg, pos);
@@ -182,7 +186,7 @@ class ReflectCompiler {
 
 	static function tooManyCompilersError(compilers: Array<BaseCompiler>) {
 		#if eval
-		final compilerList = compilers.map(c -> Type.getClassName(Type.getClass(c))).join(" | ");
+		final compilerList = compilers.map(c -> HaxeType.getClassName(HaxeType.getClass(c))).join(" | ");
 		final pos = Context.currentPos();
 		final msg = 'Multiple compilers have been enabled, only one may be active per build: $compilerList';
 		Context.error(msg, pos);
