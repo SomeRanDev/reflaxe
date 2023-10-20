@@ -6,7 +6,7 @@ package reflaxe.helpers;
 
 #if (macro || reflaxe_runtime)
 
-import haxe.macro.Context;
+import reflaxe.helpers.Context;
 import haxe.macro.Type;
 
 using reflaxe.helpers.BaseTypeHelper;
