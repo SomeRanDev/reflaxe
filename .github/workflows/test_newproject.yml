@@ -15,15 +15,14 @@ jobs:
         with:
           haxe-version: 4.3.0
 
-      - name: Checkout
-        uses: actions/checkout@v3
-
       - name: Check Haxe Version
         run: haxe -version
 
       - name: Install Reflaxe
         run: haxelib git reflaxe https://github.com/SomeRanDev/reflaxe.git
 
-      - name: Test newproject
-        working-directory: newproject
+      - name: Create Reflaxe Project
+        run: haxelib run reflaxe new Test test ts d
+
+      - name: Test Reflaxe Project
         run: haxelib run reflaxe test

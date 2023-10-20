@@ -127,7 +127,7 @@ function helpContent(): String {
 	final title = '/ Reflaxe v${haxelibJson.version} \\';
 
 	// Ensure "credits" is longer than "title"
-	var credits = "by RoBBoR (Robert Borghese)";
+	var credits = "by SomeRanDev (Robert Borghese)";
 	if(title.length > credits.length) {
 		final half = Math.floor((title.length - credits.length) / 2);
 		credits = StringTools.rpad(StringTools.lpad(credits, " ", half), " " , half);
@@ -198,15 +198,20 @@ Can you tell me...\n");
 	final extension = args.length >= 3 ? args[2] : readName("File extension for the files to generate?\nDo not include the dot! (i.e: rs, kt, js)");
 	if(extension == null) return;
 
+	// Project Type
+	final type = args.length >= 4 ? convertStringToProjectType(args[4]) : readProjectType();
+	if(type == null) return;
+
 	// ---
 
 	// Verify Info
 	Sys.println("---\n");
 	Sys.println('Full Name\n  ${fullName}\n
 Abbreviated Name\n  ${abbrevName}\n
-File Extension\n  .${extension}');
+File Extension\n  .${extension}\n
+Transpile Type\n  ${Std.string(type)}');
 
-	final isCorrect = if(args.length < 3) {
+	final isCorrect = if(args.length < 4) {
 		Sys.print("\nIs this OK? (yes)\n>");
 		try { Sys.stdin().readLine().toLowerCase(); } catch(e: Eof) { return; }
 	} else {
@@ -216,7 +221,7 @@ File Extension\n  .${extension}');
 	if(isCorrect == "" || isCorrect == "y" || isCorrect == "yes") {
 		Sys.println("");
 		printlnGreen("Perfect! Generating project in subfolder: " + folderName);
-		copyProjectFiles(folderPath, fullName, abbrevName, extension);
+		copyProjectFiles(folderPath, fullName, abbrevName, extension, type);
 	} else {
 		printlnRed("\nOkay! Cancelling....");
 	}
@@ -252,23 +257,90 @@ function readName(msg: String): Null<String> {
 }
 
 /**
+	Used as the result for `readProjectType`.
+**/
+enum ProjectType {
+	Direct;
+	Intermediate;
+}
+
+/**
+	Ask the user their desired project type.
+**/
+function readProjectType(): Null<ProjectType> {
+	// Print the message
+	Sys.println("What type of compiler would you like to make? (d)irect or (i)ntermediate?
+If you're not sure, I recommend using \"direct\"!");
+
+	// Find the result
+	final regex = ~/^(?:d|i|direct|intermediate)$/;
+	var input = "";
+	var result = null;
+	while(true) {
+		Sys.print("> ");
+		try {
+			input = Sys.stdin().readLine().trim();
+		} catch(e: Eof) {
+			return null;
+		}
+		if(regex.match(input)) {
+			result = convertStringToProjectType(input);
+			Sys.println("");
+			break;
+		} else {
+			printlnRed('`${input}` is invalid! Please input either \"d\" or \"i\".');
+		}
+	}
+
+	return result;
+}
+
+/**
+	Converts a given user-input `String` to its correlating `ProjectType` value.
+**/
+function convertStringToProjectType(input: String) {
+	return switch(input) {
+		case "direct" | "d": Direct;
+		case "intermediate" | "i": Intermediate;
+		case _: {
+			printlnRed('`${input}` is an invalid project type.');
+			null;
+		}
+	}
+}
+
+/**
 	Actually copies the project files.
 **/
-function copyProjectFiles(folderPath: String, fullName: String, abbrName: String, ext: String) {
+function copyProjectFiles(folderPath: String, fullName: String, abbrName: String, ext: String, type: ProjectType) {
 	if(!FileSystem.exists("newproject")) {
 		printlnRed("Could not find `newproject` directory in Reflaxe installation folder.");
 		return;
 	}
 
-	copyDir("newproject", folderPath, { fullName: fullName, abbrName: abbrName, ext: ext });
+	copyDir("newproject", folderPath, { fullName: fullName, abbrName: abbrName, ext: ext, type: type });
 }
 
 /**
 	Recursive function for copying files.
 	Handles special cases.
 **/
-function copyDir(src: String, dest: String, data: { fullName: String, abbrName: String, ext: String }) {
+function copyDir(src: String, dest: String, data: { fullName: String, abbrName: String, ext: String, type: ProjectType }) {
+	// Check if directory is exclusive to a project type.
+	final dirRegex = ~/\.(direct|intermediate)$/i;
+	if(dirRegex.match(src)) {
+		if(dirRegex.matched(1).toLowerCase() != Std.string(data.type).toLowerCase()) {
+			return;
+		} else {
+			// Remove the .direct|intermediate from the destination.
+			dest = dirRegex.replace(dest, "");
+		}
+	}
+
+	// Make directory
 	makeDirIfNonExist(dest);
+
+	// Copy files
 	for(file in FileSystem.readDirectory(src)) {
 		final filePath = Path.join([src, file]);
 		var destFile = Path.join([dest, file]);
@@ -279,8 +351,8 @@ function copyDir(src: String, dest: String, data: { fullName: String, abbrName: 
 					destFile = Path.join([dest, data.abbrName.toLowerCase() + "compiler"]);
 				case "LANG":
 					destFile = Path.join([dest, data.abbrName.toLowerCase()]);
-				// ignore test/out
-				case "out":
+				// ignore test/out and _Build
+				case "out" | "_Build":
 					continue;
 				case _:
 			}
