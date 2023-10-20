@@ -2,13 +2,11 @@ package reflaxe;
 
 #if (macro || reflaxe_runtime)
 
-import haxe.macro.Expr;
 import haxe.macro.Type;
 
 import reflaxe.data.ClassFuncData;
 import reflaxe.data.ClassVarData;
 import reflaxe.data.EnumOptionData;
-
 import reflaxe.output.DataAndFileInfo;
 
 using reflaxe.helpers.NullHelper;

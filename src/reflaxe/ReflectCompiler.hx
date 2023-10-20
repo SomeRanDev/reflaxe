@@ -10,12 +10,10 @@ package reflaxe;
 import Type as HaxeType;
 
 import haxe.display.Display.MetadataTarget;
-import haxe.display.Display.Platform;
 
 import haxe.macro.Compiler;
 import haxe.macro.Context;
 import haxe.macro.Expr;
-
 import haxe.macro.Type;
 
 import reflaxe.BaseCompiler;
@@ -23,7 +21,6 @@ import reflaxe.compiler.EverythingIsExprSanitizer;
 import reflaxe.compiler.RepeatVariableFixer;
 import reflaxe.compiler.CaptureVariableFixer;
 import reflaxe.compiler.NullTypeEnforcer;
-import reflaxe.compiler.TypeUsageTracker;
 import reflaxe.data.ClassFuncData;
 import reflaxe.data.ClassVarData;
 import reflaxe.data.EnumOptionArg;
