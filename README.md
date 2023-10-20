@@ -64,7 +64,7 @@ haxelib run reflaxe test
 | - | ------ | ------ |
 | 1 | Install via haxelib git. | <pre>haxelib git reflaxe https://github.com/SomeRanDev/reflaxe.git</pre> |
 | 2 | Add the lib to your `.hxml` file or compile command. | <pre lang="hxml">-lib reflaxe</pre> |
-| 3 | Extend your compiler class from `BaseCompiler`. | <pre lang="haxe">class MyLangCompiler extends reflaxe.BaseCompiler</pre> |
+| 3 | Extend your compiler class from `DirectToStringCompiler`. | <pre lang="haxe">class MyLangCompiler extends reflaxe.DirectToStringCompiler</pre> |
 
 &nbsp;
 &nbsp;
@@ -105,10 +105,10 @@ You may add as many paths to the "stdPaths" as you like, and these will be combi
 &nbsp;
 
 ## Compiler Code Sample
-For starters, you must fill out the abstract functions from `BaseCompiler` to define how Haxe AST is converted into a String representation of your target language.
+For starters, you must fill out the abstract functions from `DirectToStringCompiler` to define how Haxe AST is converted into a String representation of your target language.
 
 ```haxe
-class MyLangCompiler extends reflaxe.BaseCompiler {
+class MyLangCompiler extends reflaxe.DirectToStringCompiler {
    //---------
    // fill out just these 3 functions and Reflaxe takes care of the rest
    //---------
@@ -132,7 +132,7 @@ class MyLangCompiler extends reflaxe.BaseCompiler {
 &nbsp;
 
 ## Compiler Init Code Sample
-Reflaxe projects also require an initialization macro call to setup the various properties for your target. While you can add this "Start" function to your `BaseCompiler` class, the standard for Reflaxe projects is to have this code in a separate class:
+Reflaxe projects also require an initialization macro call to setup the various properties for your target. While you can add this "Start" function to your compiler class, the standard for Reflaxe projects is to have this code in a separate class:
 
 ```haxe
 class MyLangCompilerInit {
@@ -382,13 +382,13 @@ public var deleteOldOutput: Bool = true;
 public var ignoreBodilessFunctions: Bool = false;
 
 /**
-	If `true`, extern classes and fields are not passed to BaseCompiler.
+	If `true`, extern classes and fields are not passed to `BaseCompiler`.
 **/
 public var ignoreExterns: Bool = true;
 
 /**
 	If `true`, properties that are not physical properties
-	are not passed to BaseCompiler. (i.e. both their
+	are not passed to `BaseCompiler`. (i.e. both their
 	read and write rules are "get", "set", or "never").
 **/
 public var ignoreNonPhysicalFields: Bool = true;

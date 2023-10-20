@@ -7,7 +7,7 @@ package langcompiler;
 import haxe.macro.Type;
 
 // Import Reflaxe types
-import reflaxe.PluginCompiler;
+import reflaxe.DirectToStringCompiler;
 import reflaxe.data.ClassFuncData;
 import reflaxe.data.ClassVarData;
 import reflaxe.data.EnumOptionData;
@@ -18,7 +18,7 @@ import reflaxe.data.EnumOptionData;
 	This must extend from `BaseCompiler`. `PluginCompiler<T>` is a child class
 	that provides the ability for people to make plugins for your compiler.
 **/
-class Compiler extends PluginCompiler<Compiler> {
+class Compiler extends DirectToStringCompiler {
 	/**
 		This is the function from the BaseCompiler to override to compile Haxe classes.
 		Given the haxe.macro.ClassType and its variables and fields, return the output String.
