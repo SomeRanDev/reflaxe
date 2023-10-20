@@ -28,11 +28,11 @@ jobs:
         run: mkdir TestProject
 
       - name: Create Reflaxe Project
-        workingdirectory: TestProject
+        working-directory: TestProject
         run: haxelib run reflaxe new Test test ts d
 
       - name: Test Reflaxe Project
-        workingdirectory: TestProject
+        working-directory: TestProject/reflaxe_Test
         run: haxelib run reflaxe test
   
   test_newproject_intermediate:
@@ -56,9 +56,9 @@ jobs:
         run: mkdir TestProject
 
       - name: Create Reflaxe Project
-        workingdirectory: TestProject
+        working-directory: TestProject
         run: haxelib run reflaxe new Test test ts i
 
       - name: Test Reflaxe Project
-        workingdirectory: TestProject
+        working-directory: TestProject/reflaxe_Test
         run: haxelib run reflaxe test
