@@ -7,7 +7,7 @@ on:
       - main
 
 jobs:
-  test_newproject:
+  test_newproject_direct:
     runs-on: ubuntu-latest
     steps:
       - name: Setup Haxe 4.3.0
@@ -15,14 +15,50 @@ jobs:
         with:
           haxe-version: 4.3.0
 
+      - name: Checkout
+        uses: actions/checkout@v3
+
       - name: Check Haxe Version
         run: haxe -version
 
       - name: Install Reflaxe
         run: haxelib git reflaxe https://github.com/SomeRanDev/reflaxe.git
 
+      - name: Make New Project Directory
+        run: mkdir TestProject
+
       - name: Create Reflaxe Project
+        workingdirectory: TestProject
         run: haxelib run reflaxe new Test test ts d
 
       - name: Test Reflaxe Project
+        workingdirectory: TestProject
+        run: haxelib run reflaxe test
+  
+  test_newproject_intermediate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Haxe 4.3.0
+        uses: krdlab/setup-haxe@v1
+        with:
+          haxe-version: 4.3.0
+
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Check Haxe Version
+        run: haxe -version
+
+      - name: Install Reflaxe
+        run: haxelib git reflaxe https://github.com/SomeRanDev/reflaxe.git
+
+      - name: Make New Project Directory
+        run: mkdir TestProject
+
+      - name: Create Reflaxe Project
+        workingdirectory: TestProject
+        run: haxelib run reflaxe new Test test ts i
+
+      - name: Test Reflaxe Project
+        workingdirectory: TestProject
         run: haxelib run reflaxe test
