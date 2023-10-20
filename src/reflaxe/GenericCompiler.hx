@@ -22,7 +22,6 @@ typedef CompiledCollection<T> = Array<DataAndFileInfo<T>>;
 	The compiler that allows for custom types to be used as returns for
 	the `compiledXImpl` functions.
 **/
-@:generic
 abstract class GenericCompiler<
 	CompiledClassType,
 	CompiledEnumType,
