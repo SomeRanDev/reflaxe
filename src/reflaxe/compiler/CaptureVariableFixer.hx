@@ -19,23 +19,35 @@ using reflaxe.helpers.TypeHelper;
 	Wraps a variable in an array when accessed from a lambda.
 **/
 class CaptureVariableFixer {
-	// The original expression passed
+	/**
+		The original expression passed.
+	**/
 	var expr: TypedExpr;
 
-	// The original expression extracted as a TBlock list
+	/**
+		The original expression extracted as a `TBlock` list.
+	**/
 	var exprList: Array<TypedExpr>;
 
-	// Tracks whether within a lambda in fixCaptureExpr
+	/**
+		Tracks whether within a lambda in fixCaptureExpr.
+	**/
 	var isInLambda: Bool = false;
 
-	// Maps TVars outside a lambda to their ID
+	/**
+		Maps `TVar`s outside a lambda to their ID.
+	**/
 	var nonLambdaVars: Map<Int, TVar>;
 
-	// The list of TVar IDs to add @:arrayWrap to
+	/**
+		The list of `TVar` IDs to add `@:arrayWrap` to.
+	**/
 	var arrayWrapVarIds: Array<Int>;
 
-	// Placeholder Position
 	#if eval
+	/**
+		Placeholder Position.
+	**/
 	var tempPos: Position;
 	#end
 
@@ -56,7 +68,9 @@ class CaptureVariableFixer {
 		#end
 	}
 
-	// Applies the changes to the supplied expression.
+	/**
+		Applies the changes to the supplied expression.
+	**/
 	public function fixCaptures(): TypedExpr {
 		for(e in exprList) {
 			fixCaptureExpr(e);

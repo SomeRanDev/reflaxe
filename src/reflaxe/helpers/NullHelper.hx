@@ -7,10 +7,9 @@ package reflaxe.helpers;
 #if (macro || reflaxe_runtime)
 
 /**
-	`MetaAccess` can be annoying sometimes because the
-	functions themselves may be null. These helper
-	functions wrap around the normal `MetaAccess` functions
-	and ensure they are not null before calling.
+	`MetaAccess` can be annoying sometimes because the functions themselves may be `null`.
+	These helper functions wrap around the normal `MetaAccess` functions and ensure
+	they are not null before calling.
 **/
 class NullHelper {
 	public static function or<T>(maybe: Null<T>, defaultVal: T): T {

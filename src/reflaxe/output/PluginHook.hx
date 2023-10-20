@@ -12,22 +12,25 @@ package reflaxe.output;
 	own modular modifications to your target.
 
 	Each hook takes a function that receives and returns
-	a `String`. To add additional parameters to the hook,
-	the generic `PluginHook1`, `PluginHook2`, etc. classes
-	can be used based on the number of parameters required.
+	a the specified `DataType` type. The input is the default
+	output if the hook didn't exist.
+
+	To add additional parameters to the hook, the `PluginHook1`,
+	`PluginHook2`, etc. classes can be used based on the number
+	of parameters required.
 **/
-class PluginHook {
-	var hooks: Array<(Null<String>) -> Null<String>>;
+class PluginHook<DataType> {
+	var hooks: Array<(Null<DataType>) -> Null<DataType>>;
 
 	public function new() {
 		hooks = [];
 	}
 
-	public function addHook(func: (Null<String>) -> Null<String>) {
+	public function addHook(func: (Null<DataType>) -> Null<DataType>) {
 		hooks.push(func);
 	}
 
-	public function call(code: Null<String>): Null<String> {
+	public function call(code: Null<DataType>): Null<DataType> {
 		if(hooks.length == 0) return code;
 		var result = code;
 		for(h in hooks) {
@@ -37,18 +40,18 @@ class PluginHook {
 	}
 }
 
-class PluginHook1<T> {
-	var hooks: Array<(Null<String>, T) -> Null<String>>;
+class PluginHook1<DataType, T> {
+	var hooks: Array<(Null<DataType>, T) -> Null<DataType>>;
 
 	public function new() {
 		hooks = [];
 	}
 
-	public function addHook(func: (Null<String>, T) -> Null<String>) {
+	public function addHook(func: (Null<DataType>, T) -> Null<DataType>) {
 		hooks.push(func);
 	}
 
-	public function call(code: Null<String>, obj: T): Null<String> {
+	public function call(code: Null<DataType>, obj: T): Null<DataType> {
 		if(hooks.length == 0) return code;
 		var result = code;
 		for(h in hooks) {
@@ -58,18 +61,18 @@ class PluginHook1<T> {
 	}
 }
 
-class PluginHook2<T, U> {
-	var hooks: Array<(Null<String>, T, U) -> Null<String>>;
+class PluginHook2<DataType, T, U> {
+	var hooks: Array<(Null<DataType>, T, U) -> Null<DataType>>;
 
 	public function new() {
 		hooks = [];
 	}
 
-	public function addHook(func: (Null<String>, T, U) -> Null<String>) {
+	public function addHook(func: (Null<DataType>, T, U) -> Null<DataType>) {
 		hooks.push(func);
 	}
 
-	public function call(code: Null<String>, obj: T, obj2: U): Null<String> {
+	public function call(code: Null<DataType>, obj: T, obj2: U): Null<DataType> {
 		if(hooks.length == 0) return code;
 		var result = code;
 		for(h in hooks) {
@@ -79,18 +82,18 @@ class PluginHook2<T, U> {
 	}
 }
 
-class PluginHook3<T, U, V> {
-	var hooks: Array<(Null<String>, T, U, V) -> Null<String>>;
+class PluginHook3<DataType, T, U, V> {
+	var hooks: Array<(Null<DataType>, T, U, V) -> Null<DataType>>;
 
 	public function new() {
 		hooks = [];
 	}
 
-	public function addHook(func: (Null<String>, T, U, V) -> Null<String>) {
+	public function addHook(func: (Null<DataType>, T, U, V) -> Null<DataType>) {
 		hooks.push(func);
 	}
 
-	public function call(code: Null<String>, obj: T, obj2: U, obj3: V): Null<String> {
+	public function call(code: Null<DataType>, obj: T, obj2: U, obj3: V): Null<DataType> {
 		if(hooks.length == 0) return code;
 		var result = code;
 		for(h in hooks) {
@@ -100,18 +103,18 @@ class PluginHook3<T, U, V> {
 	}
 }
 
-class PluginHook4<T, U, V, W> {
-	var hooks: Array<(Null<String>, T, U, V, W) -> Null<String>>;
+class PluginHook4<DataType, T, U, V, W> {
+	var hooks: Array<(Null<DataType>, T, U, V, W) -> Null<DataType>>;
 
 	public function new() {
 		hooks = [];
 	}
 
-	public function addHook(func: (Null<String>, T, U, V, W) -> Null<String>) {
+	public function addHook(func: (Null<DataType>, T, U, V, W) -> Null<DataType>) {
 		hooks.push(func);
 	}
 
-	public function call(code: Null<String>, obj: T, obj2: U, obj3: V, obj4: W): Null<String> {
+	public function call(code: Null<DataType>, obj: T, obj2: U, obj3: V, obj4: W): Null<DataType> {
 		if(hooks.length == 0) return code;
 		var result = code;
 		for(h in hooks) {

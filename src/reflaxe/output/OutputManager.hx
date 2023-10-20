@@ -6,10 +6,14 @@ package reflaxe.output;
 
 #if (macro || reflaxe_runtime)
 
+import haxe.io.BytesBuffer;
 import haxe.macro.Context;
-import haxe.macro.Type;
 
 import reflaxe.BaseCompiler;
+
+// ---
+
+using Lambda;
 
 using reflaxe.helpers.BaseTypeHelper;
 using reflaxe.helpers.NullHelper;
@@ -147,45 +151,69 @@ class OutputManager {
 			}
 			outputDir;
 		}
-		final outputs = [];
-		for(c in compiler.classes) {
-			outputs.push(c.output);
-		}
-		saveFileImpl(filePath, outputs.join("\n\n"));
+
+		final arr = [];
+		for(o in compiler.generateOutputIterator()) arr.push(o.data);
+		saveFileImpl(filePath, joinStringOrBytes(arr));
 	}
 
 	function generateFilePerModule() {
 		ensureOutputDirExists();
 
-		final files: Map<String, Array<String>> = [];
-		for(c in compiler.classes) {
-			final mid = c.cls.moduleId();
+		final files: Map<String, Array<StringOrBytes>> = [];
+		for(c in compiler.generateOutputIterator()) {
+			final mid = c.baseType.moduleId();
 			final filename = overrideFileName(mid, c);
 			if(!files.exists(filename)) {
 				files[filename] = [];
 			}
 			final f = files[filename];
 			if(f != null) {
-				f.push(c.output);
+				f.push(c.data);
 			}
 		}
 
 		for(moduleId => outputList in files) {
 			final filename = getFileName(moduleId);
-			saveFile(filename, outputList.join("\n\n"));
+			saveFileImpl(filename, joinStringOrBytes(outputList));
+		}
+	}
+
+	static function joinStringOrBytes(list: Array<StringOrBytes>): StringOrBytes {
+		final strings = [];
+		final bytes = [];
+		for(o in list) {
+			switch(o.data()) {
+				case String(s): strings.push(s);
+				case Bytes(b): bytes.push(b);
+			}
+		}
+
+		if(strings.length > 0 && bytes.length > 0) {
+			throw "Cannot mix String and Bytes outputs for join.";
+		}
+
+		return if(strings.length > 0) {
+			strings.join("\n\n");
+		} else if(bytes.length > 0) {
+			final bb = new BytesBuffer();
+			for(b in bytes) bb.add(b);
+			bb.getBytes();
+		} else {
+			"";
 		}
 	}
 
 	function generateFilePerClass() {
 		ensureOutputDirExists();
-		for(c in compiler.classes) {
-			final filename = overrideFileName(c.cls.globalName(), c);
-			saveFile(getFileName(filename), c.output);
+		for(c in compiler.generateOutputIterator()) {
+			final filename = overrideFileName(c.baseType.globalName(), c);
+			c.data.save(getFileName(filename));
 		}
 	}
 
-	inline function overrideFileName(defaultName: String, o: {fileName: Null<String>, dir: Null<String>}) {
-		return (o.dir != null ? o.dir + "/" : "") + (o.fileName ?? defaultName);
+	inline function overrideFileName(defaultName: String, o: { fileName: Null<String>, directory: Null<String> }) {
+		return (o.directory != null ? o.directory + "/" : "") + (o.fileName ?? defaultName);
 	}
 
 	function getFileName(filename: String): String {
@@ -210,10 +238,10 @@ class OutputManager {
 		saveFileImpl(p, content);
 	}
 
-	function saveFileImpl(path: String, content: String) {
+	function saveFileImpl(path: String, content: StringOrBytes) {
 		// Do not save anything if the file already exists and has same content
-		if(!sys.FileSystem.exists(path) || sys.io.File.getContent(path) != content) {
-			sys.io.File.saveContent(path, content);
+		if(!sys.FileSystem.exists(path) || !content.matchesFile(path)) {
+			content.save(path);
 		}
 		if(shouldDeleteOldOutput()) {
 			recordOutputFile(path);

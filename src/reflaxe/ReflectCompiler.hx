@@ -300,7 +300,7 @@ class ReflectCompiler {
 			}
 			compiler.setupModule(TClassDecl(clsRef));
 			if(compiler.shouldGenerateClass(cls)) {
-				compiler.addClassOutput(cls, transpileClass(cls, compiler));
+				transpileClass(cls, compiler);
 			}
 		}
 
@@ -308,20 +308,20 @@ class ReflectCompiler {
 			final enm = enumRef.get();
 			compiler.setupModule(TEnumDecl(enumRef));
 			if(compiler.shouldGenerateEnum(enm)) {
-				compiler.addEnumOutput(enm, transpileEnum(enm, compiler));
+				transpileEnum(enm, compiler);
 			}
 		}
 
 		for(defRef in defDecls) {
 			final def = defRef.get();
 			compiler.setupModule(TTypeDecl(defRef));
-			compiler.addTypedefOutput(def, compiler.compileTypedef(def));
+			compiler.compileTypedef(def);
 		}
 
 		for(abstractRef in abstractDecls) {
 			final ab = abstractRef.get();
 			compiler.setupModule(TAbstract(abstractRef));
-			compiler.addAbstractOutput(ab, compiler.compileAbstract(ab));
+			compiler.compileAbstract(ab);
 		}
 
 		compiler.setupModule(null);
@@ -349,7 +349,7 @@ class ReflectCompiler {
 	// =======================================================
 	// * transpileClass
 	// =======================================================
-	static function transpileClass(cls: ClassType, compiler: BaseCompiler): Null<String> {
+	static function transpileClass(cls: ClassType, compiler: BaseCompiler) {
 		final varFields: Array<ClassVarData> = [];
 		final funcFields: Array<ClassFuncData> = [];
 
@@ -401,7 +401,7 @@ class ReflectCompiler {
 			addField(field, true);
 		}
 	
-		return compiler.compileClass(cls, varFields, funcFields);
+		compiler.compileClass(cls, varFields, funcFields);
 	}
 
 	static function preprocessFunction(compiler: BaseCompiler, field: ClassField, data: ClassFuncData): ClassFuncData {
@@ -430,7 +430,7 @@ class ReflectCompiler {
 	// =======================================================
 	// * transpileEnum
 	// =======================================================
-	static function transpileEnum(enm: EnumType, compiler: BaseCompiler): Null<String> {
+	static function transpileEnum(enm: EnumType, compiler: BaseCompiler) {
 		final options = [];
 		for(name in enm.names) {
 			final field = enm.constructs[name];
@@ -450,7 +450,8 @@ class ReflectCompiler {
 
 			options.push(option);
 		}
-		return compiler.compileEnum(enm, options);
+
+		compiler.compileEnum(enm, options);
 	}
 
 	// =======================================================

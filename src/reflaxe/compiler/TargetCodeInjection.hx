@@ -9,7 +9,7 @@ import haxe.macro.Type;
 import reflaxe.BaseCompiler;
 
 class TargetCodeInjection {
-	public static function checkTargetCodeInjection(injectFunctionName: String, expr: TypedExpr, compiler: BaseCompiler): Null<String> {
+	public static function checkTargetCodeInjection(injectFunctionName: String, expr: TypedExpr, compiler: DirectToStringCompiler): Null<String> {
 		var arguments: Null<Array<TypedExpr>> = null;
 		final callIdent = switch(expr.expr) {
 			case TCall(e, el): {

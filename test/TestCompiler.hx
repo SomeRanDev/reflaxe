@@ -25,7 +25,7 @@ using reflaxe.helpers.NameMetaHelper;
 // before typing using @:build macros. 
 import reflaxe.input.ClassModifier;
 
-class TestCompiler extends BaseCompiler {
+class TestCompiler extends reflaxe.DirectToStringCompiler {
 	
 	// This is the initialization macro used to make the compiler work!
 	// It can be a static function in any class, but we place it in

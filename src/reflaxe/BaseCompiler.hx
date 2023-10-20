@@ -6,16 +6,15 @@ import haxe.macro.Context;
 import haxe.macro.Expr;
 import haxe.macro.Type;
 
-import reflaxe.compiler.TargetCodeInjection;
 import reflaxe.compiler.MetadataCompiler;
 import reflaxe.compiler.TypeUsageTracker;
 import reflaxe.data.ClassFuncData;
 import reflaxe.data.ClassVarData;
 import reflaxe.data.EnumOptionData;
-import reflaxe.helpers.ModuleTypeHelper;
-import reflaxe.optimization.ExprOptimizer;
+import reflaxe.output.DataAndFileInfo;
 import reflaxe.output.OutputManager;
 import reflaxe.output.OutputPath;
+import reflaxe.output.StringOrBytes;
 
 using StringTools;
 
@@ -134,7 +133,10 @@ class BaseCompilerOptions {
 
 	/**
 		The name of the function used to inject code directly
-		to the target. Set to `null` to disable this feature.
+		to the target. This only works when extending from the
+		`DirectToStringCompiler` class.
+
+		Set to `null` to disable this feature.
 	**/
 	public var targetCodeInjectionName: Null<String> = null;
 
@@ -363,15 +365,6 @@ enum abstract MetaArgumentType(String) to String {
 **/
 abstract class BaseCompiler {
 	// =======================================================
-	// * Abstract Functions
-	//
-	// Override in custom compiler to control it.
-	// =======================================================
-	public abstract function compileClassImpl(classType: ClassType, varFields: Array<ClassVarData>, funcFields: Array<ClassFuncData>): Null<String>;
-	public abstract function compileEnumImpl(enumType: EnumType, options: Array<EnumOptionData>): Null<String>;
-	public abstract function compileExpressionImpl(expr: TypedExpr, topLevel: Bool): Null<String>;
-
-	// =======================================================
 	// * Conditional Overridables
 	//
 	// Override these in custom compiler to filter types.
@@ -433,10 +426,12 @@ abstract class BaseCompiler {
 	// =======================================================
 	// * err
 	// =======================================================
-	function err(msg: String, pos: Null<Position> = null) {
+	function err(msg: String, pos: Null<Position> = null): Dynamic {
 		#if eval
 		if(pos == null) pos = Context.currentPos();
-		Context.error(msg, pos);
+		return Context.error(msg, pos);
+		#else
+		return null;
 		#end
 	}
 
@@ -454,6 +449,14 @@ abstract class BaseCompiler {
 	// =======================================================
 	public var output(default, null): Null<OutputManager> = null;
 
+	/**
+		Used to configure how output is generated automatically.
+	**/
+	public abstract function generateOutputIterator(): Iterator<DataAndFileInfo<StringOrBytes>>;
+
+	/**
+		Sets the directory files will be generated in.
+	**/
 	public function setOutputDir(outputDir: String) {
 		if(this.output == null) {
 			this.output = new OutputManager(this);
@@ -461,6 +464,9 @@ abstract class BaseCompiler {
 		this.output.setOutputDir(outputDir);
 	}
 
+	/**
+		Generates the output.
+	**/
 	public function generateFiles() {
 		if(this.output != null) {
 			this.output.generateFiles();
@@ -591,46 +597,6 @@ abstract class BaseCompiler {
 		fileDirOverride = dir;
 	}
 
-	// =======================================================
-	// * Class Management
-	// =======================================================
-	public var classes(default, null): Array<{ cls: BaseType, output: String, fileName: Null<String>, dir: Null<String> }> = [];
-
-	function addToClasses(b: BaseType, output: Null<String>) {
-		if(output != null) {
-			classes.push({
-				cls: b,
-				output: output,
-				fileName: fileNameOverride,
-				dir: fileDirOverride
-			});
-
-			// Reset these for next time
-			fileNameOverride = null;
-			fileDirOverride = null;
-		}
-	}
-
-	public function addClassOutput(cls: ClassType, output: Null<String>) {
-		onClassAdded(cls, output);
-		addToClasses(cls, output);
-	}
-
-	public function addEnumOutput(en: EnumType, output: Null<String>) {
-		onEnumAdded(en, output);
-		addToClasses(en, output);
-	}
-
-	public function addTypedefOutput(def: DefType, output: Null<String>) {
-		onTypedefAdded(def, output);
-		addToClasses(def, output);
-	}
-
-	public function addAbstractOutput(abt: AbstractType, output: Null<String>) {
-		onAbstractAdded(abt, output);
-		addToClasses(abt, output);
-	}
-
 	/**
 		Returns the "main" typed expression for the program.
 		For example, if `-main MyClass` is set in the project,
@@ -706,52 +672,28 @@ abstract class BaseCompiler {
 	}
 
 	/**
-		Compiles the provided class.
+		Compiles the provided class. Defined in `GenericCompiler`.
 		Override compileClassImpl to configure the behavior.
 	**/
-	public function compileClass(classType: ClassType, varFields: Array<ClassVarData>, funcFields: Array<ClassFuncData>): Null<String> {
-		return compileClassImpl(classType, varFields, funcFields);
-	}
+	public abstract function compileClass(classType: ClassType, varFields: Array<ClassVarData>, funcFields: Array<ClassFuncData>): Void;
 
 	/**
-		Compiles the provided enum.
+		Compiles the provided enum. Defined in `GenericCompiler`.
 		Override compileEnumImpl to configure the behavior.
 	**/
-	public function compileEnum(enumType: EnumType, options: Array<EnumOptionData>): Null<String> {
-		return compileEnumImpl(enumType, options);
-	}
+	public abstract function compileEnum(enumType: EnumType, options: Array<EnumOptionData>): Void;
 
 	/**
-		Compiles the provided typedef.
-		Ignores by default as Haxe redirects all types automatically.
+		Compiles the provided typedef. Defined in `GenericCompiler`.
+		It ignores all typedefs by default since Haxe redirects all types automatically.
 	**/
-	public function compileTypedef(classType: DefType): Null<String> {
-		return null;
-	}
+	public abstract function compileTypedef(classType: DefType): Void;
 
 	/**
-		Compiles the provided abstract.
-		Ignores by default as Haxe converts all abstracts
-		to normal function calls automatically.
+		Compiles the provided abstract. Defined in `GenericCompiler`.
+		It ignores all abstracts by default since Haxe converts them to function calls.
 	**/
-	public function compileAbstract(classType: AbstractType): Null<String> {
-		return null;
-	}
-
-	/**
-		Compiles the provided expression.
-		Override compileExpressionImpl to configure the behavior.
-	**/
-	public function compileExpression(expr: TypedExpr, topLevel: Bool = false): Null<String> {
-		if(options.targetCodeInjectionName != null) {
-			final result = TargetCodeInjection.checkTargetCodeInjection(options.targetCodeInjectionName, expr, this);
-			if(result != null) {
-				return result;
-			}
-		}
-
-		return compileExpressionImpl(expr, topLevel);
-	}
+	public abstract function compileAbstract(classType: AbstractType): Void;
 
 	/**
 		Compiles the provided variable name.
@@ -762,129 +704,6 @@ abstract class BaseCompiler {
 			name = "_" + name;
 		}
 		return name;
-	}
-
-	/**
-		Compiles the provided expression.
-		Generates an error using `Context.error` if unsuccessful.
-	**/
-	public function compileExpressionOrError(expr: TypedExpr): String {
-		final result = compileExpression(expr, false);
-		if(result == null) {
-			onExpressionUnsuccessful(expr.pos);
-			return "";
-		}
-		return result;
-	}
-
-	public function onExpressionUnsuccessful(pos: Position) {
-		err("Could not generate expression", pos);
-	}
-
-	/**
-		Returns the result of calling "ExprOptimizer.optimizeAndUnwrap"
-		and "compileExpressionsIntoLines" from the "expr".
-	**/
-	public function compileClassVarExpr(expr: TypedExpr): String {
-		final exprs = ExprOptimizer.optimizeAndUnwrap(expr);
-		return compileExpressionsIntoLines(exprs);
-	}
-
-	/**
-		Same as "compileClassVarExpr", but also uses 
-		EverythingIsExprSanitizer if required.
-	**/
-	public function compileClassFuncExpr(expr: TypedExpr): String {
-		return compileClassVarExpr(expr);
-	}
-
-	/**
-		Convert a list of expressions to lines of output code.
-		The lines of code are spaced out to make it feel like
-		it was human-written.
-	**/
-	public function compileExpressionsIntoLines(exprList: Array<TypedExpr>): String {
-		var currentType = -1;
-		final lines = [];
-
-		injectionAllowed = true;
-
-		for(e in exprList) {
-			final newType = expressionType(e);
-			if(currentType != newType) {
-				if(currentType != -1) lines.push("");
-				currentType = newType;
-			}
-
-			// Compile expression
-			final output = compileExpression(e, true);
-
-			// Add injections
-			final preExpr = prefixExpressionContent(e, output);
-			if(preExpr != null) {
-				for(e in preExpr) {
-					lines.push(formatExpressionLine(e));
-				}
-			}
-
-			// Add compiled expression
-			if(output != null) {
-				lines.push(formatExpressionLine(output));
-			}
-
-			// Clear injection list
-			if(injectionContent.length > 0) {
-				injectionContent = [];
-			}
-		}
-
-		injectionAllowed = false;
-
-		return lines.join("\n");
-	}
-
-	/**
-		Allows for content to be injected before an expression.
-		Useful for adding call stack information to output.
-	**/
-	function prefixExpressionContent(expr: TypedExpr, output: Null<String>): Null<Array<String>> {
-		return injectionContent.length > 0 ? injectionContent : null;
-	}
-
-	/**
-		Stores a list of content to be injected between expressions.
-		See `injectExpressionPrefixContent` for implementation.
-	**/
-	var injectionContent: Array<String> = [];
-
-	/**
-		Tracks whether content can be injected while compiling
-		an expression.
-	**/
-	var injectionAllowed: Bool = false;
-
-	/**
-		If called while compiling multiple expressions, this
-		will inject content prior to the expression currently
-		being compiled.
-	**/
-	public function injectExpressionPrefixContent(content: String): Bool {
-		return if(injectionAllowed) {
-			injectionContent.push(content);
-			true;
-		} else {
-			false;
-		}
-	}
-
-	/**
-		Called for each line generated in the above function
-		"compileExpressionsIntoLines". Useful for adding
-		required termination characters for expressions that
-		are not treated as values (i.e: semicolons).
-	**/
-	function formatExpressionLine(expr: String): String {
-		return expr;
 	}
 
 	/**
@@ -999,146 +818,11 @@ abstract class BaseCompiler {
 	}
 
 	/**
-		This function is for compiling the result of functions
-		using the `@:nativeFunctionCode` meta.
+		Given a `haxe.macro.Position`, generates an error at the
+		position stating: "Could not generate expression".
 	**/
-	public function compileNativeFunctionCodeMeta(callExpr: TypedExpr, arguments: Array<TypedExpr>, typeParams: Null<Array<() -> String>> = null, custom: Null<(String) -> String> = null): Null<String> {
-		final declaration = callExpr.getDeclarationMeta(arguments);
-		if(declaration == null) {
-			return null;
-		}
-		final meta = declaration.meta;
-		final data = meta != null ? extractStringFromMeta(meta, ":nativeFunctionCode") : null;
-		if(data != null) {
-			final code = data.code;
-			var result = code;
-
-			if(code.contains("{this}")) {
-				final thisExpr = declaration.thisExpr != null ? compileNFCThisExpression(declaration.thisExpr, declaration.meta) : null;
-				if(thisExpr == null) {
-					if(declaration.thisExpr == null) {
-						#if eval
-						Context.error("Cannot use {this} on @:nativeFunctionCode meta for constructors.", data.entry.pos);
-						#end
-					} else {
-						onExpressionUnsuccessful(callExpr.pos);
-					}
-				} else {
-					result = result.replace("{this}", thisExpr);
-				}
-			}
-
-			var argExprs: Null<Array<String>> = null;
-			for(i in 0...arguments.length) {
-				final key = "{arg" + i + "}";
-				if(code.contains(key)) {
-					if(argExprs == null) {
-						argExprs = arguments.map(function(e) {
-							return this.compileExpressionOrError(e);
-						});
-					}
-					if(argExprs[i] == null) {
-						onExpressionUnsuccessful(arguments[i].pos);
-					} else {
-						result = result.replace(key, argExprs[i]);
-					}
-				}
-			}
-
-			if(typeParams != null) {
-				for(i in 0...typeParams.length) {
-					final key = "{type" + i + "}";
-					if(code.contains(key)) {
-						result = result.replace(key, typeParams[i]());
-					}
-				}
-			}
-
-			if(custom != null) {
-				result = custom(result);
-			}
-
-			return result;
-		}
-
-		return null;
-	}
-
-	/**
-		This function is for compiling the result of functions
-		using the `@:nativeVariableCode` meta.
-	**/
-	public function compileNativeVariableCodeMeta(fieldExpr: TypedExpr, varCpp: Null<String> = null): Null<String> {
-		final declaration = fieldExpr.getDeclarationMeta();
-		if(declaration == null) {
-			return null;
-		}
-		final meta = declaration.meta;
-		final data = meta != null ? extractStringFromMeta(meta, ":nativeVariableCode") : null;
-		if(data != null) {
-			final code = data.code;
-			var result = code;
-
-			if(code.contains("{this}")) {
-				final thisExpr = declaration.thisExpr != null ? compileNFCThisExpression(declaration.thisExpr, declaration.meta) : null;
-				if(thisExpr == null) {
-					if(declaration.thisExpr == null) {
-						#if eval
-						Context.error("Cannot use {this} on @:nativeVariableCode meta for constructors.", data.entry.pos);
-						#end
-					} else {
-						onExpressionUnsuccessful(fieldExpr.pos);
-					}
-				} else {
-					result = result.replace("{this}", thisExpr);
-				}
-			}
-
-			if(varCpp != null && code.contains("{var}")) {
-				result = result.replace("{var}", varCpp);
-			}
-
-			return result;
-		}
-
-		return null;
-	}
-
-	/**
-		Compiles the {this} expression for `@:nativeFunctionCode`.
-	**/
-	public function compileNFCThisExpression(expr: TypedExpr, meta: Null<MetaAccess>): String {
-		return compileExpressionOrError(expr); 
-	}
-
-	/**
-		This function is for compiling the result of functions
-		using the `@:nativeTypeCode` meta.
-	**/
-	public function compileNativeTypeCodeMeta(type: Type, typeParams: Null<Array<() -> String>> = null): Null<String> {
-		final meta = type.getMeta();
-		if(meta == null) {
-			return null;
-		}
-
-		final data = extractStringFromMeta(meta, ":nativeTypeCode");
-		if(data != null) {
-			final code = data.code;
-			var result = code;
-
-			if(typeParams != null) {
-				for(i in 0...typeParams.length) {
-					final key = "{type" + i + "}";
-					if(code.contains(key)) {
-						result = result.replace(key, typeParams[i]());
-					}
-				}
-			}
-
-			return result;
-		}
-
-		return null;
+	public function onExpressionUnsuccessful(pos: Position) {
+		return err("Could not generate expression.", pos);
 	}
 }
 
