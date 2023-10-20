@@ -208,7 +208,7 @@ class OutputManager {
 		ensureOutputDirExists();
 		for(c in compiler.generateOutputIterator()) {
 			final filename = overrideFileName(c.baseType.globalName(), c);
-			c.data.save(getFileName(filename));
+			saveFile(getFileName(filename), c.data);
 		}
 	}
 
@@ -224,7 +224,7 @@ class OutputManager {
 		Internal helper function for saving content to a path
 		relative to the output folder.
 	**/
-	public function saveFile(path: String, content: String) {
+	public function saveFile(path: String, content: StringOrBytes) {
 		// Get full path
 		final p = outputDir != null ? joinPaths(outputDir, path) : path;
 
