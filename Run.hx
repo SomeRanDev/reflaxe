@@ -199,7 +199,7 @@ Can you tell me...\n");
 	if(extension == null) return;
 
 	// Project Type
-	final type = args.length >= 4 ? convertStringToProjectType(args[4]) : readProjectType();
+	final type = args.length >= 4 ? convertStringToProjectType(args[3]) : readProjectType();
 	if(type == null) return;
 
 	// ---
