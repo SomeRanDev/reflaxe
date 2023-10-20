@@ -12,7 +12,6 @@ import reflaxe.output.DataAndFileInfo;
 
 import reflaxe.output.StringOrBytes;
 
-using reflaxe.helpers.DynamicHelper;
 using StringTools;
 
 using reflaxe.helpers.TypedExprHelper;
@@ -40,17 +39,14 @@ abstract class DirectToStringCompiler extends GenericCompiler<String, String, St
 	/**
 	Iterate through all output `String`s.
 	**/
-	public function generateOutputIterator() {
+	public function generateOutputIterator(): Iterator<DataAndFileInfo<StringOrBytes>> {
 		final all: CompiledCollection<String> = classes.concat(enums).concat(typedefs).concat(abstracts);
 		var index = 0;
 		return {
 			hasNext: () -> index < all.length,
 			next: () -> {
 				final data = all[index++];
-				final sob: StringOrBytes = data.data;
-				return data.with({
-					data: sob
-				});
+				return data.withOutput(data.data);
 			}
 		};
 	}

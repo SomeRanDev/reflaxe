@@ -212,8 +212,11 @@ class OutputManager {
 		}
 	}
 
-	inline function overrideFileName(defaultName: String, o: { fileName: Null<String>, directory: Null<String> }) {
-		return (o.directory != null ? o.directory + "/" : "") + (o.fileName ?? defaultName);
+	inline function overrideFileName(defaultName: String, o: {
+		var overrideFileName(default, null): Null<String>;
+		var overrideDirectory(default, null): Null<String>;
+	}) {
+		return (o.overrideDirectory != null ? o.overrideDirectory + "/" : "") + (o.overrideFileName ?? defaultName);
 	}
 
 	function getFileName(filename: String): String {

@@ -61,12 +61,7 @@ abstract class GenericCompiler<
 		Generates `CompiledCollection` from a generic object and `BaseType`.
 	**/
 	function generateCompiledCollection<T>(compiledObject: T, baseType: BaseType): DataAndFileInfo<T> {
-		final result: DataAndFileInfo<T> = {
-			data: compiledObject,
-			baseType: baseType,
-			fileName: fileNameOverride,
-			directory: fileDirOverride
-		};
+		final result = new DataAndFileInfo<T>(compiledObject, baseType, fileNameOverride, fileDirOverride);
 
 		// Reset these for next time
 		fileNameOverride = null;
