@@ -53,10 +53,10 @@ class ReflectCompiler {
 		#elseif eval
 		static var called = false;
 		if(!called) {
-			#if !display
-			Context.onAfterTyping(onAfterTyping);
-			Context.onAfterGenerate(onAfterGenerate);
-			#end
+			if(!Context.defined("display")) {
+				Context.onAfterTyping(onAfterTyping);
+				Context.onAfterGenerate(onAfterGenerate);
+			}
 			called = true;
 		} else {
 			throw "reflaxe.ReflectCompiler.Start() called multiple times.";
@@ -142,9 +142,9 @@ class ReflectCompiler {
 
 		final validCompilers = findEnabledCompilers();
 		if(validCompilers.length == 1) {
-			#if !display
-			useCompiler(validCompilers[0]);
-			#end
+			if(!Context.defined("display")) {
+				useCompiler(validCompilers[0]);
+			}
 		} else if(validCompilers.length > 1) {
 			tooManyCompilersError(validCompilers);
 		}
