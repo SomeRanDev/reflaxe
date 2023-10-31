@@ -53,7 +53,7 @@ class ReflectCompiler {
 		#elseif eval
 		static var called = false;
 		if(!called) {
-			if(!Context.defined("display")) {
+			if(#if eval !Context.defined("display") #else true #end) {
 				Context.onAfterTyping(onAfterTyping);
 				Context.onAfterGenerate(onAfterGenerate);
 			}
@@ -142,7 +142,7 @@ class ReflectCompiler {
 
 		final validCompilers = findEnabledCompilers();
 		if(validCompilers.length == 1) {
-			if(!Context.defined("display")) {
+			if(#if eval !Context.defined("display") #else true #end) {
 				useCompiler(validCompilers[0]);
 			}
 		} else if(validCompilers.length > 1) {
