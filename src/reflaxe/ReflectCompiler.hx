@@ -418,7 +418,7 @@ class ReflectCompiler {
 		}
 		if(compiler.options.preventRepeatVars) {
 			final fieldNames = data.getAllVariableNames(compiler);
-			final rvf = new RepeatVariableFixer(data.expr, null, data.args.map(a -> a.name).concat(fieldNames));
+			final rvf = new RepeatVariableFixer(data.expr, null, data.args.map(a -> a.name).concat(fieldNames), compiler);
 			data.setExpr(rvf.fixRepeatVariables());
 		}
 		if(compiler.options.wrapLambdaCaptureVarsInArray) {

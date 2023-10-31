@@ -28,7 +28,7 @@ class RepeatVariableFixer {
 	/**
 		The original expression extracted as a TBlock list
 	**/
-	var exprList: Array<TypedExpr>;
+	var originalExpr: TypedExpr;
 
 	/**
 		If another instance of RepeatVariableFixer created
@@ -44,16 +44,19 @@ class RepeatVariableFixer {
 	/**
 		A map of newly generated TVars, referenced by their id.
 	**/
-	var varReplacements: Map<Int, TVar>;
+	var varReplacements: Map<Int, TVarOverride>;
 
-	public function new(expr: TypedExpr, parent: Null<RepeatVariableFixer> = null, initVarNames: Null<Array<String>> = null) {
+	/**
+		The compiler being used.
+	**/
+	var compiler: BaseCompiler;
+
+	public function new(expr: TypedExpr, parent: Null<RepeatVariableFixer> = null, initVarNames: Null<Array<String>> = null, compiler: BaseCompiler) {
+		originalExpr = expr;
+		
 		this.expr = expr;
 		this.parent = parent;
-
-		exprList = switch(expr.expr) {
-			case TBlock(exprs): exprs.map(e -> e.copy());
-			case _: [expr.copy()];
-		}
+		this.compiler = compiler;
 
 		varNames = [];
 		if(initVarNames != null) {
@@ -66,7 +69,10 @@ class RepeatVariableFixer {
 	}
 
 	public function fixRepeatVariables(): TypedExpr {
-		final result = [];
+		final exprList = switch(originalExpr.expr) {
+			case TBlock(exprs): exprs;
+			case _: [originalExpr];
+		}
 
 		for(expr in exprList) {
 			switch(expr.expr) {
@@ -90,25 +96,23 @@ class RepeatVariableFixer {
 					if(name != tvar.name) {
 						final copyTVar = tvar.copy(name);
 						varReplacements.set(copyTVar.id, copyTVar);
-						final modifiedExpr = maybeExpr != null ? handleExpression(maybeExpr) : null;
-						final temp = expr.copy(TVar(copyTVar, modifiedExpr));
-						result.push(temp);
+						compiler.setTVarOverride(tvar, copyTVar);
 						continue;
 					} else {
-						result.push(handleExpression(expr));
+						handleExpression(expr);
 					}
 				}
 				case TBlock(_): {
-					result.push(handleBlock(expr));
+					handleBlock(expr);
 					continue;
 				}
 				case _: {
-					result.push(handleExpression(expr));
+					handleExpression(expr);
 				}
 			}
 		}
 
-		return expr.copy(TBlock(result));
+		return originalExpr;
 	}
 
 	function handleExpression(expr: TypedExpr): TypedExpr {
@@ -116,12 +120,6 @@ class RepeatVariableFixer {
 			switch(subExpr.expr) {
 				case TBlock(_): {
 					return handleBlock(subExpr);
-				}
-				case TLocal(tvar): {
-					final replacement = varReplacement(tvar.id);
-					if(replacement != null) {
-						return subExpr.copy(TLocal(replacement));
-					}
 				}
 				case _:
 			}
@@ -132,8 +130,9 @@ class RepeatVariableFixer {
 	}
 
 	function handleBlock(subExpr: TypedExpr): TypedExpr {
-		final rvf = new RepeatVariableFixer(subExpr, this);
-		return rvf.fixRepeatVariables();
+		final rvf = new RepeatVariableFixer(subExpr, this, null, compiler);
+		final result = rvf.fixRepeatVariables();
+		return result;
 	}
 
 	function varExists(name: String) {
@@ -146,7 +145,7 @@ class RepeatVariableFixer {
 		}
 	}
 
-	function varReplacement(id: Int): Null<TVar> {
+	function varReplacement(id: Int): Null<TVarOverride> {
 		return if(varReplacements.exists(id)) {
 			varReplacements.get(id);
 		} else if(parent != null) {

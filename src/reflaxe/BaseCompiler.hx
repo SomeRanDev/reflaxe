@@ -11,6 +11,7 @@ import reflaxe.compiler.TypeUsageTracker;
 import reflaxe.data.ClassFuncData;
 import reflaxe.data.ClassVarData;
 import reflaxe.data.EnumOptionData;
+import reflaxe.helpers.TVarHelper.TVarOverride;
 import reflaxe.output.DataAndFileInfo;
 import reflaxe.output.OutputManager;
 import reflaxe.output.OutputPath;
@@ -823,6 +824,36 @@ abstract class BaseCompiler {
 	**/
 	public function onExpressionUnsuccessful(pos: Position) {
 		return err("Could not generate expression.", pos);
+	}
+
+	// =======================================================
+	// * TVar Modifiers
+	// =======================================================
+
+	/**
+		`TVar`s cannot be modified directly, so we use this system
+		to override existing `TVar`s based on their id.
+	**/
+	var tvarOverrides: Map<Int, TVarOverride> = [];
+
+	/**
+		Provides the `TVar` data.
+
+		Since `TVar`s cannot be modified directly, this function will
+		provide any modified data if it exists.
+
+		This is important since variables need to be renamed to prevent
+		invalid shadowing in target languages.
+	**/
+	public function getTVarData(tvar: TVar): TVarOverride {
+		return tvarOverrides.exists(tvar.id) ? tvarOverrides.get(tvar.id) : tvar;
+	}
+
+	/**
+		Overrides `TVar` data. The data can be accessed using `getTVarData`.
+	**/
+	public function setTVarOverride(tvar: TVar, o: TVarOverride) {
+		tvarOverrides.set(tvar.id, o);
 	}
 }
 
