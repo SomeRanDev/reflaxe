@@ -33,6 +33,17 @@ class TestCompiler extends reflaxe.DirectToStringCompiler {
 	//
 	// Use `--macro TestCompiler.Start()` in your hxml to run!
 	public static function Start() {
+		haxe.macro.Context.onAfterInitMacros(Begin);
+	}
+
+	public static function Begin() {
+
+		#if (haxe >= version("5.0.0"))
+		switch(haxe.macro.Compiler.getConfiguration().platform) {
+			case CustomTarget("testlang"):
+			case _: return;
+		}
+		#end
 
 		// Pass an instance to `reflaxe.ReflectCompiler` using AddCompiler to activate it.
 		// There's a ton of options that can be used.
@@ -47,11 +58,15 @@ class TestCompiler extends reflaxe.DirectToStringCompiler {
 			smartDCE: true
 		});
 
-		// Example of ClassModifier
-		// Modifies MyClass.testMod to return 9999.
-		ClassModifier.mod("MyClass", "testMod", macro {
-			return 9999;
-		});
+		try {
+			// Example of ClassModifier
+			// Modifies MyClass.testMod to return 9999.
+			ClassModifier.mod("MyClass", "testMod", macro {
+				return 9999;
+			});
+		} catch(e) {
+			trace(e);
+		}
 	}
 
 	// This is the function from the BaseCompiler to override to compile Haxe classes.
