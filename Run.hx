@@ -541,14 +541,24 @@ function buildProject(args: Array<String>) {
 		}
 
 		// Copy extra files
-		for(file in ["haxelib.json", "extraParams.hxml", "LICENSE", "README.md"]) {
+		function copyExtraFile(file: String, printError: Bool) {
 			final filePath = Path.join([dir, file]);
 			if(FileSystem.exists(filePath)) {
 				File.copy(filePath, Path.join([destFolder, file]));
 				Sys.println("Copying file: " + file);
-			} else {
+			} else if(printError) {
 				printlnRed("Could not find file: " + file + "; ignoring...");
 			}
+		}
+
+		// Files that should exist
+		for(file in ["haxelib.json", "LICENSE", "README.md"]) {
+			copyExtraFile(file, true);
+		}
+
+		// Files that are okay to not exist
+		for(file in ["extraParams.hxml", "Run.hx", "run.n"]) {
+			copyExtraFile(file, false);
 		}
 
 		// Print success
