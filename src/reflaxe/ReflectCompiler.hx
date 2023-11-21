@@ -9,7 +9,6 @@ package reflaxe;
 // avoid conflict with haxe.macro.Type after https://github.com/HaxeFoundation/haxe/pull/11168
 import Type as HaxeType;
 
-import haxe.display.Display.Platform as DisplayPlatform;
 import haxe.display.Display.MetadataTarget;
 
 import haxe.macro.Compiler;
@@ -85,7 +84,7 @@ class ReflectCompiler {
 			metadata: name,
 			doc: doc,
 			params: params,
-			platforms: [DisplayPlatform.Cross],
+			platforms: [Cross],
 			targets: targets
 		};
 
