@@ -21,6 +21,7 @@ import reflaxe.compiler.EverythingIsExprSanitizer;
 import reflaxe.compiler.RepeatVariableFixer;
 import reflaxe.compiler.CaptureVariableFixer;
 import reflaxe.compiler.NullTypeEnforcer;
+import reflaxe.compiler.TemporaryVarRemover;
 import reflaxe.data.ClassFuncData;
 import reflaxe.data.ClassVarData;
 import reflaxe.data.EnumOptionArg;
@@ -415,6 +416,10 @@ class ReflectCompiler {
 		if(compiler.options.normalizeEIE) {
 			final eiec = new EverythingIsExprSanitizer(data.expr, compiler, null);
 			data.setExpr(eiec.convertedExpr());
+		}
+		if(compiler.options.processAvoidTemporaries) {
+			final tvr = new TemporaryVarRemover(data.expr);
+			data.setExpr(tvr.fixTemporaries());
 		}
 		if(compiler.options.preventRepeatVars) {
 			final fieldNames = data.getAllVariableNames(compiler);

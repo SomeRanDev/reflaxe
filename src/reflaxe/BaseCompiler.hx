@@ -172,6 +172,28 @@ class BaseCompilerOptions {
 	public var wrapLambdaCaptureVarsInArray: Bool = false;
 
 	/**
+		If `true`, classes marked with `@:prevent_temporaries` will
+		regress certain Haxe compiler transformations that
+		create unnecessary temporary values.
+
+		This is important for handling value types that should
+		be modified in their original location instead of being
+		modified on a temporary copy.
+
+		For example, it will prevent this...
+		```haxe
+		obj.valueTypeInst.prop = 123;
+		```
+
+		from being converted to this:
+		```haxe
+		var temp = obj.valueTypeInst;
+		temp.prop = 123;
+		```
+	**/
+	public var processAvoidTemporaries: Bool = false;
+
+	/**
 		If `true`, during the EIE normalization phase, all
 		instances of null coalescence are converted to a
 		null-check if statement.
