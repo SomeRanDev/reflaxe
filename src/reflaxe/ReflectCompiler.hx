@@ -144,7 +144,7 @@ class ReflectCompiler {
 		final validCompilers = findEnabledCompilers();
 		if(validCompilers.length == 1) {
 			if(#if eval !Context.defined("display") #else true #end) {
-				useCompiler(validCompilers[0]);
+				startCompiler(validCompilers[0]);
 			}
 		} else if(validCompilers.length > 1) {
 			tooManyCompilersError(validCompilers);
@@ -188,6 +188,21 @@ class ReflectCompiler {
 		final pos = Context.currentPos();
 		final msg = 'Multiple compilers have been enabled, only one may be active per build: $compilerList';
 		Context.error(msg, pos);
+		#end
+	}
+
+	static function startCompiler(compiler: BaseCompiler) {
+		#if (eval && reflaxe_measure)
+		final startNanoseconds = eval.luv.Time.hrTime();
+		#end
+
+		useCompiler(compiler);
+
+		#if (eval && reflaxe_measure)
+		final nanoseconds = eval.luv.Time.hrTime() - startNanoseconds;
+		final nanosecondsString = StringTools.lpad(nanoseconds.toString(), "0", 6);
+		final milisecondsString = nanosecondsString.substr(0, nanosecondsString.length - 6) + "." + nanosecondsString.substr(-6);
+		Sys.println("Reflaxe target compiled in " + milisecondsString + " miliseconds");
 		#end
 	}
 

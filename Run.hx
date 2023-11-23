@@ -453,6 +453,7 @@ function testProject(args: Array<String>) {
 	final haxeArgs = [
 		Path.withoutDirectory(path),
 		"-lib reflaxe",
+		"-D reflaxe_measure",
 		getProjPath("extraParams.hxml"),
 		"-p " + getProjPath(haxelibJson.classPath)
 	];
