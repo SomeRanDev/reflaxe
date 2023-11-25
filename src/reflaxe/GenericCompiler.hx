@@ -8,6 +8,7 @@ import reflaxe.data.ClassFuncData;
 import reflaxe.data.ClassVarData;
 import reflaxe.data.EnumOptionData;
 import reflaxe.output.DataAndFileInfo;
+import reflaxe.output.PluginHook;
 
 using reflaxe.helpers.NullHelper;
 
@@ -72,7 +73,19 @@ abstract class GenericCompiler<
 		Override `compileClassImpl` to configure the behavior.
 	**/
 	public function compileClass(classType: ClassType, varFields: Array<ClassVarData>, funcFields: Array<ClassFuncData>) {
-		final data = compileClassImpl(classType, varFields, funcFields);
+		final data = {
+			#if reflaxe_hooks
+			final hookResult = compileClassHook.call(null, this, classType, varFields, funcFields);
+			if(!hookResult.isIgnore()) {
+				switch(hookResult) {
+					case OverwriteOutput(output): output;
+					case _: null;
+				}
+			} else
+			#end
+
+			compileClassImpl(classType, varFields, funcFields);
+		}
 		if(data != null) classes.push(generateCompiledCollection(data.trustMe(), classType));
 	}
 
@@ -81,7 +94,19 @@ abstract class GenericCompiler<
 		Override `compileEnumImpl` to configure the behavior.
 	**/
 	public function compileEnum(enumType: EnumType, options: Array<EnumOptionData>) {
-		final data = compileEnumImpl(enumType, options);
+		final data = {
+			#if reflaxe_hooks
+			final hookResult = compileEnumHook.call(null, this, enumType, options);
+			if(!hookResult.isIgnore()) {
+				switch(hookResult) {
+					case OverwriteOutput(output): output;
+					case _: null;
+				}
+			} else
+			#end
+
+			compileEnumImpl(enumType, options);
+		}
 		if(data != null) enums.push(generateCompiledCollection(data.trustMe(), enumType));
 	}
 
@@ -90,7 +115,19 @@ abstract class GenericCompiler<
 		Override `compileTypedefImpl` to configure the behavior.
 	**/
 	public function compileTypedef(typedefType: DefType) {
-		final data = compileTypedefImpl(typedefType);
+		final data = {
+			#if reflaxe_hooks
+			final hookResult = compileTypedefHook.call(null, this, typedefType);
+			if(!hookResult.isIgnore()) {
+				switch(hookResult) {
+					case OverwriteOutput(output): output;
+					case _: null;
+				}
+			} else
+			#end
+
+			compileTypedefImpl(typedefType);
+		}
 		if(data != null) typedefs.push(generateCompiledCollection(data.trustMe(), typedefType));
 	}
 
@@ -99,7 +136,19 @@ abstract class GenericCompiler<
 		Override `compileAbstractImpl` to configure the behavior.
 	**/
 	public function compileAbstract(abstractType: AbstractType) {
-		final data = compileAbstractImpl(abstractType);
+		final data = {
+			#if reflaxe_hooks
+			final hookResult = compileAbstractHook.call(null, this, abstractType);
+			if(!hookResult.isIgnore()) {
+				switch(hookResult) {
+					case OverwriteOutput(output): output;
+					case _: null;
+				}
+			} else
+			#end
+
+			compileAbstractImpl(abstractType);
+		}
 		if(data != null) abstracts.push(generateCompiledCollection(data.trustMe(), abstractType));
 	}
 
@@ -108,7 +157,27 @@ abstract class GenericCompiler<
 		Override `compileExpressionImpl` to configure the behavior.
 	**/
 	public function compileExpression(expr: TypedExpr, topLevel: Bool = false): Null<CompiledExpressionType> {
-		return compileExpressionImpl(expr, topLevel);
+		#if reflaxe_hooks
+		final hookResult = compileBeforeExpressionHook.call(null, this, expr, topLevel);
+		switch(hookResult) {
+			case IgnorePlugin:
+			case OutputNothing: return null;
+			case OverwriteOutput(output): return output;
+		}
+		#end
+
+		final result = compileExpressionImpl(expr, topLevel);
+
+		#if reflaxe_hooks
+		final hookResult = compileExpressionHook.call(result, this, expr, topLevel);
+		switch(hookResult) {
+			case IgnorePlugin:
+			case OutputNothing: return null;
+			case OverwriteOutput(output): return output;
+		}
+		#end
+
+		return result;
 	}
 
 	/**
@@ -131,12 +200,12 @@ abstract class GenericCompiler<
 	// output for a Reflaxe target's generated content.
 	// =======================================================
 	#if reflaxe_hooks
-	public var compileClassHook(default, null)            = new PluginHook4<BaseCompiler, ClassType, Array<ClassVarData>, Array<ClassFuncData>>();
-	public var compileEnumHook(default, null)             = new PluginHook3<BaseCompiler, EnumType, Array<EnumOptionData>>();
-	public var compileTypedefHook(default, null)          = new PluginHook2<BaseCompiler, DefType>();
-	public var compileAbstractHook(default, null)         = new PluginHook2<BaseCompiler, AbstractType>();
-	public var compileExpressionHook(default, null)       = new PluginHook3<BaseCompiler, TypedExpr, Bool>();
-	public var compileBeforeExpressionHook(default, null) = new PluginHook3<BaseCompiler, TypedExpr, Bool>();
+	public var compileClassHook(default, null)            = new PluginHook4<CompiledClassType, BaseCompiler, ClassType, Array<ClassVarData>, Array<ClassFuncData>>();
+	public var compileEnumHook(default, null)             = new PluginHook3<CompiledEnumType, BaseCompiler, EnumType, Array<EnumOptionData>>();
+	public var compileTypedefHook(default, null)          = new PluginHook2<CompiledTypedefType, BaseCompiler, DefType>();
+	public var compileAbstractHook(default, null)         = new PluginHook2<CompiledAbstractType, BaseCompiler, AbstractType>();
+	public var compileExpressionHook(default, null)       = new PluginHook3<CompiledExpressionType, BaseCompiler, TypedExpr, Bool>();
+	public var compileBeforeExpressionHook(default, null) = new PluginHook3<CompiledExpressionType, BaseCompiler, TypedExpr, Bool>();
 	#end
 }
 
