@@ -8,6 +8,8 @@ package reflaxe.helpers;
 
 import haxe.macro.Type;
 
+using reflaxe.helpers.NameMetaHelper;
+
 /**
 	Quick static extensions to help with naming.
 **/
@@ -68,6 +70,10 @@ class BaseTypeHelper {
 			return true;
 		}
 		return false;
+	}
+
+	public static function isReflaxeExtern(cls: BaseType): Bool {
+		return cls.isExtern || cls.hasMeta(":extern");
 	}
 }
 

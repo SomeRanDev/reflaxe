@@ -398,11 +398,11 @@ abstract class BaseCompiler {
 		if(cls.isExprClass()) {
 			return false;
 		}
-		return !cls.isExtern || !options.ignoreExterns;
+		return !cls.isReflaxeExtern() || !options.ignoreExterns;
 	}
 
 	public function shouldGenerateEnum(enumType: EnumType): Bool {
-		return !enumType.isExtern || !options.ignoreExterns;
+		return !enumType.isReflaxeExtern() || !options.ignoreExterns;
 	}
 
 	public function shouldGenerateClassField(cls: ClassField): Bool {

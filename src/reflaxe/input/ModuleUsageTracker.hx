@@ -11,6 +11,7 @@ import haxe.macro.Context;
 import haxe.macro.Expr;
 import haxe.macro.Type;
 
+using reflaxe.helpers.BaseTypeHelper;
 using reflaxe.helpers.ModuleTypeHelper;
 using reflaxe.helpers.NameMetaHelper;
 using reflaxe.helpers.TypeHelper;
@@ -47,7 +48,7 @@ class ModuleUsageTracker {
 
 	public function nonStdTypes(stdMeta: Null<Array<String>> = null): Array<ModuleType> {
 		return allModuleTypes.filter(t -> {
-			return !t.getCommonData().isExtern && !isStdType(t, stdMeta);
+			return !t.getCommonData().isReflaxeExtern() && !isStdType(t, stdMeta);
 		});
 	}
 
@@ -58,10 +59,6 @@ class ModuleUsageTracker {
 		if(moduleType == null || hasModuleType(moduleType)) {
 			return;
 		}
-
-		// if(moduleType.getCommonData().isExtern) {
-		// 	return;
-		// }
 
 		outputTypes.push(moduleType);
 		outputTypeMap[moduleTypeId(moduleType)] = true;
