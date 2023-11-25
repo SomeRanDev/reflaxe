@@ -201,8 +201,8 @@ class ReflectCompiler {
 		#if (eval && reflaxe_measure)
 		final nanoseconds = eval.luv.Time.hrTime() - startNanoseconds;
 		final nanosecondsString = StringTools.lpad(nanoseconds.toString(), "0", 6);
-		final milisecondsString = nanosecondsString.substr(0, nanosecondsString.length - 6) + "." + nanosecondsString.substr(-6);
-		Sys.println("Reflaxe target compiled in " + milisecondsString + " miliseconds");
+		final millisecondsString = nanosecondsString.substr(0, nanosecondsString.length - 6) + "." + nanosecondsString.substr(-6);
+		Sys.println("Reflaxe target compiled in " + millisecondsString + " milliseconds");
 		#end
 	}
 
