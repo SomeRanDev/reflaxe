@@ -107,6 +107,16 @@ class NullableMetaAccessHelper {
 		return null;
 	}
 
+	public static function extractStringFromAllMeta(metaAccess: Null<MetaAccess>, metaName: String, index: Int = 0): Array<String> {
+		final result = extractPrimtiveFromAllMeta(metaAccess, metaName, index);
+		for(obj in result) {
+			if(obj == null || !obj.isString()) {
+				return null;
+			}
+		}
+		return cast result;
+	}
+
 	public static function extractPrimtiveFromAllMeta(metaAccess: Null<MetaAccess>, metaName: String, index: Int = 0): Array<Dynamic> {
 		if(metaAccess == null) return [];
 		final result: Array<Dynamic> = [];
