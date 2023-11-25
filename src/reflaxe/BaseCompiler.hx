@@ -516,14 +516,14 @@ abstract class BaseCompiler {
 		Set all the content for an arbitrary file added to the
 		output folder.
 	**/
-	function setExtraFile(path: OutputPath, content: String = "") {
+	public function setExtraFile(path: OutputPath, content: String = "") {
 		extraFiles.set(path.toString(), [0 => content]);
 	}
 
 	/**
 		Check if an extra file exists.
 	**/
-	function extraFileExists(path: OutputPath): Bool {
+	public function extraFileExists(path: OutputPath): Bool {
 		final pathString = path.toString();
 		return extraFiles.exists(pathString);
 	}
@@ -531,7 +531,7 @@ abstract class BaseCompiler {
 	/**
 		Set all the content for a file if it doesn't exist yet.
 	**/
-	function setExtraFileIfEmpty(path: OutputPath, content: String = "") {
+	public function setExtraFileIfEmpty(path: OutputPath, content: String = "") {
 		if(!extraFileExists(path)) {
 			setExtraFile(path, content);
 		}
@@ -544,7 +544,7 @@ abstract class BaseCompiler {
 
 		Returns an empty string if nothing exists.
 	**/
-	function getExtraFileContent(path: OutputPath, priority: Int = 0): String {
+	public function getExtraFileContent(path: OutputPath, priority: Int = 0): String {
 		final pathString = path.toString();
 		return if(!extraFiles.exists(pathString)) {
 			"";
@@ -563,7 +563,7 @@ abstract class BaseCompiler {
 		The "priority" allows for content to be appended
 		at different places within the file.
 	**/
-	function replaceInExtraFile(path: OutputPath, content: String, priority: Int = 0) {
+	public function replaceInExtraFile(path: OutputPath, content: String, priority: Int = 0) {
 		final pathString = path.toString();
 		if(!extraFiles.exists(pathString)) {
 			extraFiles.set(pathString, []);
@@ -580,7 +580,7 @@ abstract class BaseCompiler {
 		The "priority" allows for content to be appended
 		at different places within the file.
 	**/
-	function appendToExtraFile(path: OutputPath, content: String, priority: Int = 0) {
+	public function appendToExtraFile(path: OutputPath, content: String, priority: Int = 0) {
 		replaceInExtraFile(path, getExtraFileContent(path, priority) + content, priority);
 	}
 
