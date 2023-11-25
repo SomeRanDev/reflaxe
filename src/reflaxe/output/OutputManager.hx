@@ -229,7 +229,13 @@ class OutputManager {
 	**/
 	public function saveFile(path: String, content: StringOrBytes) {
 		// Get full path
-		final p = outputDir != null ? joinPaths(outputDir, path) : path;
+		final p = if(haxe.io.Path.isAbsolute(path)) {
+			path;
+		} else if(outputDir != null) {
+			joinPaths(outputDir, path);
+		} else {
+			path;
+		}
 
 		// Ensure directories exist
 		final dir = haxe.io.Path.directory(p);
