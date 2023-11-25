@@ -670,7 +670,7 @@ abstract class BaseCompiler {
 	**/
 	var typeUsage: Null<TypeUsageMap> = null;
 
-	function getTypeUsage(): Null<TypeUsageMap> {
+	public function getTypeUsage(): Null<TypeUsageMap> {
 		return typeUsage;
 	}
 
@@ -680,7 +680,7 @@ abstract class BaseCompiler {
 	**/
 	var currentModule: Null<ModuleType> = null;
 
-	function getCurrentModule(): Null<ModuleType> {
+	public function getCurrentModule(): Null<ModuleType> {
 		return currentModule;
 	}
 
