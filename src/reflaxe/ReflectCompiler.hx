@@ -32,6 +32,7 @@ import reflaxe.input.ModuleUsageTracker;
 using reflaxe.helpers.ClassFieldHelper;
 using reflaxe.helpers.SyntaxHelper;
 using reflaxe.helpers.ModuleTypeHelper;
+using reflaxe.helpers.NameMetaHelper;
 using reflaxe.helpers.NullableMetaAccessHelper;
 using reflaxe.helpers.TypeHelper;
 
@@ -376,6 +377,12 @@ class ReflectCompiler {
 			if(ignoreExterns && field.isExtern) {
 				return;
 			}
+
+			#if reflaxe_extern_meta
+			if(field.hasMeta(":reflaxe_extern")) {
+				return;
+			}
+			#end
 
 			switch(field.kind) {
 				case FVar(readVarAccess, writeVarAccess): {
