@@ -84,6 +84,10 @@ class OutputManager {
 		Parse the first line to get the compilation count.
 	**/
 	function loadCompilationCount() {
+		if(oldOutputFiles == null) {
+			return;
+		}
+
 		if(oldOutputFiles.length > 1) {
 			final first = oldOutputFiles[0];
 
@@ -106,7 +110,7 @@ class OutputManager {
 
 				// If the first number can be parsed, store it as loaded count
 				if(data[0] != null) {
-					loadedCount = data[0];
+					loadedCount = data[0].trustMe();
 				}
 			}
 		}
