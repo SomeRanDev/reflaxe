@@ -26,6 +26,7 @@ class OutputManager {
 	// -------------------------------------------------------
 	// constants
 	public final GENERATED_LIST_FILENAME = "_GeneratedFiles.txt";
+	public final GENERATED_LIST_VERSION = "version // 1";
 
 	// -------------------------------------------------------
 	// fields
@@ -34,6 +35,16 @@ class OutputManager {
 
 	var outputFiles: Array<String> = [];
 	var oldOutputFiles: Null<Array<String>> = null;
+
+	/**
+		If any file is modified, created, or deleted, this should be set to `true`.
+	**/
+	var changed = false;
+
+	/**
+		The loaded count value from _GeneratedFiles.txt.
+	**/
+	var loadedCount = -1;
 
 	// -------------------------------------------------------
 	// getters
@@ -59,11 +70,45 @@ class OutputManager {
 		checkForOldFiles();
 	}
 
-	// -------------------------------------------------------
-	// old output file management
+	/**
+		Old output file management.
+	**/
 	function checkForOldFiles() {
 		if(shouldDeleteOldOutput()) {
 			oldOutputFiles = generatedFilesList();
+			loadCompilationCount();
+		}
+	}
+
+	/**
+		Parse the first line to get the compilation count.
+	**/
+	function loadCompilationCount() {
+		if(oldOutputFiles.length > 1) {
+			final first = oldOutputFiles[0];
+
+			// Parse the version header.
+			final versionPieces = first.split("//").map(s -> StringTools.trim(s));
+			final validVersion = versionPieces.length == 2 && versionPieces[0] == "version";
+			final version = Std.parseInt(versionPieces[1]);
+
+			if(validVersion) {
+				// First line is safely not a file so we can remove
+				oldOutputFiles.shift();
+
+				// Get data
+				final data = oldOutputFiles[1].split("//").map(n -> Std.parseInt(StringTools.trim(n)));
+
+				// Second line is safely not a file so we can remove
+				if(data.length > 0) {
+					oldOutputFiles.shift();
+				}
+
+				// If the first number can be parsed, store it as loaded count
+				if(data[0] != null) {
+					loadedCount = data[0];
+				}
+			}
 		}
 	}
 
@@ -251,6 +296,7 @@ class OutputManager {
 		// Do not save anything if the file already exists and has same content
 		if(!sys.FileSystem.exists(path) || !content.matchesFile(path)) {
 			content.save(path);
+			changed = true;
 		}
 		if(shouldDeleteOldOutput()) {
 			recordOutputFile(path);
@@ -299,8 +345,16 @@ class OutputManager {
 	}
 
 	function recordAllOutputFiles() {
+		if(!changed) {
+			Sys.println("No files updated.");
+		}
 		if(outputFiles.length > 0) {
-			sys.io.File.saveContent(generatedFilesPath(), outputFiles.join("\n"));
+			final count = loadedCount == -1 ? 0 : (loadedCount + 1);
+			final headerData = [
+				GENERATED_LIST_VERSION,      // version of _GeneratedFiles structure
+				'$count//${changed ? 1 : 0}' // [compilation count]//[files changed in last compilation]
+			];
+			sys.io.File.saveContent(generatedFilesPath(), headerData.concat(outputFiles).join("\n"));
 		}
 	}
 }
