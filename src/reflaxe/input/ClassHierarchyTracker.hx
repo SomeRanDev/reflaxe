@@ -246,18 +246,16 @@ class ClassHierarchyTracker {
 
 		if(!getFieldsOfName_cache.exists(uniqueClassId)) {
 			final fieldMap: Map<String, Array<ClassField>> = [];
-			for(field in cls.statics.get()) {
-				if(!fieldMap.exists(field.name)) {
-					fieldMap.set(field.name, []);
+			function add(field) {
+				var arr = fieldMap.get(field.name);
+				if(arr == null) {
+					arr = [];
+					fieldMap.set(field.name, arr);
 				}
-				fieldMap.get(field.name).push(field);
+				arr.push(field);
 			}
-			for(field in cls.fields.get()) {
-				if(!fieldMap.exists(field.name)) {
-					fieldMap.set(field.name, []);
-				}
-				fieldMap.get(field.name).push(field);
-			}
+			for(field in cls.statics.get()) add(field);
+			for(field in cls.fields.get()) add(field);
 			getFieldsOfName_cache.set(uniqueClassId, fieldMap);
 		}
 
