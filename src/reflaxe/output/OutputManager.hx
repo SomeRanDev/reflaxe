@@ -355,8 +355,10 @@ class OutputManager {
 		if(outputFiles.length > 0) {
 			final count = loadedCount == -1 ? 0 : (loadedCount + 1);
 			final headerData = [
+				#if !reflaxe_no_generated_metadata
 				GENERATED_LIST_VERSION,      // version of _GeneratedFiles structure
 				'$count//${changed ? 1 : 0}' // [compilation count]//[files changed in last compilation]
+				#end
 			];
 			sys.io.File.saveContent(generatedFilesPath(), headerData.concat(outputFiles).join("\n"));
 		}
