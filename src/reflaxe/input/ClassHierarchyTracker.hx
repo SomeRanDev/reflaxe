@@ -12,10 +12,12 @@ import haxe.macro.TypeTools;
 
 import reflaxe.data.ClassFuncData;
 
+using reflaxe.helpers.ArrayHelper;
 using reflaxe.helpers.BaseTypeHelper;
 using reflaxe.helpers.ClassFieldHelper;
 using reflaxe.helpers.ClassTypeHelper;
 using reflaxe.helpers.ModuleTypeHelper;
+using reflaxe.helpers.NullHelper;
 using reflaxe.helpers.TypeHelper;
 
 /**
@@ -125,7 +127,7 @@ class ClassHierarchyTracker {
 		class Child<T> extends Base<T> {}
 		```
 	**/
-	public static function getAllParentTypes(cls: ClassType, params: Null<Array<Type>> = null): Array<Type> {
+	public static function getAllParentTypes(cls: ClassType, params: Null<Array<Type>> = null, resultArray: Null<Array<Type>> = null): Array<Type> {
 		return #if macro if(cls.superClass != null) {
 			final clsRef = cls.superClass.t;
 			if(params == null) {
@@ -133,7 +135,13 @@ class ClassHierarchyTracker {
 			}
 			final newParams = cls.superClass.params;
 			final superClass = TypeTools.applyTypeParameters(TInst(clsRef, newParams), cls.params, params);
-			[superClass].concat(getAllParentTypes(clsRef.get(), newParams));
+
+			if(resultArray == null) resultArray = [];
+
+			resultArray.push(superClass);
+			getAllParentTypes(clsRef.get(), newParams, resultArray);
+
+			resultArray;
 		} else #end {
 			[];
 		}
@@ -158,29 +166,31 @@ class ClassHierarchyTracker {
 	/**
 		Same as `getAllParentTypes`, only works on the interfaces for the class'
 		hierarchy.
+
+		TODO: Repeat interfaces are no longer checked (they never were to begin with technically). Should it be fixed??
 	**/
-	public static function getAllParentInterfaceTypes(cls: ClassType, params: Null<Array<Type>> = null): Array<Type> {
+	public static function getAllParentInterfaceTypes(cls: ClassType, params: Null<Array<Type>> = null, resultArray: Null<Array<Type>> = null): Array<Type> {
 		if(params == null) {
 			params = cls.params.map(c -> c.t);
 		}
 
-		final result = cls.interfaces.map(function(int) {
-			#if macro
-			return TypeTools.applyTypeParameters(TInst(int.t, int.params), cls.params, params);
-			#else
-			return TInst(int.t, int.params);
-			#end
-		});
+		if(resultArray == null) resultArray = [];
 
-		if(cls.superClass != null) {
-			for(int in getAllParentInterfaceTypes(cls.superClass.t.get())) {
-				if(!result.contains(int)) {
-					result.push(int);
-				}
-			}
+		for(int in cls.interfaces) {
+			resultArray.push(
+				#if macro
+				TypeTools.applyTypeParameters(TInst(int.t, int.params), cls.params, params)
+				#else
+				TInst(int.t, int.params)
+				#end
+			);
 		}
 
-		return result;
+		if(cls.superClass != null) {
+			getAllParentInterfaceTypes(cls.superClass.t.get(), cls.superClass.params, resultArray);
+		}
+
+		return resultArray;
 	}
 
 	/**
@@ -193,10 +203,8 @@ class ClassHierarchyTracker {
 	**/
 	public static function funcHasChildOverride(superClass: ClassType, superClassField: ClassField, isStatic: Bool): Bool {
 		for(child in getAllChildClasses(superClass)) {
-			for(field in (isStatic ? child.statics.get() : child.fields.get())) {
-				if(field.name == superClassField.name) {
-					return true;
-				}
+			if(getFieldsOfName(child, superClassField.name) != null) {
+				return true;
 			}
 		}
 		return false;
@@ -215,9 +223,45 @@ class ClassHierarchyTracker {
 		Returns every super class and implemented interface of this class as a `Type`.
 	**/
 	public static function getAllParentTypesAndInterfaces(childClass: ClassType): Array<Type> {
-		final parents = getAllParentTypes(childClass);
-		parents.reverse();
-		return parents.concat(getAllParentInterfaceTypes(childClass));
+		final result = getAllParentTypes(childClass);
+		result.reverse();
+
+		getAllParentInterfaceTypes(childClass, null, result);
+
+		return result;
+	}
+
+	/**
+		Used by `getFieldsOfName`.
+		TODO: Change to local static once those start working.
+	**/
+	static var getFieldsOfName_cache: Map<String, Map<String, Array<ClassField>>> = [];
+
+	/**
+		Finds all fields of a `ClassType` that have a specific name.
+		Uses a cache to re-retrieve the data faster.
+	**/
+	static function getFieldsOfName(cls: ClassType, fieldName: String): Null<Array<ClassField>> {
+		final uniqueClassId = cls.pack.joinAppend(".") + cls.name;
+
+		if(!getFieldsOfName_cache.exists(uniqueClassId)) {
+			final fieldMap: Map<String, Array<ClassField>> = [];
+			for(field in cls.statics.get()) {
+				if(!fieldMap.exists(field.name)) {
+					fieldMap.set(field.name, []);
+				}
+				fieldMap.get(field.name).push(field);
+			}
+			for(field in cls.fields.get()) {
+				if(!fieldMap.exists(field.name)) {
+					fieldMap.set(field.name, []);
+				}
+				fieldMap.get(field.name).push(field);
+			}
+			getFieldsOfName_cache.set(uniqueClassId, fieldMap);
+		}
+
+		return getFieldsOfName_cache.get(uniqueClassId).trustMe().get(fieldName);
 	}
 
 	/**
@@ -227,14 +271,21 @@ class ClassHierarchyTracker {
 		return type.
 	**/
 	public static function funcGetCovariantBaseType(childClass: ClassType, childClassField: ClassField, isStatic: Bool): Null<Type> {
+		final childData = childClassField.findFuncData(childClass);
+
 		for(p in getAllParentTypesAndInterfaces(childClass)) {
 			final decl = switch(p) {
 				case TInst(clsRef, params): { cls: clsRef.get(), params: params };
 				case _: throw "Impossible";
 			}
 
-			for(field in (isStatic ? decl.cls.statics.get() : decl.cls.fields.get())) {
-				if(isCovariant(field.findFuncData(decl.cls), childClassField.findFuncData(childClass))) {
+			final possibleFields = getFieldsOfName(decl.cls, childClassField.name);
+			if(possibleFields == null) {
+				continue;
+			}
+
+			for(field in possibleFields) {
+				if(isCovariant(field.findFuncData(decl.cls), childData)) {
 					#if macro
 					return TypeTools.applyTypeParameters(field.type.getTFunReturn(), decl.cls.params, decl.params);
 					#else
@@ -262,9 +313,12 @@ class ClassHierarchyTracker {
 		this class's functions and use a covariant return type.
 	**/
 	public static function superFuncIsCovariant(superClass: ClassType, superClassField: ClassField, isStatic: Bool): Bool {
+		final superFieldData = superClassField.findFuncData(superClass);
 		for(child in getAllChildClasses(superClass)) {
-			for(field in (isStatic ? child.statics.get() : child.fields.get())) {
-				if(isCovariant(superClassField.findFuncData(superClass), field.findFuncData(child))) {
+			final possibleFields = getFieldsOfName(child, superClassField.name);
+			if(possibleFields == null) continue;
+			for(field in possibleFields) {
+				if(isCovariant(superFieldData, field.findFuncData(child))) {
 					return true;
 				}
 			}
@@ -322,7 +376,9 @@ class ClassHierarchyTracker {
 	public static function findAllChildOverrides(superField: ClassFuncData): Array<ClassFuncData> {
 		final result: Array<ClassFuncData> = [];
 		for(child in getAllChildClasses(superField.classType)) {
-			for(field in child.fields.get()) {
+			final possibleFields = getFieldsOfName(child, superField.field.name);
+			if(possibleFields == null) continue;
+			for(field in possibleFields) {
 				final data = field.findFuncData(child);
 				if(data != null && isOverride(superField, data)) {
 					result.push(data);

@@ -24,25 +24,46 @@ class ClassFieldHelper {
 
 	// TODO: change to local static after Haxe bug is fixed
 	// https://github.com/HaxeFoundation/haxe/issues/11193
-	static var findVarData_cache: Map<ClassField, ClassVarData> = [];
-	static var findFuncData_cache: Map<ClassField, ClassFuncData> = [];
+	static var findVarData_cache: Map<String, ClassVarData> = [];
+	static var findFuncData_cache: Map<String, ClassFuncData> = [];
+
+	/**
+		Generates a unique `String` id for a `ClassField`.
+	**/
+	static function generateId(isVar: Bool, field: ClassField, clsType: ClassType) {
+		return if(isVar) {
+			'${clsType.pack.join(".")} ${clsType.name} ${field.name}';
+		} else {
+			var id = '${clsType.pack.join(".")} ${clsType.name} ${field.name}';
+			if(field.overloads.get().length != 0) {
+				id += switch(field.type) {
+					case TFun(args, ret): 
+						args.map(a -> a.name + " " + Std.string(a.t)) + ":" + Std.string(ret);
+					case _:
+						"";
+				}
+			}
+			id;
+		}
+	}
 
 	/**
 		Extracts the `ClassVarData` from a variable `ClassField`.
 	**/
 	public static function findVarData(field: ClassField, clsType: ClassType, isStatic: Null<Bool> = null): Null<ClassVarData> {
-		if(findVarData_cache.exists(field)) {
-			return findVarData_cache.get(field);
+		final id = generateId(true, field, clsType);
+		if(findVarData_cache.exists(id)) {
+			return findVarData_cache.get(id);
 		}
 
 		if(isStatic == null) {
-			isStatic = clsType.statics.get().contains(field);
+			isStatic = clsType.statics.get().filter(f -> f.name == field.name).length > 0;
 		}
 
 		return switch(field.kind) {
 			case FVar(read, write): {
 				final result = new ClassVarData(clsType, field, isStatic, read, write);
-				findVarData_cache.set(field, result);
+				findVarData_cache.set(id, result);
 				result;
 			}
 			case _: {
@@ -65,8 +86,9 @@ class ClassFieldHelper {
 		doesn't, it falls back on the limited info within `TFun`.
 	**/
 	public static function findFuncData(field: ClassField, clsType: ClassType, isStatic: Null<Bool> = null): Null<ClassFuncData> {
-		if(findFuncData_cache.exists(field)) {
-			return findFuncData_cache.get(field);
+		final id = generateId(false, field, clsType);
+		if(findFuncData_cache.exists(id)) {
+			return findFuncData_cache.get(id);
 		}
 
 		// If `isStatic` is not explicitly provided, manually check if is static.
@@ -109,7 +131,7 @@ class ClassFieldHelper {
 				// Return the `ClassFuncData`
 				final result = new ClassFuncData(clsType, field, isStatic, kind, ret, dataArgs, tfunc, tfunc != null ? tfunc.expr : null);
 				for(a in dataArgs) a.setFuncData(result);
-				findFuncData_cache.set(field, result);
+				findFuncData_cache.set(id, result);
 				result;
 			}
 			case _: null;
