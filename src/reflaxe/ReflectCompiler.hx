@@ -194,16 +194,13 @@ class ReflectCompiler {
 
 	static function startCompiler(compiler: BaseCompiler) {
 		#if (eval && reflaxe_measure)
-		final startNanoseconds = eval.luv.Time.hrTime();
+		final start = new reflaxe.debug.MeasurePerformance();
 		#end
 
 		useCompiler(compiler);
 
 		#if (eval && reflaxe_measure)
-		final nanoseconds = eval.luv.Time.hrTime() - startNanoseconds;
-		final nanosecondsString = StringTools.lpad(nanoseconds.toString(), "0", 6);
-		final millisecondsString = nanosecondsString.substr(0, nanosecondsString.length - 6) + "." + nanosecondsString.substr(-6);
-		Sys.println("Reflaxe target compiled in " + millisecondsString + " milliseconds");
+		start.measure("Reflaxe target compiled in %MILLI% milliseconds");
 		#end
 	}
 
