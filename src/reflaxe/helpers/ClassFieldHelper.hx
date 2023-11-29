@@ -13,6 +13,7 @@ import reflaxe.data.ClassFuncData;
 import reflaxe.data.ClassVarData;
 
 using reflaxe.helpers.NameMetaHelper;
+using reflaxe.helpers.NullableMetaAccessHelper;
 
 /**
 	Quick static extensions to help with `ClassField`.
@@ -159,6 +160,14 @@ class ClassFieldHelper {
 
 	public static function hasDefaultValue(field: ClassField): Bool {
 		return field.hasMeta(":value");
+	}
+
+	public static function getHaxeName(field: ClassField): String {
+		return if(field.hasMeta(":realPath")) {
+			field.meta.extractStringFromFirstMeta(":realPath") ?? field.name;
+		} else {
+			field.name;
+		}
 	}
 }
 

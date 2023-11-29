@@ -20,6 +20,9 @@ class ClassVarData {
 	public var read(default, null): VarAccess;
 	public var write(default, null): VarAccess;
 
+	public var getter(default, null): Null<ClassField>;
+	public var setter(default, null): Null<ClassField>;
+
 	public function new(classType: ClassType, field: ClassField, isStatic: Bool, read: VarAccess, write: VarAccess) {
 		this.classType = classType;
 		this.field = field;
@@ -27,6 +30,27 @@ class ClassVarData {
 		this.isStatic = isStatic;
 		this.read = read;
 		this.write = write;
+
+		findGetterAndSetter();
+	}
+
+	function findGetterAndSetter() {
+		function find(access: VarAccess, prefix: String, isStatic: Bool): Null<ClassField> {
+			switch(access) {
+				case AccCall: {
+					final getterName = prefix + field.getHaxeName();
+					for(f in (isStatic ? classType.statics : classType.fields).get()) {
+						if(f.getHaxeName() == getterName) {
+							return f;
+						}
+					}
+				}
+				case _:
+			}
+			return null;
+		}
+		getter = find(read, "get_", isStatic);
+		setter = find(write, "set_", isStatic);
 	}
 
 	public function hasDefaultValue(): Bool {

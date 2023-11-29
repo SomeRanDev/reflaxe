@@ -4,6 +4,7 @@ package reflaxe.data;
 
 import haxe.macro.Type;
 
+using reflaxe.helpers.ClassFieldHelper;
 using reflaxe.helpers.PositionHelper;
 using reflaxe.helpers.TypedExprHelper;
 
@@ -19,6 +20,8 @@ class ClassFuncData {
 	public var tfunc(default, null): Null<TFunc>;
 	public var expr(default, null): Null<TypedExpr>;
 
+	public var property(default, null): Null<ClassField>;
+
 	public function new(classType: ClassType, field: ClassField, isStatic: Bool, kind: MethodKind, ret: Type, args: Array<ClassFuncArg>, tfunc: Null<TFunc>, expr: Null<TypedExpr>) {
 		this.classType = classType;
 		this.field = field;
@@ -30,6 +33,50 @@ class ClassFuncData {
 		this.args = args;
 		this.tfunc = tfunc;
 		this.expr = expr;
+
+		findProperty();
+	}
+
+	/**
+		TODO: Anyway I could make this... more condensed?
+	**/
+	function findProperty() {
+		if(isGetterName()) {
+			final propName = field.getHaxeName().substr("get_".length);
+			for(f in (isStatic ? classType.statics : classType.fields).get()) {
+				final hasGetter = switch(f.kind) {
+					case FVar(AccCall, _): true;
+					case _: false;
+				}
+				if(hasGetter && f.getHaxeName() == propName) {
+					property = f;
+					break;
+				}
+			}
+		} else if(isSetterName()) {
+			final propName = field.getHaxeName().substr("set_".length);
+			for(f in (isStatic ? classType.statics : classType.fields).get()) {
+				final hasSetter = switch(f.kind) {
+					case FVar(_, AccCall): true;
+					case _: false;
+				}
+				if(hasSetter && f.getHaxeName() == propName) {
+					property = f;
+					break;
+				}
+			}
+		}
+	}
+
+	inline function isGetterName() return StringTools.startsWith("get_", field.getHaxeName());
+	inline function isSetterName() return StringTools.startsWith("get_", field.getHaxeName());
+
+	public function isGetter() {
+		return isGetterName() && property != null;
+	}
+
+	public function isSetter() {
+		return isSetterName() && property != null;
 	}
 
 	public function setExpr(e: TypedExpr) {
