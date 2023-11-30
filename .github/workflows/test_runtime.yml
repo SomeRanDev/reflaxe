@@ -10,10 +10,10 @@ jobs:
   test_runtime:
     runs-on: ubuntu-latest
     steps:
-      - name: Setup Haxe 4.3.0
+      - name: Setup Haxe 4.3.3
         uses: krdlab/setup-haxe@v1
         with:
-          haxe-version: 4.3.0
+          haxe-version: 4.3.3
 
       - name: Checkout
         uses: actions/checkout@v3
