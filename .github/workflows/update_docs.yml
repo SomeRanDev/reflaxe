@@ -36,7 +36,7 @@ jobs:
       - name: Install Haxe
         uses: krdlab/setup-haxe@v1
         with:
-          haxe-version: 4.3.1
+          haxe-version: 4.3.3
       - name: Install Dox
         run: haxelib install dox
       - name: Generate Documentation XML
