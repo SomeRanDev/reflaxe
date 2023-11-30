@@ -43,6 +43,7 @@ class ClassFuncData {
 	function findProperty() {
 		if(isGetterName()) {
 			final propName = field.getHaxeName().substr("get_".length);
+			if(propName.length == 0) return;
 			for(f in (isStatic ? classType.statics : classType.fields).get()) {
 				final hasGetter = switch(f.kind) {
 					case FVar(AccCall, _): true;
@@ -55,6 +56,7 @@ class ClassFuncData {
 			}
 		} else if(isSetterName()) {
 			final propName = field.getHaxeName().substr("set_".length);
+			if(propName.length == 0) return;
 			for(f in (isStatic ? classType.statics : classType.fields).get()) {
 				final hasSetter = switch(f.kind) {
 					case FVar(_, AccCall): true;
@@ -68,8 +70,8 @@ class ClassFuncData {
 		}
 	}
 
-	inline function isGetterName() return StringTools.startsWith("get_", field.getHaxeName());
-	inline function isSetterName() return StringTools.startsWith("get_", field.getHaxeName());
+	inline function isGetterName() return StringTools.startsWith(field.getHaxeName(), "get_");
+	inline function isSetterName() return StringTools.startsWith(field.getHaxeName(), "set_");
 
 	public function isGetter() {
 		return isGetterName() && property != null;

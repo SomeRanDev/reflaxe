@@ -10,6 +10,7 @@ import haxe.macro.Expr;
 import haxe.macro.Type;
 
 using reflaxe.helpers.BaseTypeHelper;
+using reflaxe.helpers.FieldAccessHelper;
 using reflaxe.helpers.NameMetaHelper;
 using reflaxe.helpers.TypeHelper;
 
@@ -171,6 +172,14 @@ class TypedExprHelper {
 		}
 	}
 
+	public static function getFieldAccessExpr(expr: TypedExpr, unwrapCall: Bool = false): Null<TypedExpr> {
+		return switch(unwrapParenthesis(expr).expr) {
+			case TCall(e, _) if(unwrapCall): getFieldAccessExpr(e);
+			case TField(e, _): e;
+			case _: null;
+		}
+	}
+
 	public static function isDynamicAccess(expr: TypedExpr): Null<String> {
 		return switch(unwrapParenthesis(expr).expr) {
 			case TField(e, fa): {
@@ -184,13 +193,7 @@ class TypedExprHelper {
 	}
 
 	public static function getClassField(expr: TypedExpr, unwrapCall: Bool = false): Null<ClassField> {
-		return switch(getFieldAccess(expr, unwrapCall)) {
-			case FInstance(_, _, cfRef): cfRef.get();
-			case FStatic(_, cfRef): cfRef.get();
-			case FAnon(cfRef): cfRef.get();
-			case FClosure(_, cfRef): cfRef.get();
-			case _: null;
-		}
+		return getFieldAccess(expr, unwrapCall)?.getClassField();
 	}
 
 	public static function isStaticCall(expr: TypedExpr, classPath: String, funcName: String, allowNoCall: Bool = false): Null<Array<TypedExpr>> {

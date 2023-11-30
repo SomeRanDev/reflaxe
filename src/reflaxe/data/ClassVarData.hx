@@ -38,9 +38,9 @@ class ClassVarData {
 		function find(access: VarAccess, prefix: String, isStatic: Bool): Null<ClassField> {
 			switch(access) {
 				case AccCall: {
-					final getterName = prefix + field.getHaxeName();
+					final name = prefix + field.getHaxeName();
 					for(f in (isStatic ? classType.statics : classType.fields).get()) {
-						if(f.getHaxeName() == getterName) {
+						if(f.getHaxeName() == name) {
 							return f;
 						}
 					}

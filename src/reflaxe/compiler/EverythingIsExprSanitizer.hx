@@ -10,9 +10,15 @@ import haxe.macro.Context;
 import haxe.macro.Expr;
 import haxe.macro.Type;
 
+import reflaxe.data.ClassFuncData;
+import reflaxe.data.ClassVarData;
+
+using reflaxe.helpers.ClassFieldHelper;
+using reflaxe.helpers.FieldAccessHelper;
 using reflaxe.helpers.NameMetaHelper;
 using reflaxe.helpers.NullableMetaAccessHelper;
 using reflaxe.helpers.NullHelper;
+using reflaxe.helpers.OperatorHelper;
 using reflaxe.helpers.PositionHelper;
 using reflaxe.helpers.TypedExprHelper;
 
@@ -74,6 +80,11 @@ class EverythingIsExprSanitizer {
 		TODO, write overly eloborate comment here
 	**/
 	public var nameGenerator: TempVarNameGenerator;
+
+	/**
+		Stores variables' expressions in this block by ID.
+	**/
+	public var variables(default, null): Map<Int, Null<TypedExpr>> = [];
 
 	/**
 		Expression stack.
@@ -210,11 +221,16 @@ class EverythingIsExprSanitizer {
 				);
 			}
 			case TBinop(op, e1, e2): {
-				TBinop(
-					op,
-					handleValueExpr(e1, "left"),
-					handleValueExpr(e2, "right")
-				);
+				final leftExpr = handleValueExpr(e1, "left");
+				final rightExpr = handleValueExpr(e2, "right");
+
+				#if reflaxe_allow_rose
+				final rose = ReassignOnSubfieldEdit.checkForROSE(this, op, e1, e2);
+				if(rose != null) {
+					rose;
+				} else #end {
+					TBinop(op, leftExpr, rightExpr);
+				}
 			}
 			case TField(e, field): {
 				TField(handleValueExpr(e), field);
@@ -264,8 +280,11 @@ class EverythingIsExprSanitizer {
 				newTFunc.expr = handleNonValueBlock(tfunc.expr);
 				TFunction(newTFunc);
 			}
-			case TVar(tvar, expr): {
-				TVar(tvar, expr != null ? handleValueExpr(expr) : null);
+			case TVar(tvar, maybeExpr): {
+				if(maybeExpr != null) {
+					variables.set(tvar.id, maybeExpr);
+				}
+				TVar(tvar, maybeExpr != null ? handleValueExpr(maybeExpr) : null);
 			}
 			case TBlock(exprs): {
 				handleNonValueBlock(expr).expr;
