@@ -2,6 +2,8 @@ package reflaxe.compiler;
 
 import haxe.macro.Type;
 
+import reflaxe.config.Meta;
+
 using reflaxe.helpers.NameMetaHelper;
 using reflaxe.helpers.NullHelper;
 using reflaxe.helpers.TypedExprHelper;
@@ -72,7 +74,7 @@ class TemporaryVarRemover {
 				switch(exprList[i].expr) {
 					case TVar(tvar, maybeExpr) if(isField(maybeExpr) && getVariableUsageCount(tvar.id) < 2): {
 						switch(tvar.t) {
-							case TInst(clsRef, _) if(clsRef.get().hasMeta(":avoid_temporaries")): {
+							case TInst(clsRef, _) if(clsRef.get().hasMeta(Meta.AvoidTemporaries)): {
 								tvarMap.set(tvar.id, mapTypedExpr(maybeExpr.trustMe(), false));
 								hasOverload = true;
 								continue;
