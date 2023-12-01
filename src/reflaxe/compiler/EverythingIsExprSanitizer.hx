@@ -87,6 +87,11 @@ class EverythingIsExprSanitizer {
 	public var variables(default, null): Map<Int, Null<TypedExpr>> = [];
 
 	/**
+		Variable usage tracker.
+	**/
+	public var variableUsageCount(default, null): Null<Map<Int, Int>> = null;
+
+	/**
 		Expression stack.
 	**/
 	var expressionStack: Array<TypedExpr>;
@@ -98,9 +103,15 @@ class EverythingIsExprSanitizer {
 
 	static var variableId = 0;
 
-	public function new(expr: TypedExpr, compiler: BaseCompiler, assignee: Null<TypedExpr> = null, nGenerator: Null<TempVarNameGenerator> = null) {
+	public function new(expr: TypedExpr, compiler: BaseCompiler, parent: Null<EverythingIsExprSanitizer> = null, assignee: Null<TypedExpr> = null, nGenerator: Null<TempVarNameGenerator> = null) {
 		haxeExpr = expr.copy();
 		this.compiler = compiler;
+		this.parent = parent;
+
+		// Only top-level sanitizer should have counter
+		if(parent == null) {
+			variableUsageCount = [];
+		}
 
 		topScopeArray = switch(haxeExpr.expr) {
 			case TBlock(exprs): exprs.map(e -> e.copy());
@@ -125,6 +136,17 @@ class EverythingIsExprSanitizer {
 		}
 	}
 
+	/**
+		Search through parents to find valid `variableUsageCount`.
+	**/
+	function getVariableUsageCount() {
+		var p = this;
+		while(p.parent != null) {
+			p = p.parent;
+		}
+		return p.variableUsageCount;
+	}
+	
 	public function convertedExpr(): TypedExpr {
 		preprocessExpr();
 
@@ -284,6 +306,7 @@ class EverythingIsExprSanitizer {
 				if(maybeExpr != null) {
 					variables.set(tvar.id, maybeExpr);
 				}
+				getVariableUsageCount().set(tvar.id, 0);
 				TVar(tvar, maybeExpr != null ? handleValueExpr(maybeExpr) : null);
 			}
 			case TBlock(exprs): {
@@ -349,7 +372,12 @@ class EverythingIsExprSanitizer {
 			case TEnumParameter(e, ef, index): {
 				TEnumParameter(handleValueExpr(e), ef, index);
 			}
-			case TBreak | TConst(_) | TContinue | TIdent(_) | TLocal(_) | TTypeExpr(_): {
+			case TLocal(tvar): {
+				final vuc = getVariableUsageCount();
+				vuc.set(tvar.id, (vuc.get(tvar.id) ?? 0) + 1);
+				null;
+			}
+			case TBreak | TConst(_) | TContinue | TIdent(_) | TTypeExpr(_): {
 				null;
 			}
 		}
@@ -377,7 +405,7 @@ class EverythingIsExprSanitizer {
 			}
 		}
 
-		final eiec = new EverythingIsExprSanitizer(e, compiler, isLastExpression() ? assigneeExpr : null, nameGenerator);
+		final eiec = new EverythingIsExprSanitizer(e, compiler, this, isLastExpression() ? assigneeExpr : null, nameGenerator);
 		return eiec.convertedExpr();
 	}
 
@@ -476,7 +504,7 @@ class EverythingIsExprSanitizer {
 	}
 
 	function standardizeAssignValue(e: TypedExpr, index: Int, varNameOverride: Null<String> = null): Null<TypedExpr> {
-		final eiec = new EverythingIsExprSanitizer(e, compiler, null);
+		final eiec = new EverythingIsExprSanitizer(e, compiler, this);
 		topScopeArray.insert(index, eiec.convertedExpr());
 
 		final left = switch(e.expr) {
@@ -571,7 +599,7 @@ class EverythingIsExprSanitizer {
 			t: e.t
 		};
 
-		final eiec = new EverythingIsExprSanitizer(e, compiler, idExpr, nameGenerator);
+		final eiec = new EverythingIsExprSanitizer(e, compiler, this, idExpr, nameGenerator);
 		
 		final varExpr = {
 			expr: TVar(tvar, !INIT_NULL ? null : varAssignExpr),
@@ -813,7 +841,7 @@ class EverythingIsExprSanitizer {
 			t: e.t
 		};
 
-		final eiec = new EverythingIsExprSanitizer(result, compiler, null, nameGenerator);
+		final eiec = new EverythingIsExprSanitizer(result, compiler, this, null, nameGenerator);
 		return unwrapBlock(eiec.convertedExpr());
 	}
 

@@ -22,6 +22,8 @@ class ClassFuncData {
 
 	public var property(default, null): Null<ClassField>;
 
+	var variableUsageCount: Null<Map<Int, Int>>; // Access using `getOrFindVariableUsageCount`
+
 	public function new(classType: ClassType, field: ClassField, isStatic: Bool, kind: MethodKind, ret: Type, args: Array<ClassFuncArg>, tfunc: Null<TFunc>, expr: Null<TypedExpr>) {
 		this.classType = classType;
 		this.field = field;
@@ -83,6 +85,39 @@ class ClassFuncData {
 
 	public function setExpr(e: TypedExpr) {
 		expr = e;
+	}
+
+	/**
+		Returns the variable usage count.
+		If it has not been calculated yet, it is calculated here.
+	**/
+	public function getOrFindVariableUsageCount(): Map<Int, Int> {
+		final map: Map<Int, Int> = [];
+		function count(e: TypedExpr) {
+			switch(e.expr) {
+				case TVar(tvar, _): {
+					map.set(tvar.id, 0);
+				}
+				case TLocal(tvar): {
+					map.set(tvar.id, (map.get(tvar.id) ?? 0) + 1);
+				}
+				case _:
+			}
+			return haxe.macro.TypedExprTools.map(e, count);
+		}
+		count(expr);
+		return variableUsageCount = map;
+	}
+
+	/**
+		A map of the number of times a variable is used can optionally
+		be provided for later reference.
+
+		This is usually calculated using `EverythingIsExprSanitizer` prior
+		to other optimizations. 
+	**/
+	public function setVariableUsageCount(usageMap: Map<Int, Int>) {
+		variableUsageCount = usageMap;
 	}
 
 	/**

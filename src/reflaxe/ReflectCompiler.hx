@@ -433,11 +433,12 @@ class ReflectCompiler {
 			NullTypeEnforcer.modifyExpression(data.expr);
 		}
 		if(compiler.options.normalizeEIE) {
-			final eiec = new EverythingIsExprSanitizer(data.expr, compiler, null);
+			final eiec = new EverythingIsExprSanitizer(data.expr, compiler);
 			data.setExpr(eiec.convertedExpr());
+			data.setVariableUsageCount(eiec.variableUsageCount);
 		}
 		if(compiler.options.processAvoidTemporaries) {
-			final tvr = new TemporaryVarRemover(data.expr);
+			final tvr = new TemporaryVarRemover(data.expr, data.getOrFindVariableUsageCount());
 			data.setExpr(tvr.fixTemporaries());
 		}
 		if(compiler.options.preventRepeatVars) {

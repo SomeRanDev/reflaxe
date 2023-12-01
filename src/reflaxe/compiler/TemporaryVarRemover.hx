@@ -27,8 +27,15 @@ class TemporaryVarRemover {
 	**/
 	var tvarMap: Map<Int, TypedExpr> = [];
 
-	public function new(expr: TypedExpr, parent: Null<TemporaryVarRemover> = null) {
+	/**
+		A reference to a map that tracks the variable usage count.
+		May not be available.
+	**/
+	var varUsageCount: Null<Map<Int, Int>>;
+
+	public function new(expr: TypedExpr, varUsageCount: Null<Map<Int, Int>> = null, parent: Null<TemporaryVarRemover> = null) {
 		this.expr = expr;
+		this.varUsageCount = varUsageCount;
 		this.parent = parent;
 
 		exprList = switch(expr.expr) {
@@ -41,15 +48,33 @@ class TemporaryVarRemover {
 		Generate copy of `expr` with temporaries removed.
 	**/
 	public function fixTemporaries(): TypedExpr {
+		function mapTypedExpr(mappedExpr): TypedExpr {
+			switch(mappedExpr.expr) {
+				case TLocal(v): {
+					final e = findReplacement(v.id);
+					if(e != null) return e;
+				}
+				case TBlock(_): {
+					final tvr = new TemporaryVarRemover(mappedExpr, varUsageCount, this);
+					return tvr.fixTemporaries();
+				}
+				case _:
+			}
+			return haxe.macro.TypedExprTools.map(mappedExpr, mapTypedExpr);
+		}
+
 		final result = [];
+
+		var hasOverload = false;
 
 		for(i in 0...exprList.length) {
 			if(i < exprList.length - 1) {
 				switch(exprList[i].expr) {
-					case TVar(tvar, maybeExpr) if(isField(maybeExpr)): {
+					case TVar(tvar, maybeExpr) if(isField(maybeExpr) && getVariableUsageCount(tvar.id) < 1): {
 						switch(tvar.t) {
 							case TInst(clsRef, _) if(clsRef.get().hasMeta(":avoid_temporaries")): {
-								tvarMap.set(tvar.id, maybeExpr.trustMe());
+								tvarMap.set(tvar.id, mapTypedExpr(maybeExpr.trustMe()));
+								hasOverload = true;
 								continue;
 							}
 							case _:
@@ -59,25 +84,14 @@ class TemporaryVarRemover {
 				}
 			}
 
-			result.push(exprList[i]);
-		}
-
-		function mapTypedExpr(mappedExpr): TypedExpr {
-			switch(mappedExpr.expr) {
-				case TLocal(v): {
-					final e = findReplacement(v.id);
-					if(e != null) return e;
-				}
-				case TBlock(exprs): {
-					final tvr = new TemporaryVarRemover(mappedExpr, this);
-					return tvr.fixTemporaries();
-				}
-				case _:
+			if(parent == null && !hasOverload) {
+				result.push(exprList[i]);
+			} else {
+				result.push(mapTypedExpr(exprList[i]));
 			}
-			return haxe.macro.TypedExprTools.map(mappedExpr, mapTypedExpr);
 		}
 
-		return expr.copy(TBlock(result.map(mapTypedExpr)));
+		return expr.copy(TBlock(result));
 	}
 
 	/**
@@ -88,7 +102,7 @@ class TemporaryVarRemover {
 
 		return switch(expr.expr) {
 			case TParenthesis(e): isField(e);
-			case TField(e, _): true;
+			case TField(_, _): true;
 			case _: false;
 		}
 	}
@@ -105,5 +119,16 @@ class TemporaryVarRemover {
 			if(e != null) return e;
 		}
 		return null;
+	}
+
+	/**
+		Returns the number of usages for the variable if possible.
+	**/
+	function getVariableUsageCount(variableId: Int): Int {
+		return if(varUsageCount != null && varUsageCount.exists(variableId)) {
+			varUsageCount.get(variableId);
+		} else {
+			0;
+		}
 	}
 }
