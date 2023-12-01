@@ -27,6 +27,11 @@ class NullableMetaAccessHelper {
 		return m.extract(name);
 	}
 
+	public static function maybeGet(m: Null<MetaAccess>): Metadata {
+		if(m == null || m.extract == null) return [];
+		return m.get();
+	}
+
 	public static function maybeAdd(m: Null<MetaAccess>, name: String, params: Array<Expr>, pos: Position): Void {
 		if(m != null && m.add != null) {
 			m.add(name, params, pos);
