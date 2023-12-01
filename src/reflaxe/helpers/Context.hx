@@ -406,7 +406,7 @@ class Context {
 		#end
 	}
 
-	#if (haxe > version("4.3.0"))
+	#if (haxe >= version("4.3.0"))
 	public static function getMainExpr():RTypedExpr {
 		#if (neko || eval || display)
 		return haxe.macro.Context.getMainExpr();
