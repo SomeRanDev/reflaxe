@@ -48,9 +48,9 @@ class TemporaryVarRemover {
 		Generate copy of `expr` with temporaries removed.
 	**/
 	public function fixTemporaries(): TypedExpr {
-		function mapTypedExpr(mappedExpr): TypedExpr {
+		function mapTypedExpr(mappedExpr, noReplacements): TypedExpr {
 			switch(mappedExpr.expr) {
-				case TLocal(v): {
+				case TLocal(v) if(!noReplacements): {
 					final e = findReplacement(v.id);
 					if(e != null) return e;
 				}
@@ -60,7 +60,7 @@ class TemporaryVarRemover {
 				}
 				case _:
 			}
-			return haxe.macro.TypedExprTools.map(mappedExpr, mapTypedExpr);
+			return haxe.macro.TypedExprTools.map(mappedExpr, e -> mapTypedExpr(e, noReplacements));
 		}
 
 		final result = [];
@@ -73,7 +73,7 @@ class TemporaryVarRemover {
 					case TVar(tvar, maybeExpr) if(isField(maybeExpr) && getVariableUsageCount(tvar.id) < 2): {
 						switch(tvar.t) {
 							case TInst(clsRef, _) if(clsRef.get().hasMeta(":avoid_temporaries")): {
-								tvarMap.set(tvar.id, mapTypedExpr(maybeExpr.trustMe()));
+								tvarMap.set(tvar.id, mapTypedExpr(maybeExpr.trustMe(), false));
 								hasOverload = true;
 								continue;
 							}
@@ -84,11 +84,7 @@ class TemporaryVarRemover {
 				}
 			}
 
-			if(parent == null && !hasOverload) {
-				result.push(exprList[i]);
-			} else {
-				result.push(mapTypedExpr(exprList[i]));
-			}
+			result.push(mapTypedExpr(exprList[i], parent == null && !hasOverload));
 		}
 
 		return expr.copy(TBlock(result));
