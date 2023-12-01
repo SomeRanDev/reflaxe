@@ -70,7 +70,7 @@ class TemporaryVarRemover {
 		for(i in 0...exprList.length) {
 			if(i < exprList.length - 1) {
 				switch(exprList[i].expr) {
-					case TVar(tvar, maybeExpr) if(isField(maybeExpr) && getVariableUsageCount(tvar.id) < 1): {
+					case TVar(tvar, maybeExpr) if(isField(maybeExpr) && getVariableUsageCount(tvar.id) < 2): {
 						switch(tvar.t) {
 							case TInst(clsRef, _) if(clsRef.get().hasMeta(":avoid_temporaries")): {
 								tvarMap.set(tvar.id, mapTypedExpr(maybeExpr.trustMe()));
