@@ -188,11 +188,34 @@ class ClassFuncData {
 		this function, this returns a modified list that replaces
 		all instances of `null` on an argument with a default
 		value with that default value.
+
+		If "nativeDefaultMeta" is defined, this will be treated
+		as the name of a meta on an argument that can be used to
+		specify native code (using a single `String` argument) to
+		use instead of `null`.
+
+		For example, if `nativeDefaultMeta = ":defaultArg"`, then
+		the metadata it's looking for is:
+		```haxe
+		function myFunc(@:defaultArg("targetLanguageCode") ?myArg: Int);
+		```
+
+		"nativeExpressionGenerator" MUST also be defined if "nativeDefaultMeta"
+		is. This will be given the argument and position of the meta and should
+		transform it into the target's desired `TypedExpr` format.
 	**/
-	public function replacePadNullsWithDefaults(passedArgs: Array<TypedExpr>): Array<TypedExpr> {
+	public function replacePadNullsWithDefaults(
+		passedArgs: Array<TypedExpr>,
+		nativeDefaultMeta: Null<String> = null,
+		nativeExpressionGenerator: Null<(String, Position) -> TypedExpr> = null
+	): Array<TypedExpr> {
+		if(nativeDefaultMeta != null && nativeExpressionGenerator == null) {
+			throw "Missing \"nativeExpressionGenerator\" argument.";
+		}
+
 		var hasDefaults = false;
 		for(a in args) {
-			if(a.expr != null) {
+			if(a.expr != null || (nativeDefaultMeta != null && a.hasMetadata(nativeDefaultMeta))) {
 				hasDefaults = true;
 				break;
 			}
@@ -206,7 +229,8 @@ class ClassFuncData {
 			final arg = args[i];
 			final hasPassedArg = i < passedArgs.length;
 			final useDefault = !hasPassedArg || passedArgs[i].isNullExpr();
-			if(useDefault && arg.expr != null) {
+			final defaultMetaValue = nativeDefaultMeta != null ? arg.getMetadataFirstString(nativeDefaultMeta) : null;
+			if(useDefault && (arg.expr != null || defaultMetaValue != null)) {
 				if(arg.hasConflicingDefaultValue()) {
 					// If there's a conflicting default value, pass `null` anyway.
 					// But we'll mark this `null` with a meta to help track it.
@@ -216,7 +240,10 @@ class ClassFuncData {
 						pos: e.pos,
 						t: e.t
 					});
-				} else {
+				} else if(defaultMetaValue != null && nativeExpressionGenerator != null) {
+					final pos = arg.getMetadataFirstPosition(nativeDefaultMeta.trustMe()).trustMe();
+					result.push(nativeExpressionGenerator(defaultMetaValue, pos));
+				} else if(arg.expr != null) {
 					result.push(arg.expr);
 				}
 			} else if(hasPassedArg) {
