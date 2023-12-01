@@ -2,7 +2,7 @@ package reflaxe;
 
 #if (macro || reflaxe_runtime)
 
-import haxe.macro.Context;
+import reflaxe.helpers.Context;
 import haxe.macro.Expr;
 import haxe.macro.Type;
 
@@ -22,6 +22,7 @@ using reflaxe.helpers.BaseTypeHelper;
 using reflaxe.helpers.ClassTypeHelper;
 using reflaxe.helpers.ModuleTypeHelper;
 using reflaxe.helpers.NullableMetaAccessHelper;
+using reflaxe.helpers.NullHelper;
 using reflaxe.helpers.PositionHelper;
 using reflaxe.helpers.TypedExprHelper;
 using reflaxe.helpers.TypeHelper;
@@ -845,6 +846,33 @@ abstract class BaseCompiler {
 	**/
 	public function onExpressionUnsuccessful(pos: Position) {
 		return err("Could not generate expression.", pos);
+	}
+
+	/**
+		Generates an "injection" expression if possible.
+	**/
+	public function generateInjectionExpression(content: String, position: Null<Position> = null): TypedExpr {
+		if(options.targetCodeInjectionName == null) {
+			throw "`targetCodeInjectionName` option must be defined to use this function.";
+		}
+
+		position ??= Context.currentPos();
+
+		return {
+			expr: TCall({
+				expr: TIdent(options.targetCodeInjectionName),
+				pos: position.trustMe(),
+				t: TDynamic(null)
+			}, [
+				{
+					expr: TConst(TString(content)),
+					pos: position.trustMe(),
+					t: TDynamic(null)
+				}
+			]),
+			pos: position.trustMe(),
+			t: TDynamic(null)
+		}
 	}
 }
 
