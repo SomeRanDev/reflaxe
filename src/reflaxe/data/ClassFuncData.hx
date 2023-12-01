@@ -2,9 +2,13 @@ package reflaxe.data;
 
 #if (macro || reflaxe_runtime)
 
+import haxe.macro.Expr;
 import haxe.macro.Type;
 
 using reflaxe.helpers.ClassFieldHelper;
+using reflaxe.helpers.NameMetaHelper;
+using reflaxe.helpers.NullableMetaAccessHelper;
+using reflaxe.helpers.NullHelper;
 using reflaxe.helpers.PositionHelper;
 using reflaxe.helpers.TypedExprHelper;
 
@@ -17,6 +21,7 @@ class ClassFuncData {
 
 	public var ret(default, null): Type;
 	public var args(default, null): Array<ClassFuncArg>;
+	public var argsMeta(default, null): Null<Array<Metadata>>;
 	public var tfunc(default, null): Null<TFunc>;
 	public var expr(default, null): Null<TypedExpr>;
 
@@ -36,6 +41,7 @@ class ClassFuncData {
 		this.tfunc = tfunc;
 		this.expr = expr;
 
+		extractArgumentMeta();
 		findProperty();
 	}
 
@@ -67,6 +73,40 @@ class ClassFuncData {
 				if(hasSetter && f.getHaxeName() == propName) {
 					property = f;
 					break;
+				}
+			}
+		}
+	}
+
+	/**
+		At the current moment, argument metadata is not retained.
+
+		To read argument metadata, the `@:argMeta(index: Int, callExpr: Expr)`
+		meta can be applied to the field to setup "metadata" for the
+		arguments.
+	**/
+	function extractArgumentMeta() {
+		for(meta in field.meta.get()) {
+			if(meta.name == ":argMeta") {
+				switch(meta.params) {
+					case [
+						{ expr: EConst(CInt(Std.parseInt(_) => index)) },
+						{ expr: ECall({ expr: EConst(constant) }, metaArgs) }
+					] if(index != null): {
+						if(index < args.length) {
+							final metaName = switch(constant) {
+								case CIdent(s): s;
+								case CString(s, _): s;
+								case _: continue;
+							}
+							args[index].addExtraMetadata({
+								name: metaName,
+								pos: meta.pos,
+								params: metaArgs
+							});
+						}
+					}
+					case _:
 				}
 			}
 		}

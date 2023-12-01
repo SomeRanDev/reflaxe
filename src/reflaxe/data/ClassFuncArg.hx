@@ -2,10 +2,12 @@ package reflaxe.data;
 
 #if (macro || reflaxe_runtime)
 
+import haxe.macro.Expr;
 import haxe.macro.Type;
 
 import reflaxe.input.ClassHierarchyTracker;
 
+using reflaxe.helpers.NullableMetaAccessHelper;
 using reflaxe.helpers.NullHelper;
 using reflaxe.helpers.TypedExprHelper;
 
@@ -16,15 +18,24 @@ class ClassFuncArg {
 	public var type(default, null): Type;
 	public var opt(default, null): Bool;
 	public var name(default, null): String;
+	public var meta(default, null): Null<MetaAccess>;
 	public var expr(default, null): Null<TypedExpr>;
 	public var tvar(default, null): Null<TVar>;
 
-	public function new(index: Int, type: Type, opt: Bool, name: String, expr: Null<TypedExpr> = null, tvar: Null<TVar> = null) {
+	/**
+		At the current moment, argument metadata is not retained.
+		This system bypasses this problem by extracting `@:argMeta` from the field.
+		This metadata is stored here and can be accessed with "metadata" functions.
+	**/
+	var extraMetadata: Null<Metadata>;
+
+	public function new(index: Int, type: Type, opt: Bool, name: String, meta: Null<MetaAccess> = null, expr: Null<TypedExpr> = null, tvar: Null<TVar> = null) {
 		this.index = index;
 
 		this.type = type;
 		this.opt = opt;
 		this.name = name;
+		this.meta = meta;
 		this.expr = expr;
 		this.tvar = tvar;
 	}
@@ -98,6 +109,55 @@ class ClassFuncArg {
 	**/
 	public function toString(): String {
 		return (opt ? "?" : "") + name + ": " + type + (expr != null ? Std.string(expr) : "");
+	}
+
+	public function addExtraMetadata(m: MetadataEntry) {
+		if(extraMetadata == null) extraMetadata = [];
+		extraMetadata.push(m);
+	}
+
+	public function getMetadata(): Null<Metadata> {
+		if(meta == null && extraMetadata == null) {
+			return null;
+		}
+
+		final metadata = meta.maybeGet();
+		return if(extraMetadata != null) {
+			metadata.concat(extraMetadata);
+		} else {
+			metadata;
+		}
+	}
+
+	function findMetadata(name: String): Null<MetadataEntry> {
+		final metadata = getMetadata();
+		if(metadata == null) return null;
+		for(meta in metadata) {
+			if(meta.name == name) {
+				return meta;
+			}
+		}
+		return null;
+	}
+
+	public function hasMetadata(name: String): Bool {
+		return findMetadata(name) != null;
+	}
+
+	public function getMetadataFirstString(name: String): Null<String> {
+		final entryParams = findMetadata(name)?.params;
+		if(entryParams != null && entryParams.length > 0) {
+			switch(entryParams[0].expr) {
+				case EConst(CString(s, _)): return s;
+				case _:
+			}
+		}
+		return null;
+	}
+
+	public function getMetadataFirstPosition(name: String): Null<Position> {
+		final entry = findMetadata(name);
+		return entry?.pos;
 	}
 }
 

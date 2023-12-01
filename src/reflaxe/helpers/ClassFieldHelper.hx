@@ -119,7 +119,7 @@ class ClassFieldHelper {
 				// Generate ClassFuncArg depending on whether TFunc is available.
 				var index = 0;
 				final dataArgs: Array<ClassFuncArg> = if(tfunc != null) {
-					tfunc.args.map(a -> new ClassFuncArg(index++, a.v.t, a.value != null, a.v.name, a.value, a.v));
+					tfunc.args.map(a -> new ClassFuncArg(index++, a.v.t, a.value != null, a.v.name, a.v.meta, a.value, a.v));
 				} else {
 					args.map(a -> new ClassFuncArg(index++, a.t, a.opt, a.name));
 				}
