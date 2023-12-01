@@ -126,7 +126,7 @@ class TemporaryVarRemover {
 	**/
 	function getVariableUsageCount(variableId: Int): Int {
 		return if(varUsageCount != null && varUsageCount.exists(variableId)) {
-			varUsageCount.get(variableId);
+			varUsageCount.get(variableId) ?? 0;
 		} else {
 			0;
 		}

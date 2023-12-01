@@ -139,12 +139,12 @@ class EverythingIsExprSanitizer {
 	/**
 		Search through parents to find valid `variableUsageCount`.
 	**/
-	function getVariableUsageCount() {
+	function getVariableUsageCount(): Map<Int, Int> {
 		var p = this;
 		while(p.parent != null) {
 			p = p.parent;
 		}
-		return p.variableUsageCount;
+		return p.variableUsageCount.trustMe(); // The top-most should always exist.
 	}
 	
 	public function convertedExpr(): TypedExpr {

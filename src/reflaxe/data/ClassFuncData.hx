@@ -92,6 +92,10 @@ class ClassFuncData {
 		If it has not been calculated yet, it is calculated here.
 	**/
 	public function getOrFindVariableUsageCount(): Map<Int, Int> {
+		if(expr == null) {
+			return [];
+		}
+
 		final map: Map<Int, Int> = [];
 		function count(e: TypedExpr) {
 			switch(e.expr) {
