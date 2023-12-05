@@ -2,6 +2,7 @@ package reflaxe.data;
 
 #if (macro || reflaxe_runtime)
 
+import reflaxe.helpers.Context;
 import haxe.macro.Expr;
 import haxe.macro.Type;
 
@@ -189,33 +190,37 @@ class ClassFuncData {
 		all instances of `null` on an argument with a default
 		value with that default value.
 
-		If "nativeDefaultMeta" is defined, this will be treated
+		If "noNullPadMeta" is defined, this will be treated
 		as the name of a meta on an argument that can be used to
 		specify native code (using a single `String` argument) to
 		use instead of `null`.
 
-		For example, if `nativeDefaultMeta = ":defaultArg"`, then
+		For example, if `noNullPadMeta = ":noNullPad"`, then
 		the metadata it's looking for is:
 		```haxe
-		function myFunc(@:defaultArg("targetLanguageCode") ?myArg: Int);
+		function myFunc(@:noNullPad("targetLanguageCode") ?myArg: Int);
 		```
 
-		"nativeExpressionGenerator" MUST also be defined if "nativeDefaultMeta"
+		"nativeExpressionGenerator" MUST also be defined if "noNullPadMeta"
 		is. This will be given the argument and position of the meta and should
 		transform it into the target's desired `TypedExpr` format.
+
+		If the "noNullPadMeta" metadata does not have an argument, its `null`
+		padding will be removed if possible. If this is not possible a compile-
+		time error will occur.
 	**/
 	public function replacePadNullsWithDefaults(
 		passedArgs: Array<TypedExpr>,
-		nativeDefaultMeta: Null<String> = null,
+		noNullPadMeta: Null<String> = null,
 		nativeExpressionGenerator: Null<(String, Position) -> TypedExpr> = null
 	): Array<TypedExpr> {
-		if(nativeDefaultMeta != null && nativeExpressionGenerator == null) {
+		if(noNullPadMeta != null && nativeExpressionGenerator == null) {
 			throw "Missing \"nativeExpressionGenerator\" argument.";
 		}
 
 		var hasDefaults = false;
 		for(a in args) {
-			if(a.expr != null || (nativeDefaultMeta != null && a.hasMetadata(nativeDefaultMeta))) {
+			if(a.expr != null || (noNullPadMeta != null && a.hasMetadata(noNullPadMeta))) {
 				hasDefaults = true;
 				break;
 			}
@@ -224,30 +229,52 @@ class ClassFuncData {
 			return passedArgs;
 		}
 
+		var nullPadRemovedAtIndex = null;
+
 		final result: Array<TypedExpr> = [];
 		for(i in 0...args.length) {
 			final arg = args[i];
 			final hasPassedArg = i < passedArgs.length;
 			final useDefault = !hasPassedArg || passedArgs[i].isNullExpr();
-			final defaultMetaValue = nativeDefaultMeta != null ? arg.getMetadataFirstString(nativeDefaultMeta) : null;
-			if(useDefault && (arg.expr != null || defaultMetaValue != null)) {
-				if(arg.hasConflicingDefaultValue()) {
+			
+			final noNullPad = noNullPadMeta != null ? arg.hasMetadata(noNullPadMeta) : false;
+			final noNullPadDefaultValue = noNullPad ? arg.getMetadataFirstString(noNullPadMeta.trustMe()) : null;
+
+			var resultValue = null;
+
+			if(useDefault && (arg.expr != null || noNullPad)) {
+				if(noNullPad) {
+					if(noNullPadDefaultValue == null) {
+						nullPadRemovedAtIndex = i;
+					} else if(nativeExpressionGenerator != null) {
+						final pos = arg.getMetadataFirstPosition(noNullPadMeta.trustMe()).trustMe();
+						resultValue = nativeExpressionGenerator(noNullPadDefaultValue, pos);
+					}
+				} else if(arg.hasConflicingDefaultValue()) {
 					// If there's a conflicting default value, pass `null` anyway.
 					// But we'll mark this `null` with a meta to help track it.
 					final e = passedArgs[i];
-					result.push({
+					resultValue = {
 						expr: TMeta({ name: "-conflicting-default-value", pos: e.pos }, e),
 						pos: e.pos,
 						t: e.t
-					});
-				} else if(defaultMetaValue != null && nativeExpressionGenerator != null) {
-					final pos = arg.getMetadataFirstPosition(nativeDefaultMeta.trustMe()).trustMe();
-					result.push(nativeExpressionGenerator(defaultMetaValue, pos));
+					};
 				} else if(arg.expr != null) {
-					result.push(arg.expr);
+					resultValue = arg.expr;
 				}
 			} else if(hasPassedArg) {
-				result.push(passedArgs[i]);
+				resultValue = passedArgs[i];
+			}
+
+			if(resultValue != null) {
+				if(nullPadRemovedAtIndex != null) {
+					Context.error('`null` padding removed at index $nullPadRemovedAtIndex, but argument still exists at index $i.', {
+						if(hasPassedArg) passedArgs[i].pos;
+						else if(passedArgs.length > 0) passedArgs[passedArgs.length - 1].pos;
+						else Context.currentPos();
+					});
+				}
+				result.push(resultValue);
 			}
 		}
 		return result;
