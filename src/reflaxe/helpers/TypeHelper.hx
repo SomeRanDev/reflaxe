@@ -210,6 +210,16 @@ class TypeHelper {
 	}
 
 	/**
+		Checks if the type is TEnum.
+	**/
+	public static function isEnum(t: Type): Bool {
+		return switch(t) {
+			case TEnum(_, _): true;
+			case _: false;
+		}
+	}
+
+	/**
 		Checks if the type is TMono.
 	**/
 	public static function isMonomorph(t: Type): Bool {
