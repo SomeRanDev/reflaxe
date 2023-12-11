@@ -9,6 +9,7 @@ import reflaxe.GenericCompiler;
 import reflaxe.compiler.TargetCodeInjection;
 import reflaxe.optimization.ExprOptimizer;
 import reflaxe.output.DataAndFileInfo;
+import reflaxe.output.PluginHook;
 import reflaxe.output.StringOrBytes;
 
 using StringTools;
@@ -32,7 +33,29 @@ abstract class DirectToStringCompiler extends GenericCompiler<String, String, St
 			}
 		}
 
-		return compileExpressionImpl(expr, topLevel);
+		// Copied from `GenericCompiler`, could there be better way to do this??
+
+		#if reflaxe_hooks
+		final hookResult = compileBeforeExpressionHook.call(null, this, expr, topLevel);
+		switch(hookResult) {
+			case IgnorePlugin:
+			case OutputNothing: return null;
+			case OverwriteOutput(output): return output;
+		}
+		#end
+
+		final result = compileExpressionImpl(expr, topLevel);
+
+		#if reflaxe_hooks
+		final hookResult = compileExpressionHook.call(result, this, expr, topLevel);
+		switch(hookResult) {
+			case IgnorePlugin:
+			case OutputNothing: return null;
+			case OverwriteOutput(output): return output;
+		}
+		#end
+
+		return result;
 	}
 
 	/**
