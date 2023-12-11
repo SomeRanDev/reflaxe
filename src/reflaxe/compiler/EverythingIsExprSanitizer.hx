@@ -247,7 +247,7 @@ class EverythingIsExprSanitizer {
 				final rightExpr = handleValueExpr(e2, "right");
 
 				#if reflaxe_allow_rose
-				final rose = ReassignOnSubfieldEdit.checkForROSE(this, op, e1, e2);
+				final rose = ReassignOnSubfieldEdit.checkForROSE(this, op, leftExpr, rightExpr);
 				if(rose != null) {
 					rose;
 				} else #end {
