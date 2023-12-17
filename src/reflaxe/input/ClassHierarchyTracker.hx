@@ -400,7 +400,7 @@ class ClassHierarchyTracker {
 
 			for(field in decl.cls.fields.get()) {
 				final data = field.findFuncDataFromType(parent);
-				if(data != null && !isOverride(data, childField)) {
+				if(data != null && isOverride(data, childField)) {
 					result.push(data);
 				}
 			}
