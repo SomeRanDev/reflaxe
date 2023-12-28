@@ -436,7 +436,17 @@ class EverythingIsExprSanitizer {
 		Converts (a = b = 1) => (b = 1; a = b)
 	**/
 	function handleValueExpr(e: TypedExpr, varNameOverride: Null<String> = null): TypedExpr {
-		if(e == null) return { expr: TIdent("null"), pos: PositionHelper.unknownPos(), t: TDynamic(null) };
+		if(e == null) {
+			return { expr: TIdent("null"), pos: PositionHelper.unknownPos(), t: TDynamic(null) };
+		}
+
+		switch(e.expr) {
+			case TParenthesis(e): {
+				return { expr: TParenthesis(handleValueExpr(e)), pos: e.pos, t: e.t };
+			}
+			case _:
+		}
+
 		if(compiler.options.convertNullCoal && isNullCoalExpr(e)) {
 			final newExpr = standardizeNullCoalValue(e);
 			if(newExpr != null) {
