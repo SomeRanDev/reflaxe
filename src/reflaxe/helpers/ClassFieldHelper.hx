@@ -19,6 +19,20 @@ using reflaxe.helpers.NullableMetaAccessHelper;
 	Quick static extensions to help with `ClassField`.
 **/
 class ClassFieldHelper {
+	public static function isVarKind(field: ClassField): Bool {
+		return switch(field.kind) {
+			case FVar(_, _): true;
+			case _: false;
+		}
+	}
+
+	public static function isMethodKind(field: ClassField): Bool {
+		return switch(field.kind) {
+			case FMethod(_): true;
+			case _: false;
+		}
+	}
+
 	public static function equals(field: ClassField, other: ClassField): Bool {
 		return Std.string(field) == Std.string(other);
 	}
