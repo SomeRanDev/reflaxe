@@ -237,7 +237,7 @@ class ReassignOnSubfieldEdit {
 					value;
 				} else {
 					{
-						expr: TBinop(assignOp, value, baseValue),
+						expr: TBinop(assignOp, baseValue, value),
 						pos: baseValue.pos,
 						t: baseValue.t
 					};
