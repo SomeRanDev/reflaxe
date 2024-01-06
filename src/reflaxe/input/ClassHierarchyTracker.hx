@@ -409,6 +409,14 @@ class ClassHierarchyTracker {
 	}
 
 	/**
+		Tries to check if the function is an `override`.
+	**/
+	public static function funcIsOverride(childField: ClassFuncData): Bool {
+		final chain = getParentOverrideChain(childField);
+		return chain.length > 0;
+	}
+
+	/**
 		Returns a combined list of `findAllChildOverrides` and `getParentOverrideChain`.
 	**/
 	public static function findAllOverrides(field: ClassFuncData): Array<ClassFuncData> {
