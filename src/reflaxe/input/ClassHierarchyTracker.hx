@@ -409,10 +409,33 @@ class ClassHierarchyTracker {
 	}
 
 	/**
+		Works like `getParentOverrideChain` but doesn't include interfaces and
+		abstract functions.
+	**/
+	public static function getParentOverrideChainNoAbstracts(childField: ClassFuncData): Array<ClassFuncData> {
+		final result: Array<ClassFuncData> = [];
+		for(parent in getAllParentTypes(childField.classType)) {
+			final decl = switch(parent) {
+				case TInst(clsRef, params): { cls: clsRef.get(), params: params };
+				case _: throw "Impossible";
+			}
+
+			for(field in decl.cls.fields.get()) {
+				if(field.isAbstract) continue;
+				final data = field.findFuncDataFromType(parent);
+				if(data != null && isOverride(data, childField)) {
+					result.push(data);
+				}
+			}
+		}
+		return result;
+	}
+
+	/**
 		Tries to check if the function is an `override`.
 	**/
 	public static function funcIsOverride(childField: ClassFuncData): Bool {
-		final chain = getParentOverrideChain(childField);
+		final chain = getParentOverrideChainNoAbstracts(childField);
 		return chain.length > 0;
 	}
 
