@@ -253,12 +253,14 @@ class ClassFuncData {
 				} else if(arg.hasConflictingDefaultValue()) {
 					// If there's a conflicting default value, pass `null` anyway.
 					// But we'll mark this `null` with a meta to help track it.
-					final e = passedArgs[i];
-					resultValue = {
-						expr: TMeta({ name: "-conflicting-default-value", pos: e.pos }, e),
-						pos: e.pos,
-						t: e.t
-					};
+					final e: Null<TypedExpr> = passedArgs[i];
+					if(e != null) {
+						resultValue = {
+							expr: TMeta({ name: "-conflicting-default-value", pos: e.pos }, e),
+							pos: e.pos,
+							t: e.t
+						};
+					}
 				} else if(arg.expr != null) {
 					resultValue = arg.expr;
 				}
