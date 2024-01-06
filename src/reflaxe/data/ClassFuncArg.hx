@@ -78,7 +78,7 @@ class ClassFuncArg {
 		function with a different default value for this argument,
 		this returns true.
 	**/
-	public function hasConflicingDefaultValue(): Bool {
+	public function hasConflictingDefaultValue(): Bool {
 		if(funcData.trustMe().isStatic) {
 			return false;
 		}

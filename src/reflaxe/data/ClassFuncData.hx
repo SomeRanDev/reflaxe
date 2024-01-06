@@ -250,7 +250,7 @@ class ClassFuncData {
 						final pos = arg.getMetadataFirstPosition(noNullPadMeta.trustMe()).trustMe();
 						resultValue = nativeExpressionGenerator(noNullPadDefaultValue, pos);
 					}
-				} else if(arg.hasConflicingDefaultValue()) {
+				} else if(arg.hasConflictingDefaultValue()) {
 					// If there's a conflicting default value, pass `null` anyway.
 					// But we'll mark this `null` with a meta to help track it.
 					final e = passedArgs[i];
