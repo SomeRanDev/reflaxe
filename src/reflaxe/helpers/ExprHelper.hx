@@ -18,6 +18,13 @@ class ExprHelper {
 			case _: "";
 		}
 	}
+
+	public static function unwrapParenthesisAndMeta(e: Expr): Expr {
+		return switch(e.expr) {
+			case EMeta(_, e2) | EParenthesis(e2): unwrapParenthesisAndMeta(e2);
+			case _: e;
+		}
+	}
 }
 
 #end
