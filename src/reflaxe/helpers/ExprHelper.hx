@@ -19,9 +19,13 @@ class ExprHelper {
 		}
 	}
 
-	public static function unwrapParenthesisAndMeta(e: Expr): Expr {
+	public static function unwrapParenthesisMetaAndStoredType(e: Expr): Expr {
 		return switch(e.expr) {
-			case EMeta(_, e2) | EParenthesis(e2): unwrapParenthesisAndMeta(e2);
+			case EMeta({ name: ":storedTypedExpr" }, _): {
+				final e2 = Context.getTypedExpr(Context.typeExpr(e));
+				unwrapParenthesisMetaAndStoredType(e2);
+			}
+			case EMeta(_, e2) | EParenthesis(e2): unwrapParenthesisMetaAndStoredType(e2);
 			case _: e;
 		}
 	}
