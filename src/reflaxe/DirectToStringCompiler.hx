@@ -190,7 +190,7 @@ abstract class DirectToStringCompiler extends GenericCompiler<String, String, St
 		This function is for compiling the result of functions
 		using the `@:nativeFunctionCode` meta.
 	**/
-	public function compileNativeFunctionCodeMeta(callExpr: TypedExpr, arguments: Array<TypedExpr>, typeParamsCallback: Null<(Int) -> String> = null, custom: Null<(String) -> String> = null): Null<String> {
+	public function compileNativeFunctionCodeMeta(callExpr: TypedExpr, arguments: Array<TypedExpr>, typeParamsCallback: Null<(Int) -> Null<String>> = null, custom: Null<(String) -> String> = null): Null<String> {
 		final declaration = callExpr.getDeclarationMeta(arguments);
 		if(declaration == null) {
 			return null;
