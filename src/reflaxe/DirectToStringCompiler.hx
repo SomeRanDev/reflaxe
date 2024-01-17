@@ -252,28 +252,23 @@ abstract class DirectToStringCompiler extends GenericCompiler<String, String, St
 				final endIndex = result.indexOf("}", startIndex);
 				final numStr = result.substring(startIndex, endIndex);
 				final typeIndex = Std.parseInt(numStr);
-				trace(typeIndex);
 				
 				// If the number if valid...
-				if(!Math.isNaN(typeIndex)) {
+				if(typeIndex != null && !Math.isNaN(typeIndex)) {
 					// ... add the content before this `{type` to `typeParamsResult`.
 					if(typeParamsResult == null) typeParamsResult = "";
-					trace(oldIndex, index);
 					typeParamsResult += result.substring(oldIndex, index);
-					trace("add 1 ", result.substring(oldIndex, index));
 
 					// Compile the type
 					final typeOutput = typeParamsCallback(typeIndex);
 					if(typeOutput != null) {
 						typeParamsResult += typeOutput;
-						trace('add 2 ', typeOutput);
 					}
 				}
 
 				// Skip past this {typeX} and search again.
 				oldIndex = endIndex + 1;
 				index = result.indexOf(typePrefix, oldIndex);
-				trace(typeParamsResult);
 			}
 			// Modify "result" if processing occurred.
 			if(typeParamsResult != null) {
