@@ -190,66 +190,104 @@ abstract class DirectToStringCompiler extends GenericCompiler<String, String, St
 		This function is for compiling the result of functions
 		using the `@:nativeFunctionCode` meta.
 	**/
-	public function compileNativeFunctionCodeMeta(callExpr: TypedExpr, arguments: Array<TypedExpr>, typeParams: Null<Array<() -> String>> = null, custom: Null<(String) -> String> = null): Null<String> {
+	public function compileNativeFunctionCodeMeta(callExpr: TypedExpr, arguments: Array<TypedExpr>, typeParamsCallback: Null<(Int) -> String> = null, custom: Null<(String) -> String> = null): Null<String> {
 		final declaration = callExpr.getDeclarationMeta(arguments);
 		if(declaration == null) {
 			return null;
 		}
+
 		final meta = declaration.meta;
 		final data = meta != null ? extractStringFromMeta(meta, ":nativeFunctionCode") : null;
-		if(data != null) {
-			final code = data.code;
-			var result = code;
-
-			if(code.contains("{this}")) {
-				final thisExpr = declaration.thisExpr != null ? compileNFCThisExpression(declaration.thisExpr, declaration.meta) : null;
-				if(thisExpr == null) {
-					if(declaration.thisExpr == null) {
-						#if eval
-						Context.error("Cannot use {this} on @:nativeFunctionCode meta for constructors.", data.entry.pos);
-						#end
-					} else {
-						onExpressionUnsuccessful(callExpr.pos);
-					}
-				} else {
-					result = result.replace("{this}", thisExpr);
-				}
-			}
-
-			var argExprs: Null<Array<String>> = null;
-			for(i in 0...arguments.length) {
-				final key = "{arg" + i + "}";
-				if(code.contains(key)) {
-					if(argExprs == null) {
-						argExprs = arguments.map(function(e) {
-							return this.compileExpressionOrError(e);
-						});
-					}
-					if(argExprs[i] == null) {
-						onExpressionUnsuccessful(arguments[i].pos);
-					} else {
-						result = result.replace(key, argExprs[i]);
-					}
-				}
-			}
-
-			if(typeParams != null) {
-				for(i in 0...typeParams.length) {
-					final key = "{type" + i + "}";
-					if(code.contains(key)) {
-						result = result.replace(key, typeParams[i]());
-					}
-				}
-			}
-
-			if(custom != null) {
-				result = custom(result);
-			}
-
-			return result;
+		if(data == null) {
+			return null;
 		}
 
-		return null;
+		final code = data.code;
+		var result = code;
+
+		// Handle {this}
+		if(code.contains("{this}")) {
+			final thisExpr = declaration.thisExpr != null ? compileNFCThisExpression(declaration.thisExpr, declaration.meta) : null;
+			if(thisExpr == null) {
+				if(declaration.thisExpr == null) {
+					#if eval
+					Context.error("Cannot use {this} on @:nativeFunctionCode meta for constructors.", data.entry.pos);
+					#end
+				} else {
+					onExpressionUnsuccessful(callExpr.pos);
+				}
+			} else {
+				result = result.replace("{this}", thisExpr);
+			}
+		}
+
+		// Handle {argX}
+		var argExprs: Null<Array<String>> = null;
+		for(i in 0...arguments.length) {
+			final key = "{arg" + i + "}";
+			if(code.contains(key)) {
+				if(argExprs == null) {
+					argExprs = arguments.map(function(e) {
+						return this.compileExpressionOrError(e);
+					});
+				}
+				if(argExprs[i] == null) {
+					onExpressionUnsuccessful(arguments[i].pos);
+				} else {
+					result = result.replace(key, argExprs[i]);
+				}
+			}
+		}
+
+		// Handle {typeX} if `typeParamsCallback` exists
+		if(typeParamsCallback != null) {
+			final typePrefix = "{type";
+
+			var typeParamsResult = null;
+			var oldIndex = 0;
+			var index = result.indexOf(typePrefix); // Check for `{type`
+			while(index != -1) {
+				// If found, figure out the number that comes after
+				final startIndex = index + typePrefix.length;
+				final endIndex = result.indexOf("}", startIndex);
+				final numStr = result.substring(startIndex, endIndex);
+				final typeIndex = Std.parseInt(numStr);
+				trace(typeIndex);
+				
+				// If the number if valid...
+				if(!Math.isNaN(typeIndex)) {
+					// ... add the content before this `{type` to `typeParamsResult`.
+					if(typeParamsResult == null) typeParamsResult = "";
+					trace(oldIndex, index);
+					typeParamsResult += result.substring(oldIndex, index);
+					trace("add 1 ", result.substring(oldIndex, index));
+
+					// Compile the type
+					final typeOutput = typeParamsCallback(typeIndex);
+					if(typeOutput != null) {
+						typeParamsResult += typeOutput;
+						trace('add 2 ', typeOutput);
+					}
+				}
+
+				// Skip past this {typeX} and search again.
+				oldIndex = endIndex + 1;
+				index = result.indexOf(typePrefix, oldIndex);
+				trace(typeParamsResult);
+			}
+			// Modify "result" if processing occurred.
+			if(typeParamsResult != null) {
+				typeParamsResult += result.substr(oldIndex);
+				result = typeParamsResult;
+			}
+		}
+
+		// Apply custom transformations
+		if(custom != null) {
+			result = custom(result);
+		}
+
+		return result;
 	}
 
 	/**
