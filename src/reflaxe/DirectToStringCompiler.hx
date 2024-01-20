@@ -59,7 +59,14 @@ abstract class DirectToStringCompiler extends GenericCompiler<String, String, St
 	}
 
 	/**
-	Iterate through all output `String`s.
+		Compiles an expression for a target code injection argument.
+	**/
+	public function compileExpressionForCodeInject(expr: TypedExpr): Null<String> {
+		return compileExpression(expr);
+	}
+
+	/**
+		Iterate through all output `String`s.
 	**/
 	public function generateOutputIterator(): Iterator<DataAndFileInfo<StringOrBytes>> {
 		final all: CompiledCollection<String> = classes.concat(enums).concat(typedefs).concat(abstracts);

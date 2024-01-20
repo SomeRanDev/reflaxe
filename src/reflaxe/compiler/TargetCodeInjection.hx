@@ -49,7 +49,7 @@ class TargetCodeInjection {
 			function getArg(i: Int) {
 				return if(i < injectionArguments.length) {
 					if(injectionArguments[i] == null) {
-						final arg = compiler.compileExpression(arguments[i + 1]);
+						final arg = compiler.compileExpressionForCodeInject(arguments[i + 1]);
 						if(arg == null) {
 							#if eval
 							Context.error("Compiled expression resulted in nothing.", arguments[i].pos);
