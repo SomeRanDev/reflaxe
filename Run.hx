@@ -479,6 +479,8 @@ function buildProject(args: Array<String>) {
 	final haxelibJson = ensureIsReflaxeProject();
 	if(haxelibJson == null) return;
 
+	final autoConfirmDelete = args.remove("--deleteOldFolder");
+
 	// Get destination folder
 	final destFolder = if(args.length == 0) {
 		Sys.println("No build folder path provided, using _Build/\n");
@@ -505,10 +507,14 @@ function buildProject(args: Array<String>) {
 			printlnRed("There is already a file named `" + destFolder + "`.\nPlease input a different path for the build folder.");
 			return;
 		} else {
-			// If a folder already exists, ask to delete
-			Sys.println("There is already a folder named `" + destFolder + "`.\nWould you like to delete it? (yes/no)");
-			Sys.print("> ");
-			final response = try { Sys.stdin().readLine().toLowerCase(); } catch(e: Eof) { return; }
+			final response = if(autoConfirmDelete) {
+				"y";
+			} else {
+				// If a folder already exists, ask to delete
+				Sys.println("There is already a folder named `" + destFolder + "`.\nWould you like to delete it? (yes/no)");
+				Sys.print("> ");
+				try { Sys.stdin().readLine().toLowerCase(); } catch(e: Eof) { return; }
+			}
 			if(response == "yes" || response == "y") {
 				Sys.println("Deleting...\n");
 				deleteDir(destFolder);
