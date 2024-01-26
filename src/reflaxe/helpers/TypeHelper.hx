@@ -8,6 +8,7 @@ package reflaxe.helpers;
 
 import reflaxe.helpers.Context;
 import haxe.macro.Type;
+import haxe.macro.TypeTools;
 
 using reflaxe.helpers.BaseTypeHelper;
 using reflaxe.helpers.ClassTypeHelper;
@@ -601,6 +602,27 @@ class TypeHelper {
 				result;
 			}
 			case _: false;
+		}
+	}
+
+	/**
+		If the `t` `Type` is a typedef or abstract, this returns
+		the underlying type.
+		
+		It works the same as doing `.type` on `TAbstract` or `TType`,
+		but also properly applies type parameters.
+	**/
+	public static function getUnderlyingType(t: Type): Null<Type> {
+		return switch(t) {
+			#if macro
+			case TType(_.get() => defType, params): {
+				TypeTools.applyTypeParameters(defType.type, defType.params, params);
+			}
+			case TAbstract(_.get() => absType, params): {
+				TypeTools.applyTypeParameters(absType.type, absType.params, params);
+			}
+			#end
+			case _: null;
 		}
 	}
 }
