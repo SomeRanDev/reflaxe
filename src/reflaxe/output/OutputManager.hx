@@ -224,7 +224,7 @@ class OutputManager {
 
 		for(moduleId => outputList in files) {
 			final filename = getFileName(moduleId);
-			saveFileImpl(filename, joinStringOrBytes(outputList));
+			saveFile(filename, joinStringOrBytes(outputList));
 		}
 	}
 
