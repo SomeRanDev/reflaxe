@@ -202,8 +202,10 @@ class OutputManager {
 		}
 
 		final arr = [];
-		for(o in compiler.generateOutputIterator()) arr.push(o.data);
-		saveFileImpl(filePath, joinStringOrBytes(arr));
+		for(o in compiler.generateOutputIterator()) {
+			arr.push(o.data);
+		}
+		saveFile(filePath, joinStringOrBytes(arr));
 	}
 
 	function generateFilePerModule() {
@@ -223,8 +225,7 @@ class OutputManager {
 		}
 
 		for(moduleId => outputList in files) {
-			final filename = getFileName(moduleId);
-			saveFile(filename, joinStringOrBytes(outputList));
+			saveFile(getFileName(moduleId), joinStringOrBytes(outputList));
 		}
 	}
 
