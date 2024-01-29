@@ -465,6 +465,7 @@ abstract class BaseCompiler {
 
 	public function setOptions(options: BaseCompilerOptions) {
 		this.options = options;
+		setupReservedVarNames();
 	}
 
 	// =======================================================
@@ -743,7 +744,6 @@ abstract class BaseCompiler {
 		if(reservedVarNameMap == null) {
 			reservedVarNameMap = [];
 		}
-
 		reservedVarNameMap[name] = true;
 	}
 
