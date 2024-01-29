@@ -718,13 +718,44 @@ abstract class BaseCompiler {
 	**/
 	public abstract function compileAbstract(classType: AbstractType): Void;
 
+	// =======================================================
+	// * Reserved Variable Names
+	// =======================================================
+	var reservedVarNameMap: Null<Map<String, Bool>> = null;
+
+	/**
+		Moves the `options.reservedVarNames` values into a `Map`.
+	**/
+	function setupReservedVarNames() {
+		if(options.reservedVarNames.length == 0) return;
+
+		reservedVarNameMap = [];
+		for(name in options.reservedVarNames) {
+			reservedVarNameMap[name] = true;
+		}
+	}
+
+	/**
+		Manually adds a reserved variable name that cannot be used
+		in the output.
+	**/
+	public function addReservedVarName(name: String) {
+		if(reservedVarNameMap == null) {
+			reservedVarNameMap = [];
+		}
+
+		reservedVarNameMap[name] = true;
+	}
+
 	/**
 		Compiles the provided variable name.
 		Ensures it does not match any of the reserved variable names.
 	**/
 	public function compileVarName(name: String, expr: Null<TypedExpr> = null, field: Null<ClassField> = null): String {
-		while(options.reservedVarNames.contains(name)) {
-			name = "_" + name;
+		if(reservedVarNameMap != null) {
+			while(reservedVarNameMap.exists(name)) {
+				name = "_" + name;
+			}
 		}
 		return name;
 	}
