@@ -621,9 +621,12 @@ class EverythingIsExprSanitizer {
 
 		// Wrap `e.t` with `Null<T>` if initializing with `null`.
 		final t = if(initNull && !e.t.isNull()) {
-			static var absRef = switch(Context.getType("Null")) {
-				case TAbstract(absRef, _): absRef;
-				case _: throw "`Null` does not refer to an abstract type.";
+			static var absRef: Null<Ref<AbstractType>> = null;
+			if(absRef == null) {
+				absRef = switch(Context.getType("Null")) {
+					case TAbstract(absRef, _): absRef;
+					case _: throw "`Null` does not refer to an abstract type.";
+				}
 			}
 			TAbstract(absRef, [e.t]);
 		} else {
