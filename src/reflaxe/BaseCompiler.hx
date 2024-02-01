@@ -160,6 +160,12 @@ class BaseCompilerOptions {
 	public var normalizeEIE: Bool = true;
 
 	/**
+		If `true`, variables generated for "Everything is an Expression" 
+		will be initialized with `null` and wrapped with `Null<T>`.
+	**/
+	public var initializeEIEVarsWithNull: Bool = false;
+
+	/**
 		Whether variables of the same name are allowed to be
 		redeclarated in the same scope or a subscope.
 	**/

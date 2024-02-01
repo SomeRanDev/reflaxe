@@ -6,7 +6,7 @@ package reflaxe.compiler;
 
 #if (macro || reflaxe_runtime)
 
-import haxe.macro.Context;
+import reflaxe.helpers.Context;
 import haxe.macro.Expr;
 import haxe.macro.Type;
 
@@ -21,6 +21,7 @@ using reflaxe.helpers.NullHelper;
 using reflaxe.helpers.OperatorHelper;
 using reflaxe.helpers.PositionHelper;
 using reflaxe.helpers.TypedExprHelper;
+using reflaxe.helpers.TypeHelper;
 
 /**
 	Converts block-like expressions that return a value into
@@ -36,8 +37,10 @@ class EverythingIsExprSanitizer {
 		should be initialized with `null`. I'm not sure what the
 		default behavior should be, so I'll just control with
 		a constant for now.
+
+		This can now be configured using `BaseCompilerOptions.initializeEIEVarsWithNull`.
 	**/
-	public static final INIT_NULL = false;
+	// public static final INIT_NULL = false;
 
 	/**
 		Stores the original, provided expression
@@ -554,26 +557,29 @@ class EverythingIsExprSanitizer {
 		Generates a TVar object given a name and Type.
 	**/
 	function genTVar(name: String, t: Type): TVar {
+		final initNull = compiler.options.initializeEIEVarsWithNull;
+
 		// Let's construct the TVar using an expression.
-		final ct = haxe.macro.TypeTools.toComplexType(t);
-		final untypedExpr = INIT_NULL ? (macro var $name: $ct = null) : (macro var $name: $ct);
+		var ct = haxe.macro.TypeTools.toComplexType(t);
+		if(ct != null && initNull) {
+			ct = macro : Null<$ct>;
+		}
+		final untypedExpr = initNull ? (macro var $name: $ct = null) : (macro var $name: $ct);
 
 		// We must type the expression to get the TVar.
 		// However, the type might contain type parameters or unknown types that might cause an error.
 		// So if the typing fails, make sure it doesn't cause any problems.
-		var typedExpr = #if macro try {
+		var typedExpr = try {
 			Context.typeExpr(untypedExpr);
-		} catch(e) #end {
+		} catch(e) {
 			null;
 		}
 
 		// If the typing did fail, try again. But this time, exclude the variable type.
 		var untypedTVar = false;
 		if(typedExpr == null) {
-			#if macro
-			typedExpr = Context.typeExpr(INIT_NULL ? (macro var $name = null) : (macro var $name));
+			typedExpr = Context.typeExpr(initNull ? (macro var $name = null) : (macro var $name));
 			untypedTVar = true;
-			#end
 		}
 
 		if(typedExpr == null) {
@@ -611,10 +617,24 @@ class EverythingIsExprSanitizer {
 
 		final eiec = new EverythingIsExprSanitizer(e, compiler, this, idExpr, nameGenerator);
 		
+		final initNull = compiler.options.initializeEIEVarsWithNull;
+
+		// Wrap `e.t` with `Null<T>` if initializing with `null`.
+		final t = if(initNull && !e.t.isNull()) {
+			static var absRef = switch(Context.getType("Null")) {
+				case TAbstract(absRef, _): absRef;
+				case _: throw "`Null` does not refer to an abstract type.";
+			}
+			TAbstract(absRef, [e.t]);
+		} else {
+			e.t;
+		}
+
+		// Generate TVar
 		final varExpr = {
-			expr: TVar(tvar, !INIT_NULL ? null : varAssignExpr),
+			expr: TVar(tvar, !initNull ? null : varAssignExpr),
 			pos: e.pos,
-			t: e.t
+			t: t
 		}
 
 		topScopeArray.insert(index, varExpr);
