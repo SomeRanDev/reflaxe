@@ -128,11 +128,11 @@ class NullTypeEnforcer {
 				if(e1.isNullExpr() && e2.isNullExpr()) {
 					expr.expr = TConst(TBool(true));
 				} else if(e1.isNullExpr()) {
-					if(!e2.t.isNull()) {
+					if(!e2.t.isNull() && !e2.t.isDynamic()) {
 						expr.expr = TConst(TBool(false));
 					}
 				} else if(e2.isNullExpr()) {
-					if(!e1.t.isNull()) {
+					if(!e1.t.isNull() && !e1.t.isDynamic()) {
 						expr.expr = TConst(TBool(false));
 					}
 				}
@@ -141,11 +141,11 @@ class NullTypeEnforcer {
 				if(e1.isNullExpr() && e2.isNullExpr()) {
 					expr.expr = TConst(TBool(false));
 				} else if(e1.isNullExpr()) {
-					if(!e2.t.isNull()) {
+					if(!e2.t.isNull() && !e2.t.isDynamic()) {
 						expr.expr = TConst(TBool(true));
 					}
 				} else if(e2.isNullExpr()) {
-					if(!e1.t.isNull()) {
+					if(!e1.t.isNull() && !e1.t.isDynamic()) {
 						expr.expr = TConst(TBool(true));
 					}
 				}
