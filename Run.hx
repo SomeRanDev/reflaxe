@@ -427,6 +427,7 @@ function testProject(args: Array<String>) {
 	if(haxelibJson == null) return;
 
 	// Validate the path
+	Sys.setCwd(dir);
 	if(!FileSystem.exists(path)) {
 		return printlnRed("`" + path + "` does not exist!");
 	} else if(Path.extension(path) != "hxml") {
