@@ -6,6 +6,8 @@ package reflaxe.output;
 
 #if (macro || reflaxe_runtime)
 
+import sys.FileSystem;
+import haxe.io.Path;
 import haxe.io.BytesBuffer;
 import haxe.macro.Context;
 
@@ -133,8 +135,13 @@ class OutputManager {
 	}
 
 	function ensureOutputDirExists() {
-		if(outputDir != null && !sys.FileSystem.exists(outputDir)) {
-			sys.FileSystem.createDirectory(outputDir);
+		if (outputDir != null) {
+			final dir = if (options.fileOutputType == SingleFile) {
+				Path.directory(outputDir);
+			} else {
+				outputDir;
+			}
+			FileSystem.createDirectory(dir);
 		}
 	}
 
@@ -185,21 +192,9 @@ class OutputManager {
 	}
 
 	function generateSingleFile() {
-		if(outputDir == null) {
-			throw "Output directory is not defined.";
-			return;
-		}
-
-		final filePath = if(sys.FileSystem.isDirectory(outputDir)) {
-			ensureOutputDirExists();
-			joinPaths(outputDir, getFileName(options.defaultOutputFilename));
-		} else {
-			final dir = haxe.io.Path.directory(outputDir);
-			if(!sys.FileSystem.exists(dir)) {
-				sys.FileSystem.createDirectory(dir);
-			}
-			outputDir;
-		}
+		ensureOutputDirExists();
+		
+		final filePath = outputDir ?? getFileName(options.defaultOutputFilename);
 
 		final arr = [];
 		for(o in compiler.generateOutputIterator()) {
@@ -281,7 +276,7 @@ class OutputManager {
 		// Get full path
 		final p = if(haxe.io.Path.isAbsolute(path)) {
 			path;
-		} else if(outputDir != null) {
+		} else if(outputDir != null && options.fileOutputType != SingleFile) {
 			joinPaths(outputDir, path);
 		} else {
 			path;
