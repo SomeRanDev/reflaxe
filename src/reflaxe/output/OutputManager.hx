@@ -184,21 +184,28 @@ class OutputManager {
 		}
 	}
 
+	/**
+		Generates a single file.
+
+		This should be able to take no path, a file path, OR a directory path.
+	**/
 	function generateSingleFile() {
-		if(outputDir == null) {
-			throw "Output directory is not defined.";
-			return;
+		var filePath = {
+			// If output exists and ends with file-extension, it is a direct path
+			if(outputDir != null && (options.fileOutputExtension.length == 0 || StringTools.endsWith(outputDir, options.fileOutputExtension))) {
+				final file: String = haxe.io.Path.withoutDirectory(outputDir);
+				outputDir = haxe.io.Path.directory(outputDir);
+				file;
+			}
+			
+			// Otherwise, it is a directory and use the default file name
+			else {
+				options.defaultOutputFilename;
+			}
 		}
 
-		final filePath = if(sys.FileSystem.isDirectory(outputDir)) {
+		if(outputDir.length > 0) {
 			ensureOutputDirExists();
-			joinPaths(outputDir, getFileName(options.defaultOutputFilename));
-		} else {
-			final dir = haxe.io.Path.directory(outputDir);
-			if(!sys.FileSystem.exists(dir)) {
-				sys.FileSystem.createDirectory(dir);
-			}
-			outputDir;
 		}
 
 		final arr = [];
