@@ -118,35 +118,42 @@ class NullTypeEnforcer {
 	}
 
 	/**
+		Returns `true` if this type can be compared to `null` with `==` or `!=`.
+
+		Comparing any type with `null` may be undesirable on certain targets
+		where all `null` interactions must be made on a nullable type.
+	**/
+	static inline function nullComparable(type: haxe.macro.Type) {
+		return type.isNull() || type.isDynamic();
+	}
+
+	/**
 		This function is called externally.
 		Used for scenarios where the expression needs to be modified.
 		As the expression processors above cannot modify the expressions.
 	**/
 	public static function modifyExpression(expr: TypedExpr): Void {
 		switch(expr.expr) {
-			case TBinop(OpEq, e1, e2): {
+			case TBinop(b, e1, e2) if(b == OpEq || b == OpNotEq): {
+
+				// If both expressions are `null`.
 				if(e1.isNullExpr() && e2.isNullExpr()) {
-					expr.expr = TConst(TBool(true));
-				} else if(e1.isNullExpr()) {
-					if(!e2.t.isNull() && !e2.t.isDynamic()) {
-						expr.expr = TConst(TBool(false));
-					}
-				} else if(e2.isNullExpr()) {
-					if(!e1.t.isNull() && !e1.t.isDynamic()) {
-						expr.expr = TConst(TBool(false));
+					expr.expr = TConst(TBool(b == OpEq));
+				}
+				
+				// If left expression is `null`...
+				else if(e1.isNullExpr()) {
+					if(!nullComparable(e2.t)) {
+						// check if right type is null-comparable.
+						expr.expr = TConst(TBool(b == OpNotEq));
 					}
 				}
-			}
-			case TBinop(OpNotEq, e1, e2): {
-				if(e1.isNullExpr() && e2.isNullExpr()) {
-					expr.expr = TConst(TBool(false));
-				} else if(e1.isNullExpr()) {
-					if(!e2.t.isNull() && !e2.t.isDynamic()) {
-						expr.expr = TConst(TBool(true));
-					}
-				} else if(e2.isNullExpr()) {
-					if(!e1.t.isNull() && !e1.t.isDynamic()) {
-						expr.expr = TConst(TBool(true));
+
+				// If right expression is `null`...
+				else if(e2.isNullExpr()) {
+					if(!nullComparable(e1.t)) {
+						// check if left type is null-comparable.
+						expr.expr = TConst(TBool(b == OpNotEq));
 					}
 				}
 			}
