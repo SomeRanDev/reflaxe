@@ -54,14 +54,14 @@ final commands = {
 /**
 	The directory this command was run in.
 **/
-var dir: String = "";
+var commandRunDir: String = "";
 
 /**
 	Main function.
 **/
 function main() {
 	final args = Sys.args();
-	dir = args.splice(args.length - 1, 1)[0];
+	commandRunDir = args.splice(args.length - 1, 1)[0];
 	final mainCommand = args.length < 1 ? "help" : args[0];
 	if(Reflect.hasField(commands, mainCommand)) {
 		Reflect.callMethod(commands, Reflect.getProperty(commands, mainCommand).act, [args.slice(1)]);
@@ -75,7 +75,7 @@ function main() {
 	Get path relative to directory this command was run in.
 **/
 function getPath(p: String) {
-	return FileSystem.absolutePath(haxe.io.Path.join([dir, p]));
+	return FileSystem.absolutePath(haxe.io.Path.join([commandRunDir, p]));
 }
 
 /**
@@ -387,7 +387,7 @@ function replaceFileContent(content: String, data: { fullName: String, abbrName:
 **/
 function ensureIsReflaxeProject(): Null<Dynamic> {
 	var haxelibJson: Dynamic = null;
-	final haxelibJsonPath = Path.join([dir, "haxelib.json"]);
+	final haxelibJsonPath = Path.join([commandRunDir, "haxelib.json"]);
 	if(!FileSystem.exists(haxelibJsonPath)) {
 		printlnRed("haxelib.json file not found!\nThis command must be run in a Reflaxe project.");
 	} else {
@@ -426,8 +426,10 @@ function testProject(args: Array<String>) {
 	final haxelibJson = ensureIsReflaxeProject();
 	if(haxelibJson == null) return;
 
+	// Update "cwd" to ACTUAL path that ran command before validating path
+	Sys.setCwd(commandRunDir);
+
 	// Validate the path
-	Sys.setCwd(dir);
 	if(!FileSystem.exists(path)) {
 		return printlnRed("`" + path + "` does not exist!");
 	} else if(Path.extension(path) != "hxml") {
@@ -435,8 +437,8 @@ function testProject(args: Array<String>) {
 	}
 
 	// Get current cwd
-	// Remember, the command directory is stored in "dir", not "Sys.getCwd()"!!
-	var cwd = dir;
+	// Remember, the command directory is stored in `commandRunDir`, not `Sys.getCwd()`!!
+	var cwd = commandRunDir;
 	final hxmlDir = Path.directory(path);
 
 	// Convert cwd to relative path if possible
@@ -446,7 +448,7 @@ function testProject(args: Array<String>) {
 	}
 
 	// Change cwd
-	Sys.setCwd(Path.join([dir, hxmlDir]));
+	Sys.setCwd(Path.join([commandRunDir, hxmlDir]));
 	printlnGray("cd " + hxmlDir);
 
 	// Generate arguments
@@ -500,7 +502,7 @@ function buildProject(args: Array<String>) {
 	}
 
 	// Ensure destination folder relative to cwd
-	final destFolder = Path.join([dir, destFolder]);
+	final destFolder = Path.join([commandRunDir, destFolder]);
 
 	// Check if destination folder already exists
 	if(FileSystem.exists(destFolder)) {
@@ -533,8 +535,8 @@ function buildProject(args: Array<String>) {
 	final classPath = haxelibJson.classPath;
 	if(classPath.length != null && classPath.length > 0) {
 		// Copy class path
-		final dirNormalized = Path.addTrailingSlash(Path.normalize(dir));
-		final classPathSrc = Path.join([dir, classPath]);
+		final dirNormalized = Path.addTrailingSlash(Path.normalize(commandRunDir));
+		final classPathSrc = Path.join([commandRunDir, classPath]);
 		final classPathDest = Path.join([destFolder, classPath]);
 		copyDirContent(classPathSrc, classPathDest, dirNormalized);
 		Sys.println("Copying class path: " + Path.addTrailingSlash(classPath));
@@ -542,7 +544,7 @@ function buildProject(args: Array<String>) {
 		// Copy std paths
 		final stdPaths: Array<String> = cast (haxelibJson.reflaxe?.stdPaths ?? []);
 		for(stdPath in stdPaths) {
-			final stdPathSrc = Path.join([dir, stdPath]);
+			final stdPathSrc = Path.join([commandRunDir, stdPath]);
 			final ext = StringTools.endsWith(Path.removeTrailingSlashes(stdPath), "_std") ? ".cross.hx" : null;
 			copyDirContent(stdPathSrc, classPathDest, dirNormalized, stdPaths, ext);
 			Sys.println("Copying std path: " + Path.addTrailingSlash(stdPath));
@@ -550,7 +552,7 @@ function buildProject(args: Array<String>) {
 
 		// Copy extra files
 		function copyExtraFile(file: String, printError: Bool) {
-			final filePath = Path.join([dir, file]);
+			final filePath = Path.join([commandRunDir, file]);
 			if(FileSystem.exists(filePath)) {
 				File.copy(filePath, Path.join([destFolder, file]));
 				Sys.println("Copying file: " + file);
