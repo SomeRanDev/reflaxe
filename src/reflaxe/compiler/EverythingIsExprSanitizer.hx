@@ -715,7 +715,7 @@ class EverythingIsExprSanitizer {
 		if(opInfo == null) return null;
 
 		final pos = PositionHelper.unknownPos();
-		final t = TDynamic(null);
+		final t = e.t;
 
 		function getAddSubOp(isAdd: Bool) return isAdd ? Binop.OpAdd : Binop.OpSub;
 
