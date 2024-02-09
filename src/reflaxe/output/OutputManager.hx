@@ -204,7 +204,7 @@ class OutputManager {
 			}
 		}
 
-		if(outputDir.length > 0) {
+		if(outputDir != null && outputDir.length > 0) {
 			ensureOutputDirExists();
 		}
 
