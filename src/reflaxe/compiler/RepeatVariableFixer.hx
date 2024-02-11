@@ -112,23 +112,20 @@ class RepeatVariableFixer {
 	}
 
 	function handleExpression(expr: TypedExpr): TypedExpr {
-		function mapSubExprs(subExpr: TypedExpr) {
-			switch(subExpr.expr) {
-				case TBlock(_): {
-					return handleBlock(subExpr);
-				}
-				case TLocal(tvar): {
-					final replacement = varReplacement(tvar.id);
-					if(replacement != null) {
-						return subExpr.copy(TLocal(replacement));
-					}
-				}
-				case _:
+		switch(expr.expr) {
+			case TBlock(_): {
+				return handleBlock(expr);
 			}
-			return haxe.macro.TypedExprTools.map(subExpr, mapSubExprs);
+			case TLocal(tvar): {
+				final replacement = varReplacement(tvar.id);
+				if(replacement != null) {
+					return expr.copy(TLocal(replacement));
+				}
+			}
+			case _:
 		}
 
-		return haxe.macro.TypedExprTools.map(expr, mapSubExprs);
+		return haxe.macro.TypedExprTools.map(expr, handleExpression);
 	}
 
 	function handleBlock(subExpr: TypedExpr): TypedExpr {
