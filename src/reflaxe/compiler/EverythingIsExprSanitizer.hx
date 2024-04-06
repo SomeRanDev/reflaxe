@@ -246,7 +246,7 @@ class EverythingIsExprSanitizer {
 				);
 			}
 			case TBinop(op, e1, e2): {
-				final leftExpr = handleValueExpr(e1, "left");
+				final leftExpr = handleValueExpr(e1, "left", op.isAssign());
 				final rightExpr = handleValueExpr(e2, "right");
 
 				#if reflaxe_allow_rose
@@ -438,7 +438,7 @@ class EverythingIsExprSanitizer {
 		[isAssignExpr/standardizeAssignValue]
 		Converts (a = b = 1) => (b = 1; a = b)
 	**/
-	function handleValueExpr(e: TypedExpr, varNameOverride: Null<String> = null): TypedExpr {
+	function handleValueExpr(e: TypedExpr, varNameOverride: Null<String> = null, isLvalue: Bool = false): TypedExpr {
 		if(e == null) {
 			return { expr: TIdent("null"), pos: PositionHelper.unknownPos(), t: TDynamic(null) };
 		}
@@ -462,7 +462,7 @@ class EverythingIsExprSanitizer {
 				e = newExpr;
 			}
 		}
-		if(isFunctionRef(e)) {
+		if(!isLvalue && isFunctionRef(e)) {
 			final newExpr = standardizeFunctionValue(e);
 			if(newExpr != null) {
 				e = newExpr;
