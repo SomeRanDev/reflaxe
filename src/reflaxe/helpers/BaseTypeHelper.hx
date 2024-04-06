@@ -17,31 +17,35 @@ class BaseTypeHelper {
 	static final IMPL_SUFFIX = "_Impl_";
 	static final FIELDS_SUFFIX = "_Fields_";
 
-	public static function namespaces(cls: BaseType): Array<String> {
-		final moduleMembers = cls.module.split(".");
+	public static function namespaces(self: BaseType): Array<String> {
+		final moduleMembers = self.module.split(".");
 		final moduleName = moduleMembers[moduleMembers.length - 1];
-		if(moduleName != cls.name && (moduleName + IMPL_SUFFIX) != cls.name && (moduleName + FIELDS_SUFFIX) != cls.name) {
+		if(moduleName != self.name && (moduleName + IMPL_SUFFIX) != self.name && (moduleName + FIELDS_SUFFIX) != self.name) {
 			return moduleMembers;
 		}
 		return moduleMembers.slice(0, moduleMembers.length - 2);
 	}
 
-	public static function uniqueName(cls: BaseType, removeSpecialSuffixes: Bool = true): String {
-		final prefix = namespaces(cls).join("_");
-		var name = cls.name;
+	public static function uniqueName(self: BaseType, removeSpecialSuffixes: Bool = true): String {
+		final prefix = namespaces(self).join("_");
+		var name = self.name;
 		if(removeSpecialSuffixes) {
 			name = removeNameSpecialSuffixes(name);
 		}
-		return (prefix.length > 0 ? (prefix + "_") : "") + (cls.module == cls.name ? "" : ("_" + StringTools.replace(cls.module, ".", "_") + "_")) + name;
+		return (prefix.length > 0 ? (prefix + "_") : "") + (self.module == self.name ? "" : ("_" + StringTools.replace(self.module, ".", "_") + "_")) + name;
 	}
 
-	public static function globalName(cls: BaseType, removeSpecialSuffixes: Bool = true): String {
-		final prefix = namespaces(cls).join("_");
-		var name = cls.name;
+	public static function globalName(self: BaseType, removeSpecialSuffixes: Bool = true): String {
+		final prefix = namespaces(self).join("_");
+		var name = self.name;
 		if(removeSpecialSuffixes) {
 			name = removeNameSpecialSuffixes(name);
 		}
 		return (prefix.length > 0 ? (prefix + "_") : "") + name;
+	}
+
+	public static function equals(self: BaseType, other: BaseType): Bool {
+		return uniqueName(self) == uniqueName(other);
 	}
 
 	public static function removeNameSpecialSuffixes(name: String): String {
@@ -55,25 +59,25 @@ class BaseTypeHelper {
 		return result;
 	}
 
-	public static function moduleId(cls: BaseType): String {
-		return StringTools.replace(cls.module, ".", "_");
+	public static function moduleId(self: BaseType): String {
+		return StringTools.replace(self.module, ".", "_");
 	}
 
-	public static function matchesDotPath(cls: BaseType, path: String): Bool {
-		if(cls.pack.length == 0) {
-			return cls.name == path;
+	public static function matchesDotPath(self: BaseType, path: String): Bool {
+		if(self.pack.length == 0) {
+			return self.name == path;
 		}
-		if((cls.pack.join(".") + "." + cls.name) == path) {
+		if((self.pack.join(".") + "." + self.name) == path) {
 			return true;
 		}
-		if((cls.module + "." + cls.name) == path) {
+		if((self.module + "." + self.name) == path) {
 			return true;
 		}
 		return false;
 	}
 
-	public static function isReflaxeExtern(cls: BaseType): Bool {
-		return cls.isExtern || cls.hasMeta(":extern");
+	public static function isReflaxeExtern(self: BaseType): Bool {
+		return self.isExtern || self.hasMeta(":extern");
 	}
 }
 
