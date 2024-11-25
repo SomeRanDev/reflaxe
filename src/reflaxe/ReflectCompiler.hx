@@ -440,7 +440,7 @@ class ReflectCompiler {
 			}
 		}
 		if(compiler.options.processAvoidTemporaries) {
-			final tvr = new TemporaryVarRemover(data.expr, data.getOrFindVariableUsageCount());
+			final tvr = new TemporaryVarRemover(OnlyFieldAccess, data.expr, data.getOrFindVariableUsageCount());
 			data.setExpr(tvr.fixTemporaries());
 		}
 		if(compiler.options.preventRepeatVars) {
