@@ -126,6 +126,9 @@ class ClassFuncData {
 
 	public function setExpr(e: TypedExpr) {
 		expr = e;
+
+		// The expression changed, so the stored usage count data is now invalid.
+		variableUsageCount = null;
 	}
 
 	/**
