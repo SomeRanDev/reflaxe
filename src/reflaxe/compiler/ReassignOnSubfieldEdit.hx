@@ -205,6 +205,14 @@ class ReassignOnSubfieldEdit {
 		throw "Impossible?";
 	}
 
+	static function getClassTypeInfo(type: Type): Array<Dynamic> {
+		return switch(type) {
+			case TInst(clsRef, params): ([clsRef, params] : Array<Dynamic>);
+			case TAbstract(absRef, params): ([getClassTypeInfo(absRef.get().type)[0], params] : Array<Dynamic>);
+			case _: throw "Impossible";
+		}
+	}
+
 	/**
 		Generates the single argument passed to the new setter.
 	**/
@@ -218,10 +226,7 @@ class ReassignOnSubfieldEdit {
 		metadataArgs: Array<String>
 	): Array<TypedExpr> {
 		// We need to access the `Ref<ClassType>` and its possible params later.
-		final info = switch(getCallExpr.t) {
-			case TInst(clsRef, params): ([clsRef, params] : Array<Dynamic>);
-			case _: throw "Impossible";
-		}
+		final info = getClassTypeInfo(getCallExpr.t);
 
 		// Generates the arguments for the constructor in the resulting expression.
 		final newArgs = [];
