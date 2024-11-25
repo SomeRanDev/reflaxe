@@ -212,6 +212,11 @@ class EverythingIsExprSanitizer {
 			index++;
 		}
 
+		// No reason to wrap in TBlock if it's just one block-like expression already.
+		if(topScopeArray.length == 1 && isBlocklikeExpr(topScopeArray[0])) {
+			return topScopeArray[0];
+		}
+
 		return { expr: TBlock(topScopeArray), pos: haxeExpr.pos, t: haxeExpr.t };
 	}
 
@@ -476,6 +481,11 @@ class EverythingIsExprSanitizer {
 				return newExpr;
 			}
 		} else if(isBlocklikeExpr(e)) {
+			final inlinable = isInlinableBlocklikeExpr(e);
+			if(inlinable != null) {
+				return handleValueExpr(inlinable);
+			}
+
 			final newExpr = standardizeSubscopeValue(e, index, varNameOverride);
 			if(newExpr != null) {
 				index += 2;
@@ -552,6 +562,32 @@ class EverythingIsExprSanitizer {
 			case _: false;
 		}
 	}
+
+	/**
+		Similar to the function above, this function checks if the
+		provided TypedExpr `e` is a block-like expression.
+
+		However, if the block-like expression can be safely replaced
+		with a non-block-like expression, this function returns the
+		expression that can replace it. Otherwise, `null` is returned.
+
+		This occurs for block expressions with one expression inside.
+	**/
+		public static function isInlinableBlocklikeExpr(e: TypedExpr): Null<TypedExpr> {
+			if(e == null) return null;
+			return switch(e.expr) {
+				case TBlock(expressions) if(expressions.length == 1): expressions[0];
+				case TParenthesis(e1): {
+					final inner = isInlinableBlocklikeExpr(e1);
+					inner != null ? e.copy(TParenthesis(inner)) : null;
+				}
+				case TMeta(m, e1): {
+					final inner = isInlinableBlocklikeExpr(e1);
+					inner != null ? e.copy(TMeta(m, inner)) : null;
+				}
+				case _: null;
+			}
+		}
 
 	/**
 		Generates a TVar object given a name and Type.
