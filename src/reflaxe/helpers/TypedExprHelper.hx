@@ -164,6 +164,13 @@ class TypedExprHelper {
 		}
 	}
 
+	public static function isThisExpr(e: TypedExpr): Bool {
+		return switch(unwrapParenthesis(e).expr) {
+			case TConst(TThis): true;
+			case _: false;
+		}
+	}
+
 	public static function getFieldAccess(expr: TypedExpr, unwrapCall: Bool = false): Null<FieldAccess> {
 		return switch(unwrapParenthesis(expr).expr) {
 			case TCall(e, _) if(unwrapCall): getFieldAccess(e);
