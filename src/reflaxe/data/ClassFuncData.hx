@@ -133,10 +133,12 @@ class ClassFuncData {
 
 	public function setExprList(expressions: Array<TypedExpr>) {
 		if(expressions.length == 1) {
-			setExpr(expressions[0]);
-		} else {
+			setExpr(expressions[0].trustMe());
+		} else if(expr != null) {
 			// Retain the previous expression's Position and Type.
 			setExpr(expr.copy(TBlock(expressions)));
+		} else {
+			throw "`expr` must not be `null` when using ClassFuncData.setExprList.";
 		}
 	}
 

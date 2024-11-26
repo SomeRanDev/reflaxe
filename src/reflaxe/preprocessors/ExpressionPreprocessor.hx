@@ -137,6 +137,9 @@ class ExpressionPreprocessorHelper {
 		This is where the implementations for the builtin `ExpressionPreprocessor` are.
 	**/
 	public static function process(self: ExpressionPreprocessor, data: ClassFuncData, compiler: BaseCompiler) {
+		if(data.expr == null) {
+			return;
+		}
 		switch(self) {
 			case SanitizeEverythingIsExpression: {
 				final eiec = new EverythingIsExprSanitizer(data.expr, compiler);
