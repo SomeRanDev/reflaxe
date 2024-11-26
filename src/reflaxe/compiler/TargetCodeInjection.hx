@@ -67,7 +67,8 @@ class TargetCodeInjection {
 			// Find all instances of {NUMBER} and replace with argument if possible
 			~/{(\d+)}/g.map(injectionString, function(ereg) {
 				final num = Std.parseInt(ereg.matched(1));
-				return (num != null ? getArg(num) : null) ?? ereg.matched(0);
+				final num = num != null ? getArg(num) : null;
+				return num ?? ereg.matched(0);
 			});
 		} else {
 			null;
