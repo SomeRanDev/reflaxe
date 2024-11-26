@@ -58,6 +58,13 @@ class TypedExprHelper {
 		}
 	}
 
+	public static function ensureBlock(expr: TypedExpr): TypedExpr {
+		return switch(expr.expr) {
+			case TBlock(_): expr;
+			case _: copy(expr, TBlock([expr]));
+		}
+	}
+
 	public static function unwrapMeta(expr: TypedExpr): TypedExpr {
 		return switch(expr.expr) {
 			case TParenthesis(e): {
