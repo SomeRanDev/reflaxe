@@ -1,4 +1,10 @@
-package reflaxe.compiler;
+// =======================================================
+// * ReassignOnSubfieldEdit
+// =======================================================
+
+package reflaxe.preprocessors.implementations.everything_is_expr;
+
+#if (macro || reflaxe_runtime)
 
 import reflaxe.helpers.Context;
 import haxe.macro.Expr;
@@ -264,3 +270,5 @@ class ReassignOnSubfieldEdit {
 		];
 	}
 }
+
+#end

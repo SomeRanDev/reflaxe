@@ -1,4 +1,10 @@
-package reflaxe.compiler;
+// =======================================================
+// * RemoveTemporaryVariablesImpl
+// =======================================================
+
+package reflaxe.preprocessors.implementations;
+
+#if (macro || reflaxe_runtime)
 
 import haxe.macro.Type;
 
@@ -11,22 +17,29 @@ using reflaxe.helpers.NullHelper;
 using reflaxe.helpers.TypedExprHelper;
 
 /**
-	Represents the different modes `TemporaryVarRemover` can be set to.
+	Represents the different modes `RemoveTemporaryVariablesImpl` can be set to.
 **/
-enum TemporaryVarRemoverMode {
+enum RemoveTemporaryVariablesMode {
 	/**
-		Only variables used once and assigned from class fields are purged.
+		Only variables used once and assigned from class fields on 
+		classes with `@:prevent_temporaries` are purged.
+
+		This regresses certain Haxe compiler transformations that
+		create unnecessary temporary values. This is important for
+		handling value types that should be modified in their original
+		location instead of being modified on a temporary copy.
 
 		```haxe
 		// This would be converted...
 		{
-			final sprite = object.sprite;
-			sprite.expand(2.0);
+			// This may be a copy instead of a reference in some languages...
+			final rect = object.rect;
+			rect.expand(2.0);
 		}
 
 		// ... to this.
 		{
-			object.sprite.expand(2.0);
+			object.rect.expand(2.0);
 		}
 		```
 	**/
@@ -76,11 +89,11 @@ enum TemporaryVarRemoverMode {
 	AllOneUseVariables;
 }
 
-class TemporaryVarRemover {
+class RemoveTemporaryVariablesImpl {
 	/**
 		The type of variables that are removed.
 	**/
-	public var mode(default, null): TemporaryVarRemoverMode;
+	public var mode(default, null): RemoveTemporaryVariablesMode;
 
 	/**
 		The original expression passed.
@@ -93,9 +106,9 @@ class TemporaryVarRemover {
 	var exprList: Array<TypedExpr>;
 
 	/**
-		The `TemporaryVarRemover` that created this instance.
+		The `RemoveTemporaryVariablesImpl` that created this instance.
 	**/
-	var parent: Null<TemporaryVarRemover>;
+	var parent: Null<RemoveTemporaryVariablesImpl>;
 
 	/**
 		A map of all the variables that are being removed.
@@ -114,7 +127,7 @@ class TemporaryVarRemover {
 		`varUsageCount` is an externally generated map containing the number of times
 		a variable is used. The key is the `TVar` `id` and the value is the use count.
 	**/
-	public function new(mode: TemporaryVarRemoverMode, expr: TypedExpr, varUsageCount: Null<Map<Int, Int>> = null) {
+	public function new(mode: RemoveTemporaryVariablesMode, expr: TypedExpr, varUsageCount: Null<Map<Int, Int>> = null) {
 		this.mode = mode;
 		this.expr = expr;
 		this.varUsageCount = varUsageCount;
@@ -136,7 +149,7 @@ class TemporaryVarRemover {
 					if(e != null) return e;
 				}
 				case TBlock(_): {
-					final tvr = new TemporaryVarRemover(mode, mappedExpr, varUsageCount);
+					final tvr = new RemoveTemporaryVariablesImpl(mode, mappedExpr, varUsageCount);
 					tvr.parent = this;
 					return tvr.fixTemporaries();
 				}
@@ -229,3 +242,5 @@ class TemporaryVarRemover {
 		}
 	}
 }
+
+#end

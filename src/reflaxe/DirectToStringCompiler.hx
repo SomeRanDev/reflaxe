@@ -7,7 +7,6 @@ import haxe.macro.Type;
 
 import reflaxe.GenericCompiler;
 import reflaxe.compiler.TargetCodeInjection;
-import reflaxe.optimization.ExprOptimizer;
 import reflaxe.output.DataAndFileInfo;
 import reflaxe.output.PluginHook;
 import reflaxe.output.StringOrBytes;
@@ -81,17 +80,18 @@ abstract class DirectToStringCompiler extends GenericCompiler<String, String, St
 	}
 
 	/**
-		Returns the result of calling "ExprOptimizer.optimizeAndUnwrap"
-		and "compileExpressionsIntoLines" from the "expr".
+		Returns the result of `compileExpressionsIntoLines` from the `expr`.
 	**/
 	public function compileClassVarExpr(expr: TypedExpr): String {
-		final exprs = ExprOptimizer.optimizeAndUnwrap(expr);
-		return compileExpressionsIntoLines(exprs);
+		return compileExpressionsIntoLines(expr.unwrapBlock());
 	}
 
 	/**
-		Same as "compileClassVarExpr", but also uses 
-		EverythingIsExprSanitizer if required.
+		Alias for `compileClassVarExpr` for function expressions.
+
+		This might be updated with additional behavior in future
+		versions of Reflaxe, so be sure to use for functions even
+		if it works identically to `compileClassVarExpr`.
 	**/
 	public function compileClassFuncExpr(expr: TypedExpr): String {
 		return compileClassVarExpr(expr);

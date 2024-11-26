@@ -15,6 +15,7 @@ import reflaxe.output.DataAndFileInfo;
 import reflaxe.output.OutputManager;
 import reflaxe.output.OutputPath;
 import reflaxe.output.StringOrBytes;
+import reflaxe.preprocessors.ExpressionPreprocessor;
 
 using StringTools;
 
@@ -92,6 +93,15 @@ enum LambdaWrapType {
 @:structInit
 class BaseCompilerOptions {
 	/**
+		The "preprocessors" applied to the expressions of functions and
+		variables before being provided to the user's compiler.
+
+		Leave this as `null` to use the default setup provided by the
+		function: `ExpressionPreprocessorHelper.defaults`.
+	**/
+	public var expressionPreprocessors: Null<Array<ExpressionPreprocessor>> = null;
+
+	/**
 		How the source code files are outputted.
 	**/
 	public var fileOutputType: BaseCompilerFileOutputType = FilePerClass;
@@ -155,50 +165,10 @@ class BaseCompilerOptions {
 	public var unwrapTypedefs: Bool = true;
 
 	/**
-		Whether Haxe's "Everything is an Expression" is normalized.
-	**/
-	public var normalizeEIE: Bool = true;
-
-	/**
 		If `true`, variables generated for "Everything is an Expression" 
 		will be initialized with `null` and wrapped with `Null<T>`.
 	**/
 	public var initializeEIEVarsWithNull: Bool = false;
-
-	/**
-		Whether variables of the same name are allowed to be
-		redeclarated in the same scope or a subscope.
-	**/
-	public var preventRepeatVars: Bool = true;
-
-	/**
-		Whether variables captured by lambdas are wrapped in
-		an `Array`. Useful as certain targets can't capture and
-		modify a value unless stored by reference.
-	**/
-	public var wrapLambdaCaptureVarsInArray: Bool = false;
-
-	/**
-		If `true`, classes marked with `@:prevent_temporaries` will
-		regress certain Haxe compiler transformations that
-		create unnecessary temporary values.
-
-		This is important for handling value types that should
-		be modified in their original location instead of being
-		modified on a temporary copy.
-
-		For example, it will prevent this...
-		```haxe
-		obj.valueTypeInst.prop = 123;
-		```
-
-		from being converted to this:
-		```haxe
-		var temp = obj.valueTypeInst;
-		temp.prop = 123;
-		```
-	**/
-	public var processAvoidTemporaries: Bool = false;
 
 	/**
 		If `true`, during the EIE normalization phase, all
@@ -468,9 +438,14 @@ abstract class BaseCompiler {
 	// * Options
 	// =======================================================
 	public var options(default, null): BaseCompilerOptions = {};
+	public var expressionPreprocessors(default, null): Array<ExpressionPreprocessor> = [];
 
 	public function setOptions(options: BaseCompilerOptions) {
 		this.options = options;
+		this.expressionPreprocessors = (
+			options.expressionPreprocessors ?? ExpressionPreprocessorHelper.defaults()
+		);
+
 		setupReservedVarNames();
 	}
 

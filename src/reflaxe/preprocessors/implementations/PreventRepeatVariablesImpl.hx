@@ -1,8 +1,8 @@
 // =======================================================
-// * RepeatVariableFixer
+// * PreventRepeatVariablesImpl
 // =======================================================
 
-package reflaxe.compiler;
+package reflaxe.preprocessors.implementations;
 
 #if (macro || reflaxe_runtime)
 
@@ -19,7 +19,7 @@ using reflaxe.helpers.TypedExprHelper;
 	Whether variables of the same name are allowed to be
 	redeclarated in the same scope or a subscope.
 **/
-class RepeatVariableFixer {
+class PreventRepeatVariablesImpl {
 	/**
 		The original expression passed
 	**/
@@ -31,10 +31,10 @@ class RepeatVariableFixer {
 	var exprList: Array<TypedExpr>;
 
 	/**
-		If another instance of RepeatVariableFixer created
+		If another instance of PreventRepeatVariablesImpl created
 		this one, it can be referenced from here.
 	**/
-	var parent: Null<RepeatVariableFixer>;
+	var parent: Null<PreventRepeatVariablesImpl>;
 
 	/**
 		A list of all the already declared variable names.
@@ -46,7 +46,7 @@ class RepeatVariableFixer {
 	**/
 	var varReplacements: Map<Int, TVar>;
 
-	public function new(expr: TypedExpr, parent: Null<RepeatVariableFixer> = null, initVarNames: Null<Array<String>> = null) {
+	public function new(expr: TypedExpr, parent: Null<PreventRepeatVariablesImpl> = null, initVarNames: Null<Array<String>> = null) {
 		this.expr = expr;
 		this.parent = parent;
 
@@ -129,7 +129,7 @@ class RepeatVariableFixer {
 	}
 
 	function handleBlock(subExpr: TypedExpr): TypedExpr {
-		final rvf = new RepeatVariableFixer(subExpr, this);
+		final rvf = new PreventRepeatVariablesImpl(subExpr, this);
 		return rvf.fixRepeatVariables();
 	}
 

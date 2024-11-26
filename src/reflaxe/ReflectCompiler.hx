@@ -17,11 +17,7 @@ import haxe.macro.Expr;
 import haxe.macro.Type;
 
 import reflaxe.BaseCompiler;
-import reflaxe.compiler.EverythingIsExprSanitizer;
-import reflaxe.compiler.RepeatVariableFixer;
-import reflaxe.compiler.CaptureVariableFixer;
 import reflaxe.compiler.NullTypeEnforcer;
-import reflaxe.compiler.TemporaryVarRemover;
 import reflaxe.data.ClassFuncData;
 import reflaxe.data.ClassVarData;
 import reflaxe.data.EnumOptionArg;
@@ -432,25 +428,8 @@ class ReflectCompiler {
 		if(compiler.options.enforceNullTyping) {
 			NullTypeEnforcer.modifyExpression(data.expr);
 		}
-		if(compiler.options.normalizeEIE) {
-			final eiec = new EverythingIsExprSanitizer(data.expr, compiler);
-			data.setExpr(eiec.convertedExpr());
-			if(eiec.variableUsageCount != null) {
-				data.setVariableUsageCount(eiec.variableUsageCount);
-			}
-		}
-		if(compiler.options.processAvoidTemporaries) {
-			final tvr = new TemporaryVarRemover(OnlyFieldAccess, data.expr, data.getOrFindVariableUsageCount());
-			data.setExpr(tvr.fixTemporaries());
-		}
-		if(compiler.options.preventRepeatVars) {
-			final fieldNames = data.getAllVariableNames(compiler);
-			final rvf = new RepeatVariableFixer(data.expr, null, data.args.map(a -> a.name).concat(fieldNames));
-			data.setExpr(rvf.fixRepeatVariables());
-		}
-		if(compiler.options.wrapLambdaCaptureVarsInArray) {
-			final cfv = new CaptureVariableFixer(data.expr);
-			data.setExpr(cfv.fixCaptures());
+		for(preprocessor in compiler.expressionPreprocessors) {
+			preprocessor.process(data, compiler);
 		}
 		return data;
 	}

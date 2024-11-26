@@ -1,4 +1,4 @@
-package reflaxe.optimization;
+package reflaxe.preprocessors.implementations;
 
 // =======================================================
 // * UnnecessaryVarDeclRemover
@@ -19,11 +19,11 @@ using reflaxe.helpers.TypedExprHelper;
 	Removes unnecessary variable declarations for variables
 	that are unused until a reassignment later in the same scope.
 **/
-class MarkUnusedVariables {
+class MarkUnusedVariablesImpl {
 	var exprList: Array<TypedExpr>;
 
 	public static function mark(list: Array<TypedExpr>): Array<TypedExpr> {
-		final muv = new MarkUnusedVariables(list);
+		final muv = new MarkUnusedVariablesImpl(list);
 		var result = muv.markUnusedLocalVariables();
 		while(muv.foundUnused) {
 			result = muv.markUnusedLocalVariables();

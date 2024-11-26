@@ -2,7 +2,7 @@
 // * UnnecessaryBlockRemover
 // =======================================================
 
-package reflaxe.optimization;
+package reflaxe.preprocessors.implementations;
 
 #if (macro || reflaxe_runtime)
 
@@ -15,22 +15,21 @@ using reflaxe.helpers.TypedExprHelper;
 using reflaxe.helpers.TypeHelper;
 
 /**
-	Removes unnecessary blocks that do not introduce
-	conflicting variable declarations.
+	Removes unnecessary variable aliases.
 **/
-class UnnecessaryVarAliasRemover {
-	public static function optimize(el: Array<TypedExpr>): Array<TypedExpr> {
-		final uvar = new UnnecessaryVarAliasRemover(el);
+class RemoveLocalVariableAliasesImpl {
+	public static function process(el: Array<TypedExpr>): Array<TypedExpr> {
+		final uvar = new RemoveLocalVariableAliasesImpl(el);
 		return uvar.removeAliases();
 	}
 
 	// ---
 
 	var el: Array<TypedExpr>;
-	var parent: Null<UnnecessaryVarAliasRemover>;
+	var parent: Null<RemoveLocalVariableAliasesImpl>;
 	var aliases: Map<Int, TypedExpr>;
 
-	public function new(el: Array<TypedExpr>, parent: Null<UnnecessaryVarAliasRemover> = null) {
+	public function new(el: Array<TypedExpr>, parent: Null<RemoveLocalVariableAliasesImpl> = null) {
 		this.el = el;
 		this.parent = parent;
 		aliases = [];
@@ -77,7 +76,7 @@ class UnnecessaryVarAliasRemover {
 					}
 				}
 				case TBlock(blockExprs): {
-					result.push(expr.copy(TBlock(optimize(blockExprs))));
+					result.push(expr.copy(TBlock(process(blockExprs))));
 					true; // skip since we supplied our own version of TBlock
 				}
 				case _: false;

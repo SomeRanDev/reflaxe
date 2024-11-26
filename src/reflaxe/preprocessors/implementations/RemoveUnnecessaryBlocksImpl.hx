@@ -2,30 +2,30 @@
 // * UnnecessaryBlockRemover
 // =======================================================
 
-package reflaxe.optimization;
+package reflaxe.preprocessors.implementations;
 
 #if (macro || reflaxe_runtime)
 
 import haxe.macro.Type;
 
-using reflaxe.helpers.TypedExprHelper;
+using reflaxe.helpers.ModuleTypeHelper;
 using reflaxe.helpers.NameMetaHelper;
 using reflaxe.helpers.NullHelper;
-using reflaxe.helpers.ModuleTypeHelper;
+using reflaxe.helpers.TypedExprHelper;
 
 /**
 	Removes unnecessary blocks that do not introduce
 	conflicting variable declarations.
 **/
-class UnnecessaryBlockRemover {
+class RemoveUnnecessaryBlocksImpl {
 	var exprList: Array<TypedExpr>;
 
 	var requiredNames: Array<String>;
 	var declaredVars: Array<String>; 
 	var multiUseVarNames: Null<Array<String>>;
 
-	public static function optimize(list: Array<TypedExpr>): Array<TypedExpr> {
-		final ubr = new UnnecessaryBlockRemover(list);
+	public static function process(list: Array<TypedExpr>): Array<TypedExpr> {
+		final ubr = new RemoveUnnecessaryBlocksImpl(list);
 		return ubr.removeUnnecessaryBlocks();
 	}
 
@@ -49,7 +49,7 @@ class UnnecessaryBlockRemover {
 	}
 
 	/**
-		Track all variable declarations and uses for future use
+		Track all variable declarations and uses for future use.
 	**/
 	function trackExpr(e: TypedExpr) {
 		switch(e.expr) {
@@ -96,7 +96,7 @@ class UnnecessaryBlockRemover {
 				case TBlock([]): {}
 				case TBlock(el): {
 					// Merge the possible sub-expression blocks for this sub-block.
-					final ubr = new UnnecessaryBlockRemover(el, multiUseVarNames);
+					final ubr = new RemoveUnnecessaryBlocksImpl(el, multiUseVarNames);
 					final newExprList = ubr.removeUnnecessaryBlocks();
 
 					// Check if merge should occur

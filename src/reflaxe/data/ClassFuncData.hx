@@ -131,6 +131,15 @@ class ClassFuncData {
 		variableUsageCount = null;
 	}
 
+	public function setExprList(expressions: Array<TypedExpr>) {
+		if(expressions.length == 1) {
+			setExpr(expressions[0]);
+		} else {
+			// Retain the previous expression's Position and Type.
+			setExpr(expr.copy(TBlock(expressions)));
+		}
+	}
+
 	/**
 		Returns the variable usage count.
 		If it has not been calculated yet, it is calculated here.

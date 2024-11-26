@@ -2,7 +2,7 @@
 // * EverythingIsExprSanitizer
 // =======================================================
 
-package reflaxe.compiler;
+package reflaxe.preprocessors.implementations.everything_is_expr;
 
 #if (macro || reflaxe_runtime)
 

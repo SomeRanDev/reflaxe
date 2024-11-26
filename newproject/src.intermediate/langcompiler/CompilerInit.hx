@@ -3,6 +3,7 @@ package langcompiler;
 #if (macro || LANG_runtime)
 
 import reflaxe.ReflectCompiler;
+import reflaxe.preprocessors.ExpressionPreprocessor;
 
 class CompilerInit {
 	public static function Start() {
@@ -17,6 +18,16 @@ class CompilerInit {
 		#end
 
 		ReflectCompiler.AddCompiler(new Compiler(), {
+			expressionPreprocessors: [
+				SanitizeEverythingIsExpression,
+				PreventRepeatVariables,
+				RemoveSingleExpressionBlocks,
+				RemoveConstantBoolIfs,
+				RemoveUnnecessaryBlocks,
+				RemoveReassignedVariableDeclarations,
+				RemoveLocalVariableAliases,
+				MarkUnusedVariables,
+			],
 			fileOutputExtension: ".EXTENSION",
 			outputDirDefineName: "LANG-output",
 			fileOutputType: FilePerClass,

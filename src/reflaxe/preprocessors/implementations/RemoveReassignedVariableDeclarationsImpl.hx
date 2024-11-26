@@ -1,8 +1,8 @@
 // =======================================================
-// * UnnecessaryVarDeclRemover
+// * RemoveReassignedVariableDeclarationsImpl
 // =======================================================
 
-package reflaxe.optimization;
+package reflaxe.preprocessors.implementations;
 
 #if (macro || reflaxe_runtime)
 
@@ -16,11 +16,11 @@ using reflaxe.helpers.ModuleTypeHelper;
 	Removes unnecessary variable declarations for variables
 	that are unused until a reassignment later in the same scope.
 **/
-class UnnecessaryVarDeclRemover {
+class RemoveReassignedVariableDeclarationsImpl {
 	var exprList: Array<TypedExpr>;
 
-	public static function optimize(list: Array<TypedExpr>): Array<TypedExpr> {
-		final ubr = new UnnecessaryVarDeclRemover(list);
+	public static function process(list: Array<TypedExpr>): Array<TypedExpr> {
+		final ubr = new RemoveReassignedVariableDeclarationsImpl(list);
 		return ubr.removeUnnecessaryVarDecls();
 	}
 
@@ -74,7 +74,7 @@ class UnnecessaryVarDeclRemover {
 				}
 				case TBlock(el): {
 					final copyExpr = expr.copy();
-					copyExpr.expr = TBlock(optimize(el));
+					copyExpr.expr = TBlock(process(el));
 					result.push(copyExpr);
 					continue;
 				}

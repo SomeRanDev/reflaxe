@@ -2,7 +2,7 @@
 // * UnnecessaryBlockRemover
 // =======================================================
 
-package reflaxe.optimization;
+package reflaxe.preprocessors.implementations;
 
 #if (macro || reflaxe_runtime)
 
@@ -11,11 +11,26 @@ import haxe.macro.Type;
 using reflaxe.helpers.TypedExprHelper;
 
 /**
-	Removes unnecessary blocks that do not introduce
-	conflicting variable declarations.
+	Removes unnecessary if statements that are hardcoded with `true` or `false`.
+
+	This...
+	```haxe
+	if(true) {
+		trace("Hello!");
+	}
+
+	if(false) {
+		trace("Goodbye!");
+	}
+	```
+
+	...would be converted to this:
+	```haxe
+	trace("Hello");
+	```
 **/
-class UnnecessaryIfRemover {
-	public static function optimize(el: Array<TypedExpr>): Array<TypedExpr> {
+class RemoveConstantBoolIfsImpl {
+	public static function process(el: Array<TypedExpr>): Array<TypedExpr> {
 		final result = [];
 		for(e in el) {
 			result.push(removeIfs(e));

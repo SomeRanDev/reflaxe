@@ -1,8 +1,8 @@
 // =======================================================
-// * CaptureVariableFixer
+// * WrapLambdaCaptureVariablesInArray
 // =======================================================
 
-package reflaxe.compiler;
+package reflaxe.preprocessors.implementations;
 
 #if (macro || reflaxe_runtime)
 
@@ -18,7 +18,7 @@ using reflaxe.helpers.TypeHelper;
 /**
 	Wraps a variable in an array when accessed from a lambda.
 **/
-class CaptureVariableFixer {
+class WrapLambdaCaptureVariablesInArrayImpl {
 	/**
 		The original expression passed.
 	**/
@@ -52,7 +52,7 @@ class CaptureVariableFixer {
 	#end
 
 	// Constructor
-	public function new(expr: TypedExpr, parent: Null<RepeatVariableFixer> = null, initVarNames: Null<Array<String>> = null) {
+	public function new(expr: TypedExpr, parent: Null<PreventRepeatVariablesImpl> = null, initVarNames: Null<Array<String>> = null) {
 		this.expr = expr;
 
 		exprList = switch(expr.expr) {
