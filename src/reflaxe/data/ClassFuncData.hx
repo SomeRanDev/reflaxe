@@ -6,6 +6,8 @@ import reflaxe.helpers.Context;
 import haxe.macro.Expr;
 import haxe.macro.Type;
 
+import reflaxe.preprocessors.ExpressionPreprocessor;
+
 using reflaxe.helpers.ClassFieldHelper;
 using reflaxe.helpers.NameMetaHelper;
 using reflaxe.helpers.NullableMetaAccessHelper;
@@ -14,23 +16,28 @@ using reflaxe.helpers.PositionHelper;
 using reflaxe.helpers.TypedExprHelper;
 
 class ClassFuncData {
-	public var classType(default, null): ClassType;
-	public var field(default, null): ClassField;
+	public final classType: ClassType;
+	public final field: ClassField;
 
-	public var isStatic(default, null): Bool;
-	public var kind(default, null): MethodKind;
+	public final isStatic: Bool;
+	public final kind: MethodKind;
 
-	public var ret(default, null): Type;
-	public var args(default, null): Array<ClassFuncArg>;
-	public var argsMeta(default, null): Null<Array<Metadata>>;
-	public var tfunc(default, null): Null<TFunc>;
+	public final ret: Type;
+	public final args: Array<ClassFuncArg>;
+	public final tfunc: Null<TFunc>;
+
+	public final property: Null<ClassField>;
+
 	public var expr(default, null): Null<TypedExpr>;
-
-	public var property(default, null): Null<ClassField>;
 
 	var variableUsageCount: Null<Map<Int, Int>>; // Access using `getOrFindVariableUsageCount`
 
-	public function new(classType: ClassType, field: ClassField, isStatic: Bool, kind: MethodKind, ret: Type, args: Array<ClassFuncArg>, tfunc: Null<TFunc>, expr: Null<TypedExpr>) {
+	public function new(
+		classType: ClassType, field: ClassField, isStatic: Bool, kind: MethodKind, ret: Type,
+		args: Array<ClassFuncArg>, tfunc: Null<TFunc>, expr: Null<TypedExpr>,
+		extractArgumentMetadata: Bool = true,
+		property: Null<ClassField> = null
+	) {
 		this.classType = classType;
 		this.field = field;
 
@@ -42,17 +49,39 @@ class ClassFuncData {
 		this.tfunc = tfunc;
 		this.expr = expr;
 
-		extractArgumentMeta();
-		findProperty();
+		if(extractArgumentMetadata) {
+			extractArgumentMeta();
+		}
+		this.property = property ?? findProperty();
+	}
+
+	/**
+		Makes a shallow clone.
+
+		Useful in combination with `applyPreprocessors` to use processors without
+		affecting the original `ClassFuncData`.
+	**/
+	public function clone(): ClassFuncData {
+		return new ClassFuncData(classType, field, isStatic, kind, ret, args, tfunc, expr, false, property);
+	}
+
+	/**
+		Applies preprocessors to the `expr`.
+	**/
+	public function applyPreprocessors(compiler: BaseCompiler, preprocessors: Array<ExpressionPreprocessor>) {
+		for(processor in preprocessors) {
+			processor.process(this, compiler);
+		}
 	}
 
 	/**
 		TODO: Anyway I could make this... more condensed?
 	**/
-	function findProperty() {
+	function findProperty(): Null<ClassField> {
+		var property = null;
 		if(isGetterName()) {
 			final propName = field.getHaxeName().substr("get_".length);
-			if(propName.length == 0) return;
+			if(propName.length == 0) return null;
 			for(f in (isStatic ? classType.statics : classType.fields).get()) {
 				final hasGetter = switch(f.kind) {
 					case FVar(AccCall, _): true;
@@ -65,7 +94,7 @@ class ClassFuncData {
 			}
 		} else if(isSetterName()) {
 			final propName = field.getHaxeName().substr("set_".length);
-			if(propName.length == 0) return;
+			if(propName.length == 0) return null;
 			for(f in (isStatic ? classType.statics : classType.fields).get()) {
 				final hasSetter = switch(f.kind) {
 					case FVar(_, AccCall): true;
@@ -77,6 +106,7 @@ class ClassFuncData {
 				}
 			}
 		}
+		return property;
 	}
 
 	/**
