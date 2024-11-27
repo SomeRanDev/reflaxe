@@ -124,6 +124,10 @@ class ClassFuncData {
 		return isSetterName() && property != null;
 	}
 
+	/**
+		Sets the typed expression.
+		Invalidates any cached information regarding the old expression.
+	**/
 	public function setExpr(e: TypedExpr) {
 		expr = e;
 
@@ -131,6 +135,12 @@ class ClassFuncData {
 		variableUsageCount = null;
 	}
 
+	/**
+		Works the same as `setExpr`, but takes an array of expressions.
+
+		If just one expression, it is used directly.
+		Multiple are converted into a block expression.
+	**/
 	public function setExprList(expressions: Array<TypedExpr>) {
 		if(expressions.length == 1) {
 			setExpr(expressions[0].trustMe());
