@@ -21,8 +21,10 @@ using reflaxe.helpers.TypedExprHelper;
 **/
 enum RemoveTemporaryVariablesMode {
 	/**
-		Only variables used once and assigned from class fields on 
-		classes with `@:prevent_temporaries` are purged.
+		Only variables assigned from class fields with the
+		`@:avoid_temporaries` metadata are removed. This meta
+		can be placed on the field itself, or the class declaration
+		of the type the field is using.
 
 		This regresses certain Haxe compiler transformations that
 		create unnecessary temporary values. This is important for
@@ -30,6 +32,10 @@ enum RemoveTemporaryVariablesMode {
 		location instead of being modified on a temporary copy.
 
 		```haxe
+		// Given a Rect class like this...
+		@:avoid_temporaries
+		class Rect { ... }
+
 		// This would be converted...
 		{
 			// This may be a copy instead of a reference in some languages...
@@ -43,7 +49,7 @@ enum RemoveTemporaryVariablesMode {
 		}
 		```
 	**/
-	OnlyFieldAccess;
+	OnlyAvoidTemporaryFieldAccess;
 
 	/**
 		Any variable that is used once and name starts with "temp" will
@@ -187,33 +193,55 @@ class RemoveTemporaryVariablesImpl {
 		variable should be removed.
 	**/
 	function shouldRemoveVariable(tvar: TVar, maybeExpr: Null<TypedExpr>): Bool {
-		if(getVariableUsageCount(tvar.id) >= 2) {
-			return false;
-		}
-
+		final count = getVariableUsageCount(tvar.id);
 		return switch(mode) {
-			case OnlyFieldAccess if(isField(maybeExpr)): {
-				switch(tvar.t) {
-					case TInst(clsRef, _): clsRef.get().hasMeta(Meta.AvoidTemporaries);
-					case _: false;
-				}
-			}
-			case AllTempVariables: tvar.name.startsWith("temp");
-			case AllOneUseVariables: true;
+			case OnlyAvoidTemporaryFieldAccess: shouldRemoveVariableBeauseAvoidTemporaries(tvar, maybeExpr);
+			case AllTempVariables if(count < 2): tvar.name.startsWith("temp");
+			case AllOneUseVariables if(count < 2): true;
 			case _: false;
 		}
 	}
 
 	/**
-		Returns `true` if the expression is an identifier or field access.
+		Given a `TVar` and its expression, check if it should be removed
+		on the basis of its type or field declaration having the
+		`@:avoid_temporaries` metadata.
 	**/
-	static function isField(expr: Null<TypedExpr>): Bool {
-		if(expr == null) return false;
+	static function shouldRemoveVariableBeauseAvoidTemporaries(tvar: TVar, maybeExpr: Null<TypedExpr>) {
+		final fieldAccess = isField(maybeExpr);
+		if(fieldAccess == null) {
+			return false;
+		}
+
+		// Check if type has `@:avoid_temporaries`.
+		final isAvoidTemporariesType = switch(tvar.t) {
+			case TInst(clsRef, _): clsRef.get().hasMeta(Meta.AvoidTemporaries);
+			case TAbstract(absRef, _): absRef.get().hasMeta(Meta.AvoidTemporaries);
+			case TEnum(enmRef, _): enmRef.get().hasMeta(Meta.AvoidTemporaries);
+			case _: false;
+		}
+		if(isAvoidTemporariesType) { return true; }
+		
+		// Check if field has `@:avoid_temporaries`.
+		return switch(fieldAccess) {
+			case FInstance(_, _, cf) | FStatic(_, cf): cf.get().hasMeta(Meta.AvoidTemporaries);
+			case _: false;
+		}
+	}
+
+	/**
+		Finds the `FieldAccess` if the expression is a `TField`.
+		Returns `null` otherwise.
+	**/
+	static function isField(expr: Null<TypedExpr>): Null<FieldAccess> {
+		if(expr == null) return null;
 
 		return switch(expr.expr) {
 			case TParenthesis(e): isField(e);
-			case TField(_, _): true;
-			case _: false;
+			case TCast(e, null): isField(e);
+			case TMeta(_, e): isField(e);
+			case TField(_, fa): fa;
+			case _: null;
 		}
 	}
 
