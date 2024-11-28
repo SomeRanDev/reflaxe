@@ -15,6 +15,7 @@ import reflaxe.preprocessors.implementations.RemoveTemporaryVariablesImpl.Remove
 import reflaxe.preprocessors.implementations.RemoveUnnecessaryBlocksImpl;
 import reflaxe.preprocessors.implementations.WrapLambdaCaptureVariablesInArrayImpl;
 
+using reflaxe.helpers.ArrayHelper;
 using reflaxe.helpers.ClassFieldHelper;
 using reflaxe.helpers.TypedExprHelper;
 

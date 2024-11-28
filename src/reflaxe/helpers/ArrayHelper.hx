@@ -29,6 +29,17 @@ class ArrayHelper {
 		return if(arr.length == 0) "";
 		else arr.join(connector) + connector;
 	}
+
+	/**
+		If `other` is not `null`, works just like `concat`.
+		If it IS `null`, this just returns `self`.
+	**/
+	public static function concatIfNotNull<T>(self: Array<T>, other: Null<Array<T>>) {
+		if(other == null) {
+			return self;
+		}
+		return self.concat(other);
+	}
 }
 
 #end
