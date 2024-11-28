@@ -16,6 +16,8 @@ using reflaxe.helpers.PositionHelper;
 using reflaxe.helpers.TypedExprHelper;
 
 class ClassFuncData {
+	public final id: String;
+
 	public final classType: ClassType;
 	public final field: ClassField;
 
@@ -33,11 +35,14 @@ class ClassFuncData {
 	var variableUsageCount: Null<Map<Int, Int>>; // Access using `getOrFindVariableUsageCount`
 
 	public function new(
+		id: String,
 		classType: ClassType, field: ClassField, isStatic: Bool, kind: MethodKind, ret: Type,
 		args: Array<ClassFuncArg>, tfunc: Null<TFunc>, expr: Null<TypedExpr>,
 		extractArgumentMetadata: Bool = true,
 		property: Null<ClassField> = null
 	) {
+		this.id = id;
+
 		this.classType = classType;
 		this.field = field;
 
@@ -62,7 +67,7 @@ class ClassFuncData {
 		affecting the original `ClassFuncData`.
 	**/
 	public function clone(): ClassFuncData {
-		return new ClassFuncData(classType, field, isStatic, kind, ret, args, tfunc, expr, false, property);
+		return new ClassFuncData(id, classType, field, isStatic, kind, ret, args, tfunc, expr, false, property);
 	}
 
 	/**

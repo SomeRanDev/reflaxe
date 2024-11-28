@@ -144,7 +144,7 @@ class ClassFieldHelper {
 				}
 
 				// Return the `ClassFuncData`
-				final result = new ClassFuncData(clsType, field, isStatic, kind, ret, dataArgs, tfunc, tfunc != null ? tfunc.expr : null);
+				final result = new ClassFuncData(id, clsType, field, isStatic, kind, ret, dataArgs, tfunc, tfunc != null ? tfunc.expr : null);
 				for(a in dataArgs) a.setFuncData(result);
 				findFuncData_cache.set(id, result);
 				result;
