@@ -28,6 +28,12 @@ class PreventRepeatVariablesOptions {
 		from having the same names as class variables.
 	**/
 	public var preventRepeatArguments: Bool = true;
+
+	/**
+		If defined, any variable names that match the names provided
+		here will be changed.
+	**/
+	public var extraReservedNames: Null<Array<String>> = null;
 }
 
 /**
@@ -171,14 +177,17 @@ class ExpressionPreprocessorHelper {
 				final tvr = new RemoveTemporaryVariablesImpl(mode, data.expr, data.getOrFindVariableUsageCount());
 				data.setExpr(tvr.fixTemporaries());
 			}
-			case PreventRepeatVariables({ preventRepeatArguments: preventRepeatArguments }): {
-				final classFieldNames = data.getAllVariableNames(compiler);
-				final rvf = new PreventRepeatVariablesImpl(data.expr, null, data.args.map(a -> a.name).concat(classFieldNames));
+			case PreventRepeatVariables({
+				preventRepeatArguments: preventRepeatArguments,
+				extraReservedNames: extraReservedNames
+			}): {
+				final reservedNames = data.getAllVariableNames(compiler).concatIfNotNull(extraReservedNames);
+				final rvf = new PreventRepeatVariablesImpl(data.expr, null, data.args.map(a -> a.name).concat(reservedNames));
 
 				// Ensure the argument names don't match any class variables.
 				if(preventRepeatArguments) {
 					for(arg in data.args) {
-						if(arg.ensureNameDoesntMatch(classFieldNames) && arg.tvar != null) {
+						if(arg.ensureNameDoesntMatch(reservedNames) && arg.tvar != null) {
 							rvf.registerVarReplacement(arg.getName(), arg.tvar);
 						}
 					}
