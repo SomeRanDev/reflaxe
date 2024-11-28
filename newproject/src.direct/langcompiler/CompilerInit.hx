@@ -20,7 +20,7 @@ class CompilerInit {
 		ReflectCompiler.AddCompiler(new Compiler(), {
 			expressionPreprocessors: [
 				SanitizeEverythingIsExpression,
-				PreventRepeatVariables,
+				PreventRepeatVariables({}),
 				RemoveSingleExpressionBlocks,
 				RemoveConstantBoolIfs,
 				RemoveUnnecessaryBlocks,
