@@ -83,7 +83,7 @@ enum ExpressionPreprocessor {
 
 		This is enabled by default.
 	**/
-	SanitizeEverythingIsExpression;
+	SanitizeEverythingIsExpression(options: EverythingIsExprSanitizerOptions);
 
 	/**
 		If `true`, classes marked with `@:prevent_temporaries` will
@@ -160,8 +160,8 @@ class ExpressionPreprocessorHelper {
 			return;
 		}
 		switch(self) {
-			case SanitizeEverythingIsExpression: {
-				final eiec = new EverythingIsExprSanitizer(data.expr, compiler);
+			case SanitizeEverythingIsExpression(options): {
+				final eiec = new EverythingIsExprSanitizer(data.expr, options);
 				data.setExpr(eiec.convertedExpr());
 				if(eiec.variableUsageCount != null) {
 					data.setVariableUsageCount(eiec.variableUsageCount);
@@ -222,7 +222,7 @@ class ExpressionPreprocessorHelper {
 	**/
 	public static function defaults(): Array<ExpressionPreprocessor> {
 		return [
-			SanitizeEverythingIsExpression,
+			SanitizeEverythingIsExpression({}),
 			PreventRepeatVariables({}),
 			RemoveSingleExpressionBlocks,
 			RemoveConstantBoolIfs,

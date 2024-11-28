@@ -56,37 +56,6 @@ enum BaseCompilerFileOutputType {
 }
 
 /**
-	Used for `BaseCompilerOptions.wrapFunctionReferences`.
-**/
-enum LambdaWrapType {
-	/**
-		Reflaxe will never wrap function references.
-	**/
-	Never;
-
-	/**
-		Reflaxe will ONLY wrap function fields that use
-		`@:native`, `@:nativeFunctionCode`, or whatever
-		is listed in the `wrapFunctionMetadata` option.
-	**/
-	NativeMetaOnly;
-
-	/**
-		Reflaxe will wrap both extern function references
-		and `wrapFunctionMetadata` metadata fields.
-
-		This includes both functions marked `extern` and
-		functions from `extern` classes.
-	**/
-	ExternOnly;
-
-	/**
-		Reflaxe will wrap all function references.
-	**/
-	Yes;
-}
-
-/**
 	A structure that contains all the options for
 	configuring the `BaseCompiler`'s behavior.
 **/
@@ -163,60 +132,6 @@ class BaseCompilerOptions {
 		class or enum type before being processed and generated.
 	**/
 	public var unwrapTypedefs: Bool = true;
-
-	/**
-		If `true`, variables generated for "Everything is an Expression" 
-		will be initialized with `null` and wrapped with `Null<T>`.
-	**/
-	public var initializeEIEVarsWithNull: Bool = false;
-
-	/**
-		If `true`, during the EIE normalization phase, all
-		instances of null coalescence are converted to a
-		null-check if statement.
-	**/
-	public var convertNullCoal: Bool = false;
-
-	/**
-		If `true`, during the EIE normalization phase, all
-		instances of prefix/postfix increment and decrement
-		are converted to a Binop form.
-
-		Helpful on Python-like targets that do not support
-		the `++` or `--` operators.
-	**/
-	public var convertUnopIncrement: Bool = false;
-
-	/**
-		When enabled, function properties that are referenced
-		as a value will be wrapped in a lambda.
-
-		For example this:
-			```haxe
-			var fcc = String.fromCharCode
-			```
-		
-		Gets converted to this:
-			```haxe
-			var fcc = function(i: Int): String {
-				return String.fromCharCode(i);
-			}
-			```
-	**/
-	public var wrapFunctionReferences: LambdaWrapType = ExternOnly;
-
-	/**
-		If `wrapFunctionReferences` is set to either `NativeMetaOnly`
-		or `ExternOnly`, the metadata listed here will trigger a
-		function to be wrapped in a lambda.
-
-		Metadata that will modify the code that's generated for a
-		function at its call-site should be included here.
-	**/
-	public var wrapFunctionMetadata: Array<String> = [
-		":native",
-		":nativeFunctionCode"
-	];
 
 	/**
 		If `true`, only the module containing the "main"

@@ -24,6 +24,97 @@ using reflaxe.helpers.TypedExprHelper;
 using reflaxe.helpers.TypeHelper;
 
 /**
+	Used for `BaseCompilerOptions.wrapFunctionReferencesWithLambda`.
+**/
+enum LambdaWrapType {
+	/**
+		Reflaxe will never wrap function references.
+	**/
+	Never;
+
+	/**
+		Reflaxe will ONLY wrap function fields that use
+		`@:native`, `@:nativeFunctionCode`, or whatever
+		is listed in the `wrapFunctionMetadata` option.
+	**/
+	NativeMetaOnly;
+
+	/**
+		Reflaxe will wrap both extern function references
+		and `wrapFunctionMetadata` metadata fields.
+
+		This includes both functions marked `extern` and
+		functions from `extern` classes.
+	**/
+	ExternOnly;
+
+	/**
+		Reflaxe will wrap all function references.
+	**/
+	Yes;
+}
+
+/**
+	Options for `ExpressionPreprocessor.EverythingIsExprSanitizer`.
+**/
+@:structInit
+class EverythingIsExprSanitizerOptions {
+	/**
+		If `true`, during the EIE normalization phase, all
+		instances of prefix/postfix increment and decrement
+		are converted to a Binop form.
+
+		Helpful on Python-like targets that do not support
+		the `++` or `--` operators.
+	**/
+	public var convertIncrementAndDecrementOperators: Bool = false;
+
+	/**
+		If `true`, during the EIE normalization phase, all
+		instances of null coalescence are converted to a
+		null-check if statement.
+	**/
+	public var convertNullCoalescing: Bool = false;
+
+	/**
+		If `true`, variables generated for "Everything is an Expression" 
+		will be initialized with `null` and wrapped with `Null<T>`.
+	**/
+	public var setUninitializedVariablesToNull: Bool = false;
+
+	/**
+		When enabled, function properties that are referenced
+		as a value will be wrapped in a lambda.
+
+		For example this:
+		```haxe
+		var fcc = String.fromCharCode
+		```
+
+		Gets converted to this:
+		```haxe
+		var fcc = function(i: Int): String {
+			return String.fromCharCode(i);
+		}
+		```
+	**/
+	public var wrapFunctionReferencesWithLambda: LambdaWrapType = ExternOnly;
+
+	/**
+		If `wrapFunctionReferencesWithLambda` is set to either `NativeMetaOnly`
+		or `ExternOnly`, the metadata listed here will trigger a
+		function to be wrapped in a lambda.
+
+		Metadata that will modify the code that's generated for a
+		function at its call-site should be included here.
+	**/
+	public var wrapFunctionMetadata: Array<String> = [
+		":native",
+		":nativeFunctionCode"
+	];
+}
+
+/**
 	Converts block-like expressions that return a value into
 	an equivalent expression that does not rely on Haxe's
 	"Everything is an Expression" feature.
@@ -32,16 +123,6 @@ using reflaxe.helpers.TypeHelper;
 	https://code.haxe.org/category/principles/everything-is-an-expression.html
 **/
 class EverythingIsExprSanitizer {
-	/**
-		Whether a variable that will be initialized regardless
-		should be initialized with `null`. I'm not sure what the
-		default behavior should be, so I'll just control with
-		a constant for now.
-
-		This can now be configured using `BaseCompilerOptions.initializeEIEVarsWithNull`.
-	**/
-	// public static final INIT_NULL = false;
-
 	/**
 		Stores the original, provided expression
 	**/
@@ -55,9 +136,9 @@ class EverythingIsExprSanitizer {
 	var index: Int = 0;
 
 	/**
-		Reference to the BaseCompiler that using this sanitizer.
+		The `EverythingIsExprSanitizerOptions` config for this.
 	**/
-	public var compiler(default, null): BaseCompiler;
+	var options: EverythingIsExprSanitizerOptions;
 
 	/**
 		If this expression is not null, the final expression of
@@ -104,11 +185,9 @@ class EverythingIsExprSanitizer {
 	**/
 	var metaStack: Array<String>;
 
-	static var variableId = 0;
-
-	public function new(expr: TypedExpr, compiler: BaseCompiler, parent: Null<EverythingIsExprSanitizer> = null, assignee: Null<TypedExpr> = null, nGenerator: Null<TempVarNameGenerator> = null) {
+	public function new(expr: TypedExpr, options: EverythingIsExprSanitizerOptions, parent: Null<EverythingIsExprSanitizer> = null, assignee: Null<TypedExpr> = null, nGenerator: Null<TempVarNameGenerator> = null) {
 		haxeExpr = expr.copy();
-		this.compiler = compiler;
+		this.options = options;
 		this.parent = parent;
 
 		// Only top-level sanitizer should have counter
@@ -406,14 +485,14 @@ class EverythingIsExprSanitizer {
 		to tranverse it and handle its sub-expressions.
 	**/
 	function handleNonValueBlock(e: TypedExpr): TypedExpr {
-		if(compiler.options.convertUnopIncrement && isUnopExpr(e)) {
+		if(options.convertIncrementAndDecrementOperators && isUnopExpr(e)) {
 			final newExpr = standardizeUnopValue(e, false);
 			if(newExpr != null) {
 				e = newExpr;
 			}
 		}
 
-		final eiec = new EverythingIsExprSanitizer(e, compiler, this, isLastExpression() ? assigneeExpr : null, nameGenerator);
+		final eiec = new EverythingIsExprSanitizer(e, options, this, isLastExpression() ? assigneeExpr : null, nameGenerator);
 		return eiec.convertedExpr();
 	}
 
@@ -455,13 +534,13 @@ class EverythingIsExprSanitizer {
 			case _:
 		}
 
-		if(compiler.options.convertNullCoal && isNullCoalExpr(e)) {
+		if(options.convertNullCoalescing && isNullCoalExpr(e)) {
 			final newExpr = standardizeNullCoalValue(e);
 			if(newExpr != null) {
 				e = newExpr;
 			}
 		}
-		if(compiler.options.convertUnopIncrement && isUnopExpr(e)) {
+		if(options.convertIncrementAndDecrementOperators && isUnopExpr(e)) {
 			final newExpr = standardizeUnopValue(e, true);
 			if(newExpr != null) {
 				e = newExpr;
@@ -527,7 +606,7 @@ class EverythingIsExprSanitizer {
 	}
 
 	function standardizeAssignValue(e: TypedExpr, index: Int, varNameOverride: Null<String> = null): Null<TypedExpr> {
-		final eiec = new EverythingIsExprSanitizer(e, compiler, this);
+		final eiec = new EverythingIsExprSanitizer(e, options, this);
 		topScopeArray.insert(index, eiec.convertedExpr());
 
 		final left = switch(e.expr) {
@@ -593,7 +672,7 @@ class EverythingIsExprSanitizer {
 		Generates a TVar object given a name and Type.
 	**/
 	function genTVar(name: String, t: Type): TVar {
-		final initNull = compiler.options.initializeEIEVarsWithNull;
+		final initNull = options.setUninitializedVariablesToNull;
 
 		// Let's construct the TVar using an expression.
 		var ct = haxe.macro.TypeTools.toComplexType(t);
@@ -651,9 +730,9 @@ class EverythingIsExprSanitizer {
 			t: e.t
 		};
 
-		final eiec = new EverythingIsExprSanitizer(e, compiler, this, idExpr, nameGenerator);
+		final eiec = new EverythingIsExprSanitizer(e, options, this, idExpr, nameGenerator);
 		
-		final initNull = compiler.options.initializeEIEVarsWithNull;
+		final initNull = options.setUninitializedVariablesToNull;
 
 		// Wrap `e.t` with `Null<T>` if initializing with `null`.
 		final t = if(initNull && !e.t.isNull()) {
@@ -783,7 +862,7 @@ class EverythingIsExprSanitizer {
 	**/
 	function isFunctionRef(e: Null<TypedExpr>) {
 		// Check if this feature is disabled
-		final option = compiler.options.wrapFunctionReferences;
+		final option = options.wrapFunctionReferencesWithLambda;
 		if(option == Never) {
 			return false;
 		}
@@ -841,7 +920,7 @@ class EverythingIsExprSanitizer {
 					}
 
 					final m = cf.meta;
-					for(metaName in compiler.options.wrapFunctionMetadata) {
+					for(metaName in options.wrapFunctionMetadata) {
 						if(m.maybeHas(metaName)) {
 							return true;
 						}
@@ -910,7 +989,7 @@ class EverythingIsExprSanitizer {
 			t: e.t
 		};
 
-		final eiec = new EverythingIsExprSanitizer(result, compiler, this, null, nameGenerator);
+		final eiec = new EverythingIsExprSanitizer(result, options, this, null, nameGenerator);
 		return unwrapBlock(eiec.convertedExpr());
 	}
 
