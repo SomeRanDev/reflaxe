@@ -65,6 +65,15 @@ class PreventRepeatVariablesImpl {
 		varReplacements = [];
 	}
 
+	/**
+		Used to manually register a variable name replacement.
+		This is used for updating the name of function arguments.
+	**/
+	public function registerVarReplacement(newName: String, previousTVar: TVar) {
+		varReplacements.set(previousTVar.id, previousTVar.copy(newName));
+		varNames.set(newName, true);
+	}
+
 	public function fixRepeatVariables(): TypedExpr {
 		final result = [];
 

@@ -23,6 +23,11 @@ class ClassFuncArg {
 	public var tvar(default, null): Null<TVar>;
 
 	/**
+		Replaces the name returned by `getName` if not `null`.
+	**/
+	public var overrideName(default, null): Null<String>;
+
+	/**
 		At the current moment, argument metadata is not retained.
 		This system bypasses this problem by extracting `@:argMeta` from the field.
 		This metadata is stored here and can be accessed with "metadata" functions.
@@ -46,6 +51,43 @@ class ClassFuncArg {
 	**/
 	public function setFuncData(funcData: ClassFuncData) {
 		this.funcData = funcData;
+	}
+
+	/**
+		Returns `overrideName` if it's not `null`.
+		Otherwise, returns `name`.
+	**/
+	public function getName(): String {
+		return if(overrideName != null) {
+			overrideName;
+		} else {
+			name;
+		}
+	}
+
+	/**
+		Ensures the value returned by `getName` doesn't match
+		any of the provided `names`.
+	**/
+	public function ensureNameDoesntMatch(names: Array<String>): Bool {
+		final currentName = getName();
+
+		var matchFound = false;
+		for(name in names) {
+			if(currentName == name) {
+				overrideName = currentName + "2";
+				matchFound = true;
+				break;
+			}
+		}
+
+		if(matchFound) {
+			// We need to re-run the check in case any previous names
+			// match the new `overrideName`.
+			ensureNameDoesntMatch(names);
+		}
+
+		return matchFound;
 	}
 
 	/**

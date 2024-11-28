@@ -19,6 +19,18 @@ using reflaxe.helpers.ClassFieldHelper;
 using reflaxe.helpers.TypedExprHelper;
 
 /**
+	Options for `ExpressionPreprocessor.PreventRepeatVariables`.
+**/
+@:structInit
+class PreventRepeatVariablesOptions {
+	/**
+		Deteremines if function arguments are checked and prevented
+		from having the same names as class variables.
+	**/
+	public var preventRepeatArguments: Bool = true;
+}
+
+/**
 	These are processes applied to expressions prior to being passed
 	to the user's custom compiler functions.
 
@@ -101,9 +113,16 @@ enum ExpressionPreprocessor {
 		This is a MUST USE for target langauges that do not support
 		local variable shadowing.
 
-		This is enabled by default.
+		`preventRepeatArguments` deteremines if function arguments
+		are checked and prevented from having the same names as
+		class variables.
+
+		This is enabled by default with:
+		```haxe
+		{ preventRepeatArguments: true }
+		```
 	**/
-	PreventRepeatVariables;
+	PreventRepeatVariables(options: PreventRepeatVariablesOptions);
 
 	/**
 		Reworks lambda captured variables so they are placed in
@@ -152,9 +171,19 @@ class ExpressionPreprocessorHelper {
 				final tvr = new RemoveTemporaryVariablesImpl(mode, data.expr, data.getOrFindVariableUsageCount());
 				data.setExpr(tvr.fixTemporaries());
 			}
-			case PreventRepeatVariables: {
-				final fieldNames = data.getAllVariableNames(compiler);
-				final rvf = new PreventRepeatVariablesImpl(data.expr, null, data.args.map(a -> a.name).concat(fieldNames));
+			case PreventRepeatVariables({ preventRepeatArguments: preventRepeatArguments }): {
+				final classFieldNames = data.getAllVariableNames(compiler);
+				final rvf = new PreventRepeatVariablesImpl(data.expr, null, data.args.map(a -> a.name).concat(classFieldNames));
+
+				// Ensure the argument names don't match any class variables.
+				if(preventRepeatArguments) {
+					for(arg in data.args) {
+						if(arg.ensureNameDoesntMatch(classFieldNames) && arg.tvar != null) {
+							rvf.registerVarReplacement(arg.getName(), arg.tvar);
+						}
+					}
+				}
+
 				data.setExpr(rvf.fixRepeatVariables());
 			}
 			case WrapLambdaCaptureVariablesInArray: {
@@ -194,7 +223,7 @@ class ExpressionPreprocessorHelper {
 	public static function defaults(): Array<ExpressionPreprocessor> {
 		return [
 			SanitizeEverythingIsExpression,
-			PreventRepeatVariables,
+			PreventRepeatVariables({}),
 			RemoveSingleExpressionBlocks,
 			RemoveConstantBoolIfs,
 			RemoveUnnecessaryBlocks,
