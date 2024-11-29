@@ -22,7 +22,7 @@ using reflaxe.helpers.TypedExprHelper;
 enum RemoveTemporaryVariablesMode {
 	/**
 		Only variables assigned from class fields with the
-		`@:avoid_temporaries` metadata are removed. This meta
+		`@:avoidTemporaries` metadata are removed. This meta
 		can be placed on the field itself, or the class declaration
 		of the type the field is using.
 
@@ -33,7 +33,7 @@ enum RemoveTemporaryVariablesMode {
 
 		```haxe
 		// Given a Rect class like this...
-		@:avoid_temporaries
+		@:avoidTemporaries
 		class Rect { ... }
 
 		// This would be converted...
@@ -205,7 +205,7 @@ class RemoveTemporaryVariablesImpl {
 	/**
 		Given a `TVar` and its expression, check if it should be removed
 		on the basis of its type or field declaration having the
-		`@:avoid_temporaries` metadata.
+		`@:avoidTemporaries` metadata.
 	**/
 	static function shouldRemoveVariableBeauseAvoidTemporaries(tvar: TVar, maybeExpr: Null<TypedExpr>) {
 		final fieldAccess = isField(maybeExpr);
@@ -213,7 +213,7 @@ class RemoveTemporaryVariablesImpl {
 			return false;
 		}
 
-		// Check if type has `@:avoid_temporaries`.
+		// Check if type has `@:avoidTemporaries`.
 		final isAvoidTemporariesType = switch(tvar.t) {
 			case TInst(clsRef, _): clsRef.get().hasMeta(Meta.AvoidTemporaries);
 			case TAbstract(absRef, _): absRef.get().hasMeta(Meta.AvoidTemporaries);
@@ -222,7 +222,7 @@ class RemoveTemporaryVariablesImpl {
 		}
 		if(isAvoidTemporariesType) { return true; }
 		
-		// Check if field has `@:avoid_temporaries`.
+		// Check if field has `@:avoidTemporaries`.
 		return switch(fieldAccess) {
 			case FInstance(_, _, cf) | FStatic(_, cf): cf.get().hasMeta(Meta.AvoidTemporaries);
 			case _: false;

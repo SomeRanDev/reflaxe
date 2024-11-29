@@ -10,6 +10,7 @@ import reflaxe.helpers.Context;
 import haxe.macro.Type;
 
 using reflaxe.helpers.NameMetaHelper;
+using reflaxe.helpers.NullableMetaAccessHelper;
 using reflaxe.helpers.NullHelper;
 using reflaxe.helpers.TypedExprHelper;
 using reflaxe.helpers.TypeHelper;
@@ -42,6 +43,7 @@ class RemoveLocalVariableAliasesImpl {
 		final innerType = Context.followWithAbstracts(t);
 		return switch(innerType) {
 			case TAbstract(_.get() => abs, []): abs.hasMeta(":runtimeValue");
+			case _ if(innerType.getMeta().maybeHas(":copyValue")): true;
 			case _ if(innerType.isString()): true;
 			case _: false;
 		}
