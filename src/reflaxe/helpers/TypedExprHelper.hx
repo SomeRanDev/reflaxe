@@ -51,6 +51,10 @@ class TypedExprHelper {
 		}
 	}
 
+	public static function wrapParenthesis(expr: TypedExpr): TypedExpr {
+		return { expr: TParenthesis(expr), pos: expr.pos, t: expr.t };
+	}
+
 	public static function unwrapBlock(expr: TypedExpr): Array<TypedExpr> {
 		return switch(expr.expr) {
 			case TBlock(exprList): exprList;
