@@ -44,7 +44,7 @@ class ClassTypeHelper {
 			constructor with the assignments removed. It can be used to
 			generate a constructor with the assignments if desired.
 	**/
-	public static function extractPreconstructorFieldAssignments(cls: ClassType): Null<{
+	public static function extractPreconstructorFieldAssignments(cls: ClassType, overrideConstructorExpr: Null<TypedExpr> = null): Null<{
 		assignments: Map<ClassField, TypedExpr>,
 		expressions: Array<TypedExpr>,
 		modifiedConstructor: TypedExpr
@@ -53,8 +53,13 @@ class ClassTypeHelper {
 			return null;
 		}
 
-		final constructor = cls.constructor.get();
-		final constructorExpr = constructor.expr();
+		final constructorExpr = if(overrideConstructorExpr != null) {
+			overrideConstructorExpr;
+		} else {
+			final constructor = cls.constructor.get();
+			constructor.expr();
+		}
+
 		if(constructorExpr == null) {
 			return null;
 		}
