@@ -65,12 +65,17 @@ class ClassTypeHelper {
 		}
 
 		final exprList: Null<Array<TypedExpr>> = switch(constructorExpr.expr) {
+			// For when using ClassField.expr()
 			case TFunction(tfunc): {
 				switch(tfunc.expr.expr) {
 					case TBlock(exprList): exprList;
 					case _: return null;
 				}
 			}
+
+			// For when using `overrideConstructorExpr`
+			case TBlock(exprList): exprList;
+
 			case _: return null;
 		}
 
