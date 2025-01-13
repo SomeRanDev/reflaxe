@@ -93,6 +93,12 @@ enum RemoveTemporaryVariablesMode {
 		```
 	**/
 	AllOneUseVariables;
+
+	/**
+		All variables are removed. Each usage of a variable
+		is replaced with its assigned value.
+	**/
+	AllVariables;
 }
 
 class RemoveTemporaryVariablesImpl {
@@ -198,6 +204,7 @@ class RemoveTemporaryVariablesImpl {
 			case OnlyAvoidTemporaryFieldAccess: shouldRemoveVariableBeauseAvoidTemporaries(tvar, maybeExpr);
 			case AllTempVariables if(count < 2): tvar.name.startsWith("temp");
 			case AllOneUseVariables if(count < 2): true;
+			case AllVariables: true;
 			case _: false;
 		}
 	}
