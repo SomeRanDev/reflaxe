@@ -43,11 +43,11 @@ class RemoveConstantBoolIfsImpl {
 			case TIf(econd, eif, eelse): {
 				switch(econd.unwrapParenthesis().expr) {
 					case TConst(TBool(true)): {
-						return eif;
+						return removeIfs(eif);
 					}
 					case TConst(TBool(false)): {
 						if(eelse != null) {
-							return eelse;
+							return removeIfs(eelse);
 						} else {
 							return {
 								expr: TBlock([]),
