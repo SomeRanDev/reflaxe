@@ -47,12 +47,25 @@ class TypedExprHelper {
 			case TParenthesis(e): {
 				unwrapParenthesis(e);
 			}
-			case e: expr;
+			case _: expr;
 		}
 	}
 
 	public static function wrapParenthesis(expr: TypedExpr): TypedExpr {
-		return { expr: TParenthesis(expr), pos: expr.pos, t: expr.t };
+		return switch(expr.expr) {
+			case TParenthesis(e): e;
+			case _: { expr: TParenthesis(expr), pos: expr.pos, t: expr.t };
+		}
+	}
+
+	/**
+		Only wraps with parenthesis if the expression is order-sensitive.
+	**/
+	public static function wrapParenthesisIfOrderSensitive(expr: TypedExpr): TypedExpr {
+		return switch(expr.expr) {
+			case TBinop(_, _, _) | TUnop(_, _, _): wrapParenthesis(expr);
+			case _: expr;
+		}
 	}
 
 	public static function unwrapBlock(expr: TypedExpr): Array<TypedExpr> {

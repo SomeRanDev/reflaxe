@@ -158,7 +158,7 @@ class RemoveTemporaryVariablesImpl {
 			switch(mappedExpr.expr) {
 				case TLocal(v) if(!noReplacements): {
 					final e = findReplacement(v.id);
-					if(e != null) return e;
+					if(e != null) return e.wrapParenthesisIfOrderSensitive();
 				}
 				case TBlock(_): {
 					final tvr = new RemoveTemporaryVariablesImpl(mode, mappedExpr, varUsageCount);
