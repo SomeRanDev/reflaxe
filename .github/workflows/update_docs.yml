@@ -45,11 +45,7 @@ jobs:
       - name: Build Website
         run: ./GenSite.bat
         working-directory: ./documentation
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          # Upload pages output
-          path: './documentation/pages'
       - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v2
+        uses: actions/deploy-pages@v4.0.5
+        with:
+          artifact_name: './documentation/pages'
