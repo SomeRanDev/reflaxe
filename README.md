@@ -35,7 +35,7 @@ All you need to worry about is programming the conversion from Haxe's typed AST 
 ## Automatic Installation
 Reflaxe provides an easy script to help get started!
 
-First install Reflaxe (THE 4.0.0-beta PART IS IMPORTANT):
+First install Reflaxe (THE `4.0.0-beta` PART IS IMPORTANT):
 ```hxml
 haxelib install reflaxe 4.0.0-beta
 ```
@@ -50,17 +50,6 @@ To test your compiler, enter the directory and use `Test.hxml`:
 cd reflaxe_<langname>
 haxelib run reflaxe test
 ```
-
-&nbsp;
-&nbsp;
-&nbsp;
-
-## Manual Installation
-| # | What to do | What to write |
-| - | ------ | ------ |
-| 1 | Install via haxelib git. | <pre>haxelib git reflaxe https://github.com/SomeRanDev/reflaxe.git</pre> |
-| 2 | Add the lib to your `.hxml` file or compile command. | <pre lang="hxml">-lib reflaxe</pre> |
-| 3 | Extend your compiler class from `DirectToStringCompiler`. | <pre lang="haxe">class MyLangCompiler extends reflaxe.DirectToStringCompiler</pre> |
 
 &nbsp;
 &nbsp;
