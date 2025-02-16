@@ -46,7 +46,7 @@ jobs:
         run: ./GenSite.bat
         working-directory: ./documentation
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v2
+        uses: actions/upload-pages-artifact@v3
         with:
           # Upload pages output
           path: './documentation/pages'
