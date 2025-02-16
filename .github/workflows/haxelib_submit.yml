@@ -12,8 +12,11 @@ jobs:
       - uses: krdlab/setup-haxe@v1
         with:
           haxe-version: 4.3.6
+      - uses: edgarrc/action-7z@v1
+        with:
+          args: 7z a reflaxe.zip newproject/* src/* LICENSE Run.hx extraParams.hxml haxelib.json
       - run: |
           haxe -version
-          haxelib submit . ${{ secrets.HAXELIB_PASSWORD }}
+          haxelib submit reflaxe.zip ${{ secrets.HAXELIB_PASSWORD }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
