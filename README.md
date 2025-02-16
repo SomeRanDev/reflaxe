@@ -35,13 +35,9 @@ All you need to worry about is programming the conversion from Haxe's typed AST 
 ## Automatic Installation
 Reflaxe provides an easy script to help get started!
 
-First install Reflaxe using one of the commands below:
+First install Reflaxe (THE 4.0.0-beta PART IS IMPORTANT):
 ```hxml
-# install haxelib release
-haxelib install reflaxe
-
-# install nightly (recommended!)
-haxelib git reflaxe https://github.com/SomeRanDev/reflaxe.git
+haxelib install reflaxe 4.0.0-beta
 ```
 
 Then run the following command to generate a new Reflaxe project:
