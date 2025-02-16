@@ -7,6 +7,7 @@ jobs:
   haxelib_submit:
     name: Publish to Haxelib
     runs-on: ubuntu-latest
+    environment: my-secrets
     steps:
       - uses: actions/checkout@v2
       - uses: krdlab/setup-haxe@v1
