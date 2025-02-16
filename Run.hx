@@ -562,13 +562,30 @@ function buildProject(args: Array<String>) {
 		}
 
 		// Files that should exist
-		for(file in ["haxelib.json", "LICENSE", "README.md"]) {
+		for(file in ["LICENSE", "README.md"]) {
 			copyExtraFile(file, true);
 		}
 
 		// Files that are okay to not exist
 		for(file in ["extraParams.hxml", "Run.hx", "run.n"]) {
 			copyExtraFile(file, false);
+		}
+
+		// Copy and edit haxelib.json
+		{
+			final filePath = Path.join([commandRunDir, "haxelib.json"]);
+			if(FileSystem.exists(filePath)) {
+				final data = try {
+					haxe.Json.parse(File.getContent(filePath));
+				} catch(_) {
+					null;
+				}
+				Reflect.deleteField(data, "reflaxe");
+				File.saveContent(Path.join([destFolder, "haxelib.json"]), haxe.Json.stringify(data, "\t"));
+				Sys.println("Copying and sanitizing haxelib.json");
+			} else {
+				printlnRed("Could not find haxelib.json");
+			}
 		}
 
 		// Print success
