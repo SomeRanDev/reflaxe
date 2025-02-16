@@ -17,6 +17,6 @@ jobs:
           args: 7z a reflaxe.zip newproject/* src/* LICENSE Run.hx extraParams.hxml haxelib.json
       - run: |
           haxe -version
-          haxelib submit reflaxe.zip ${{ secrets.HAXELIB_PASSWORD }}
+          haxelib submit reflaxe.zip ${{ secrets.HAXELIB_PASSWORD }} -debug
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
