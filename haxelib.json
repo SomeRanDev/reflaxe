@@ -1,6 +1,6 @@
 {
 	"name": "reflaxe",
-	"version": "4.0.0",
+	"version": "4.0.0-beta",
 	"description": "A framework for creating Haxe language compilation targets using macros.",
 	"url": "https://github.com/SomeRanDev/reflaxe",
 	"license": "MIT",
@@ -14,6 +14,6 @@
 		"extension"
 	],
 	"classPath": "src/",
-	"releasenote": "https://github.com/SomeRanDev/reflaxe/releases/tag/v3.0.0",
+	"releasenote": "Nightly version of Reflaxe.",
 	"contributors": ["SomeRanDev"]
 }

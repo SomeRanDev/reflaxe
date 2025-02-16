@@ -1,0 +1,19 @@
+on:
+  push:
+    branches:
+      - haxelib-version
+
+jobs:
+  haxelib_submit:
+    name: Publish to Haxelib
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: krdlab/setup-haxe@v1
+        with:
+          haxe-version: 4.3.6
+      - run: |
+          haxe -version
+          haxelib submit . ${{ secrets.HAXELIB_PASSWORD }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
