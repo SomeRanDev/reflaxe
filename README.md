@@ -445,3 +445,5 @@ public var metadataTemplates: Array<{
 	compileFunc: Null<(MetadataEntry, Array<String>) -> Null<String>>
 }> = [];
 ```
+
+test
