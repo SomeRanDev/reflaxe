@@ -97,7 +97,7 @@ class TestCompiler extends reflaxe.DirectToStringCompiler {
 		var funcString = "";
 		for(ff in funcFields) {
 			final field = ff.field;
-			final funcHeader = (ff.isStatic ? "static " : "") + "func " + field.getNameOrNative() + "(" + ff.args.map(a -> a.name).join(", ") + "):\n";
+			final funcHeader = (ff.isStatic ? "static " : "") + "func " + field.getNameOrNative() + "(" + ff.args.map(a -> a.getName()).join(", ") + "):\n";
 			final funcContent = ff.expr != null ? compileClassFuncExpr(ff.expr) : "pass";
 			funcString += (funcHeader + funcContent.tab()).tab() + "\n\n";
 		}
