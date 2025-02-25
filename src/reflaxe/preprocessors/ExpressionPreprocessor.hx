@@ -183,7 +183,7 @@ class ExpressionPreprocessorHelper {
 				extraReservedNames: extraReservedNames
 			}): {
 				final reservedNames = data.getAllVariableNames(compiler).concatIfNotNull(extraReservedNames);
-				final rvf = new PreventRepeatVariablesImpl(data.expr, null, data.args.map(a -> a.name).concat(reservedNames));
+				final rvf = new PreventRepeatVariablesImpl(data.expr, null, data.args.map(a -> a.originalName).concat(reservedNames));
 
 				// Ensure the argument names don't match any class variables.
 				if(preventRepeatArguments) {

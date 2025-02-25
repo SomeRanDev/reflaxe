@@ -17,10 +17,19 @@ class ClassFuncArg {
 
 	public var type(default, null): Type;
 	public var opt(default, null): Bool;
-	public var name(default, null): String;
+	// DEPRECATED: Use `getName()` instead!! (Or use `originalName`)
+	// public var name(default, null): String; // TODO: remove these comments
 	public var meta(default, null): Null<MetaAccess>;
 	public var expr(default, null): Null<TypedExpr>;
 	public var tvar(default, null): Null<TVar>;
+
+	/**
+		Stores the original name for the argument.
+
+		This used to be public and named `name`, but you should now use
+		`getName()` instead!
+	**/
+	public var originalName(default, null): String;
 
 	/**
 		Replaces the name returned by `getName` if not `null`.
@@ -34,12 +43,12 @@ class ClassFuncArg {
 	**/
 	var extraMetadata: Null<Metadata>;
 
-	public function new(index: Int, type: Type, opt: Bool, name: String, meta: Null<MetaAccess> = null, expr: Null<TypedExpr> = null, tvar: Null<TVar> = null) {
+	public function new(index: Int, type: Type, opt: Bool, originalName: String, meta: Null<MetaAccess> = null, expr: Null<TypedExpr> = null, tvar: Null<TVar> = null) {
 		this.index = index;
 
 		this.type = type;
 		this.opt = opt;
-		this.name = name;
+		this.originalName = originalName;
 		this.meta = meta;
 		this.expr = expr;
 		this.tvar = tvar;
@@ -61,7 +70,7 @@ class ClassFuncArg {
 		return if(overrideName != null) {
 			overrideName;
 		} else {
-			name;
+			originalName;
 		}
 	}
 
@@ -150,7 +159,7 @@ class ClassFuncArg {
 		Convert this class to a String representation.
 	**/
 	public function toString(): String {
-		return (opt ? "?" : "") + name + ": " + type + (expr != null ? Std.string(expr) : "");
+		return (opt ? "?" : "") + originalName + ": " + type + (expr != null ? Std.string(expr) : "");
 	}
 
 	public function addExtraMetadata(m: MetadataEntry) {

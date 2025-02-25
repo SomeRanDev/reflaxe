@@ -391,7 +391,7 @@ class ClassFuncData {
 
 		// If there are no optional arguments, there is only one possibility.
 		if(optionalIndexes.length == 0) {
-			return [{ args: args, padExprs: args.map(a -> TypedExprHelper.make(TIdent(a.name), a.type)) }];
+			return [{ args: args, padExprs: args.map(a -> TypedExprHelper.make(TIdent(a.getName()), a.type)) }];
 		}
 
 		// Find every variation by determining the max number of combinations (2^optional_count),
@@ -411,7 +411,7 @@ class ClassFuncData {
 				// add it to this list of arguments.
 				if(index < 0 || ((comboID & Std.int(Math.pow(2, index))) > 0)) {
 					tempArgs.push(arg);
-					padExprs.push(TypedExprHelper.make(TIdent(arg.name), arg.type));
+					padExprs.push(TypedExprHelper.make(TIdent(arg.getName()), arg.type));
 				} else {
 					padExprs.push(arg.expr ?? TypedExprHelper.make(TConst(TNull), arg.type));
 				}
