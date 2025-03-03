@@ -1,7 +1,7 @@
 on:
   push:
     branches:
-      - haxelib-version
+      - main
 
 jobs:
   haxelib_submit:
