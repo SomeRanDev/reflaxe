@@ -18,7 +18,6 @@ All you need to worry about is programming the conversion from Haxe's typed AST 
 | Topic | Description |
 | --- | --- |
 | [Automatic Installation](#automatic-installation) | How to generate a Reflaxe project using the "new" command. |
-| [Manual Installation](#manual-installation) | How to install into your library manually. |
 | [Building](#building) | How to build for library for submission. |
 | [Reflaxe Properties](#reflaxe-properties) | How to configure unique properties for your Reflaxe project. |
 | [Compiler Code Sample](/#compiler-code-sample) | How to code the compiler. |
@@ -430,5 +429,3 @@ public var metadataTemplates: Array<{
 	compileFunc: Null<(MetadataEntry, Array<String>) -> Null<String>>
 }> = [];
 ```
-
-test
