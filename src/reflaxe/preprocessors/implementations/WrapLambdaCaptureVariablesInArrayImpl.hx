@@ -16,6 +16,19 @@ using reflaxe.helpers.TypedExprHelper;
 using reflaxe.helpers.TypeHelper;
 
 /**
+	Options for `ExpressionPreprocessor.WrapLambdaCaptureVariablesInArray`.
+**/
+@:structInit
+class WrapLambdaCaptureVariablesInArrayOptions {
+	/**
+		If a type declaration has any of these metadata, it will be wrapped.
+
+		This value is assigned to `wrapMetadata` of `WrapLambdaCaptureVariablesInArrayImpl`.
+	**/
+	public var wrapMetadata: Null<Array<String>> = null;
+}
+
+/**
 	Wraps a variable in an array when accessed from a lambda.
 **/
 class WrapLambdaCaptureVariablesInArrayImpl {
@@ -44,6 +57,11 @@ class WrapLambdaCaptureVariablesInArrayImpl {
 	**/
 	var arrayWrapVarIds: Array<Int>;
 
+	/**
+		If a type declaration has any of these metadata, it will be wrapped.
+	**/
+	var wrapMetadata: Null<Array<String>> = null;
+
 	#if eval
 	/**
 		Placeholder Position.
@@ -52,8 +70,9 @@ class WrapLambdaCaptureVariablesInArrayImpl {
 	#end
 
 	// Constructor
-	public function new(expr: TypedExpr, parent: Null<PreventRepeatVariablesImpl> = null, initVarNames: Null<Array<String>> = null) {
+	public function new(expr: TypedExpr, wrapMetadata: Null<Array<String>>) {
 		this.expr = expr;
+		this.wrapMetadata = wrapMetadata;
 
 		exprList = switch(expr.expr) {
 			case TBlock(exprs): exprs.map(e -> e.copy());
@@ -123,9 +142,9 @@ class WrapLambdaCaptureVariablesInArrayImpl {
 			case _: null;
 		}
 		if(typeAndTVar != null) {
-			final t = typeAndTVar.type;
 			final tvar = typeAndTVar.tvar;
-			if(t != null && t.isPrimitive() && arrayWrapVarIds.contains(tvar.id)) {
+			final t = typeAndTVar.type;
+			if(t != null && isWrapType(t) && arrayWrapVarIds.contains(tvar.id)) {
 				#if eval
 				tvar.meta.maybeAdd(":arrayWrap", [], tempPos);
 				#end
@@ -133,6 +152,28 @@ class WrapLambdaCaptureVariablesInArrayImpl {
 		}
 		
 		haxe.macro.TypedExprTools.iter(e, addMetaToLocals);
+	}
+
+	/**
+		Returns `true` if the type should be wrapped for use in a lambda.
+	**/
+	function isWrapType(t: Type) {
+		if(t.isPrimitive()) {
+			return true;
+		}
+
+		if(wrapMetadata != null) {
+			final m = t.getMeta();
+			if(m != null) {
+				for(metaName in wrapMetadata) {
+					if(m.has(metaName)) {
+						return true;
+					}
+				}
+			}
+		}
+
+		return false;
 	}
 }
 

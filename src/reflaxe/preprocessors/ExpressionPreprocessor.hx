@@ -138,7 +138,7 @@ enum ExpressionPreprocessor {
 		Useful as certain targets can't capture and modify a value
 		unless stored by reference.
 	**/
-	WrapLambdaCaptureVariablesInArray;
+	WrapLambdaCaptureVariablesInArray(options: WrapLambdaCaptureVariablesInArrayOptions);
 
 	RemoveSingleExpressionBlocks;
 	RemoveConstantBoolIfs;
@@ -196,8 +196,8 @@ class ExpressionPreprocessorHelper {
 
 				data.setExpr(rvf.fixRepeatVariables());
 			}
-			case WrapLambdaCaptureVariablesInArray: {
-				final cfv = new WrapLambdaCaptureVariablesInArrayImpl(data.expr);
+			case WrapLambdaCaptureVariablesInArray(options): {
+				final cfv = new WrapLambdaCaptureVariablesInArrayImpl(data.expr, options.wrapMetadata);
 				data.setExpr(cfv.fixCaptures());
 			}
 			case RemoveSingleExpressionBlocks: {
