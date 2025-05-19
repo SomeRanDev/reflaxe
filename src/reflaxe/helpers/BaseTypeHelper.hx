@@ -90,7 +90,7 @@ class BaseTypeHelper {
 			final lastPackMember = self.pack[self.pack.length - 1];
 			// Package names cannot start with underscore + uppercase letter.
 			// If it does, that means it's a "fields" placeholder.
-			if(lastPackMember.charCodeAt(0) == 95 && lastPackMember.charCodeAt(1) <= 90) {
+			if(lastPackMember.charCodeAt(0) == 95 && (lastPackMember.charCodeAt(1) ?? 91) <= 90) {
 				// We must change `my.pack._Class._Class_Fields` to `my.pack.Class`.
 				// To do this, ignore the last package member and use module name.
 				if(self.pack.length <= 1 && self.module == path) {
