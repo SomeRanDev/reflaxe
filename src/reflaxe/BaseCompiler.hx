@@ -134,25 +134,26 @@ class BaseCompilerOptions {
 	public var unwrapTypedefs: Bool = true;
 
 	/**
-		If `true`, only the module containing the "main"
-		function and any classes it references are compiled.
-		Otherwise, Haxe's less restrictive output type list is used.
-	**/
-	public var smartDCE: Bool = false;
+		If `true`, ONLY the following is compiled by default:
+		- Modules with `@:keep`
+		- Modules and packages passed as Haxe arguments.
 
-	/**
-		If `true`, any std module is only compiled if explicitly
-		added during compilation using:
+		To add more types to the queue, this function should
+		be used during compilation:
 		`BaseCompiler.addModuleTypeForCompilation(ModuleType)`
 
 		Helpful for projects that want to be extremely
 		precise with what modules are compiled.
 
-		By default, no modules are compiled when this is enabled,
-		`onCompileStart` must be used to decide what will be
-		compiled first.
+		Compiling the main function/module needs to be done
+		manully in `onCompileStart`. It can be obtained in
+		both forms using the following functions:
+		```haxe
+		BaseCompiler.getMainExpr(): Null<TypedExpr>;
+		BaseCompiler.getMainModule(): Null<ModuleType>;
+		```
 	**/
-	public var dynamicDCE: Bool = false;
+	public var manualDCE: Bool = false;
 
 	/**
 		A list of meta attached to "std" classes for the
@@ -283,6 +284,40 @@ abstract class BaseCompiler {
 	//
 	// Override these in custom compiler to filter types.
 	// =======================================================
+
+	/**
+		A function intended to be overriden by your compiler class.
+
+		This is called once at the start of compilation.
+
+		`moduleTypes` is an array of ALL types supplied by the Haxe
+		compiler. Removing (or adding?) entries from this will
+		change what modules are sent to your compiler.
+
+		`moduleTypes` is a unique copy made specifically for this
+		function, so it is safe to modify directly and return it.
+
+		To enable the exact behavior supplied by the deprecated
+		`smartDCE` option, the following code can be used:
+		```haxe
+		public override function filterTypes(moduleTypes: Array<ModuleType>): Array<ModuleType> {
+			final tracker = new reflaxe.input.ModuleUsageTracker(moduleTypes, this);
+			return tracker.filteredTypes(this.options.customStdMeta);
+		}
+		```
+	**/
+	public function filterTypes(moduleTypes: Array<ModuleType>): Array<ModuleType> {
+		return moduleTypes;
+	}
+
+	/**
+		A function intended to be overriden by your compiler class.
+
+		This is called at the start of compilation for each class.
+
+		If `false` is returned, the class will not be sent to your
+		compiler later.
+	**/
 	public function shouldGenerateClass(cls: ClassType): Bool {
 		if(cls.isTypeParameter()) {
 			return false;
@@ -293,10 +328,27 @@ abstract class BaseCompiler {
 		return !cls.isReflaxeExtern() || !options.ignoreExterns;
 	}
 
+	/**
+		A function intended to be overriden by your compiler class.
+
+		This is called at the start of compilation for each enum.
+
+		If `false` is returned, the enum will not be sent to your
+		compiler later.
+	**/
 	public function shouldGenerateEnum(enumType: EnumType): Bool {
 		return !enumType.isReflaxeExtern() || !options.ignoreExterns;
 	}
 
+	/**
+		A function intended to be overriden by your compiler class.
+
+		This is called at the start of compilation for each class field.
+
+		If `false` is returned, a `ClassFuncData` or `ClassVarData` will
+		not be generated for the field. The field will still be accessible
+		from the `ClassType` however.
+	**/
 	public function shouldGenerateClassField(cls: ClassField): Bool {
 		return true;
 	}
@@ -396,9 +448,13 @@ abstract class BaseCompiler {
 	}
 
 	/**
-		If you wish to code how files are generated yourself,
-		override this function in child class and set
-		options.fileOutputType to "Manual".
+		A function intended to be overriden by your compiler class.
+
+		This is called once at the end of compilation if
+		`options.fileOutputType` is set to `Manual`.
+
+		This is where you can generate your output files manually
+		instead of relying on Reflaxe's default output system.
 
 		Files should be saved using `output.saveFile(path, content)`
 	**/
@@ -437,8 +493,9 @@ abstract class BaseCompiler {
 
 	/**
 		Returns the contents of the file if it exists.
-		The "priority" can be specified to get content
-		specifically assigned that priority level.
+
+		`priority` dictates where the content is appended relative to
+		other calls to these functions.
 
 		Returns an empty string if nothing exists.
 	**/
@@ -458,8 +515,9 @@ abstract class BaseCompiler {
 
 	/**
 		Set the content or append it if it already exists.
-		The "priority" allows for content to be appended
-		at different places within the file.
+
+		`priority` dictates where the content is appended relative to
+		other calls to these functions.
 	**/
 	public function replaceInExtraFile(path: OutputPath, content: String, priority: Int = 0) {
 		final pathString = path.toString();
@@ -475,8 +533,9 @@ abstract class BaseCompiler {
 
 	/**
 		Set the content or append it if it already exists.
-		The "priority" allows for content to be appended
-		at different places within the file.
+
+		`priority` dictates where the content is appended relative to
+		other calls to these functions.
 	**/
 	public function appendToExtraFile(path: OutputPath, content: String, priority: Int = 0) {
 		replaceInExtraFile(path, getExtraFileContent(path, priority) + content, priority);
@@ -489,23 +548,21 @@ abstract class BaseCompiler {
 	var fileDirOverride: Null<String> = null;
 
 	/**
-		Use while compiling a module type (typically through
-		one of the `BaseCompiler` override methods like
-		`compileClassImpl`) to set the name of the file
-		that will contain the output being generated.
+		Use while compiling a module type (typically through one of the
+		`BaseCompiler` override methods like `compileClassImpl`) to set
+		the name of the file that will contain the output being generated.
 
-		Setting to an empty `String` or `null` will result
-		in the default file name being used.
+		Setting to an empty `String` or `null` will result in the default
+		file name being used.
 	**/
 	public function setOutputFileName(name: Null<String>) {
 		fileNameOverride = name;
 	}
 
 	/**
-		Use while compiling a module type (typically through
-		one of the `BaseCompiler` override methods like
-		`compileClassImpl`) to set the output directory of
-		the file containing the output for the type being compiled.
+		Use while compiling a module type (typically through one of the
+		`BaseCompiler` override methods like `compileClassImpl`) to set
+		the name of the file that will contain the output being generated.
 
 		Subdirectories can be used with the forward slash.
 
@@ -519,12 +576,12 @@ abstract class BaseCompiler {
 
 	/**
 		Returns the "main" typed expression for the program.
-		For example, if `-main MyClass` is set in the project,
-		the expression will be: `MyClass.main()`.
 
-		Please note if using Haxe v4.2.5 or below, the main
-		class must be defined using `-D mainClass`.
-		For example: `-D mainClass=MyClass`.
+		For example, if `-main MyClass` is set in the project, the expression
+		will be: `MyClass.main()`.
+
+		Please note if using Haxe v4.2.5 or below, the main class must be
+		defined using `-D mainClass`. For example: `-D mainClass=MyClass`.
 	**/
 	public function getMainExpr(): Null<TypedExpr> {
 		#if macro
@@ -535,8 +592,7 @@ abstract class BaseCompiler {
 	}
 
 	/**
-		Extracts the `ModuleType` of the main class based on
-		`getMainExpr` function.
+		Extracts the `ModuleType` of the main class based on `getMainExpr` function.
 	**/
 	public function getMainModule(): Null<ModuleType> {
 		final mainExpr = getMainExpr();
@@ -563,8 +619,8 @@ abstract class BaseCompiler {
 	}
 
 	/**
-		Store and reference the typeUsage Map for the current
-		class or enum being compiled.
+		Store and reference the typeUsage Map for the current class or
+		enum being compiled.
 	**/
 	var typeUsage: Null<TypeUsageMap> = null;
 
@@ -573,18 +629,20 @@ abstract class BaseCompiler {
 	}
 
 	/**
-		Stores a reference to the ModuleType currently being
-		compiled.
+		Stores a reference to the ModuleType currently being compiled.
 	**/
 	var currentModule: Null<ModuleType> = null;
 
+	/**
+		Public getter for `currentModule`.
+	**/
 	public function getCurrentModule(): Null<ModuleType> {
 		return currentModule;
 	}
 
 	/**
-		Called before compileClass, compileEnum, etc. to
-		setup fields to be referenced.
+		Called before compileClass, compileEnum, etc. to set up
+		fields to be referenced.
 	**/
 	public function setupModule(mt: Null<ModuleType>) {
 		currentModule = mt;
@@ -592,24 +650,32 @@ abstract class BaseCompiler {
 	}
 
 	/**
+		A function required to be overriden by your compiler class.
+
 		Compiles the provided class. Defined in `GenericCompiler`.
-		Override compileClassImpl to configure the behavior.
+		Override this to configure the behavior.
 	**/
 	public abstract function compileClass(classType: ClassType, varFields: Array<ClassVarData>, funcFields: Array<ClassFuncData>): Void;
 
 	/**
+		A function required to be overriden by your compiler class.
+
 		Compiles the provided enum. Defined in `GenericCompiler`.
-		Override compileEnumImpl to configure the behavior.
+		Override this to configure the behavior.
 	**/
 	public abstract function compileEnum(enumType: EnumType, options: Array<EnumOptionData>): Void;
 
 	/**
+		A function intended to be overriden by your compiler class.
+
 		Compiles the provided typedef. Defined in `GenericCompiler`.
 		It ignores all typedefs by default since Haxe redirects all types automatically.
 	**/
 	public abstract function compileTypedef(classType: DefType): Void;
 
 	/**
+		A function intended to be overriden by your compiler class.
+
 		Compiles the provided abstract. Defined in `GenericCompiler`.
 		It ignores all abstracts by default since Haxe converts them to function calls.
 	**/
@@ -658,22 +724,24 @@ abstract class BaseCompiler {
 
 	/**
 		Compiles the Haxe metadata to the target's equivalent.
-		This function will always return `null` unless 
-		"allowMetaMetadata" is true or "metadataTemplates"
-		contains at least one entry.
+
+		This function will always return `null` unless  `allowMetaMetadata`
+		is `true` or `metadataTemplates` contains at least one entry.
 	**/
 	public function compileMetadata(metaAccess: Null<MetaAccess>, target: haxe.display.Display.MetadataTarget): Null<String> {
 		return MetadataCompiler.compileMetadata(options, metaAccess, target);
 	}
 
 	/**
-		Each expression is assigned a "type" (represented by int).
-		When generating code, expressions of the same type are kept
-		close together, while expressions of different types are
-		separated by a new line.
+		Each expression is assigned a "type" (represented by an `Int`).
+
+		When generating code, expressions of the same type are kept close together,
+		while expressions of different types are separated by a new line.
 
 		This helps make the code output look human-written.
-		Used in "compileExpressionsIntoLines".
+		Used in `compileExpressionsIntoLines`.
+
+		This can be overriden if you want.
 	**/
 	function expressionType(expr: Null<TypedExpr>): Int {
 		if(expr == null) {
@@ -714,13 +782,35 @@ abstract class BaseCompiler {
 	}
 
 	/**
-		These fields are used for the `dynamicDCE` option.
-		While enabled, use `addModuleTypeForCompilation` to
-		add additional ModuleTypes to be compiled.
+		Used internally with `addModuleTypeForCompilation` for the `manualDCE` option.
+
+		A stack of `ModuleType`s yet to be processed.
 	**/
 	public var dynamicTypeStack: Array<ModuleType> = [];
+
+	/**
+		Used internally with `addModuleTypeForCompilation` for the `manualDCE` option.
+
+		A list of `ModuleType` unique identifiers that have been queued once.
+	**/
 	public var dynamicTypesHandled: Array<String> = [];
 
+	/**
+		This function is to be used in conjunction with the `manualDCE` option.
+
+		With `manualDCE` enabled, types encountered while compiling should
+		be passed to this function to be added to the compilation queue.
+
+		Any repeats will NOT be re-queued, you are safe (as expected) to spam
+		this function as much as you want.
+
+		You should essentially call this for:
+		 - The type of every variable compiled.
+		 - The type of every expression compiled.
+		 - All argument and return types for every function compiled.
+
+		Use `addTypeForCompilation` to pass a `haxe.macro.Type` instead.
+	**/
 	public function addModuleTypeForCompilation(mt: ModuleType) {
 		final id = mt.getUniqueId();
 		if(!dynamicTypesHandled.contains(id)) {
@@ -730,7 +820,25 @@ abstract class BaseCompiler {
 	}
 
 	/**
-		Used in compileNativeFunctionCodeMeta & compileNativeTypeCodeMeta.
+		See `addModuleTypeForCompilation`.
+
+		Works the same as `addModuleTypeForCompilation` but takes a 
+		`haxe.macro.Type` instead of `haxe.macro.ModuleType`.
+
+		Returns `false` if the `haxe.macro.Type` couldn't be converted
+		to `haxe.macro.ModuleType`.
+	**/
+	public function addTypeForCompilation(type: Type): Bool {
+		final moduleType = type.toModuleType();
+		if(moduleType != null) {
+			addModuleTypeForCompilation(moduleType);
+			return true;
+		}
+		return false;
+	}
+
+	/**
+		Used in `compileNativeFunctionCodeMeta` and `compileNativeTypeCodeMeta`.
 	**/
 	function extractStringFromMeta(meta: MetaAccess, name: String): Null<{ entry: MetadataEntry, code: String }> {
 		return if(meta.maybeHas(name)) {
@@ -768,8 +876,8 @@ abstract class BaseCompiler {
 	}
 
 	/**
-		Given a `haxe.macro.Position`, generates an error at the
-		position stating: "Could not generate expression".
+		Given a `haxe.macro.Position`, generates an error at the position
+		stating: "Could not generate expression".
 	**/
 	public function onExpressionUnsuccessful(pos: Position) {
 		return err("Could not generate expression.", pos);
@@ -777,6 +885,14 @@ abstract class BaseCompiler {
 
 	/**
 		Generates an "injection" expression if possible.
+
+		```haxe
+		// For example:
+		generateInjectionExpression("const booty <= (1,2)");
+
+		// Returns a dynamically-typed `TypedExpr` for the expression:
+		untyped __LANG__("const booty <= (1,2)");
+		```
 	**/
 	public function generateInjectionExpression(content: String, position: Null<Position> = null): TypedExpr {
 		if(options.targetCodeInjectionName == null) {

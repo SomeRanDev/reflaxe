@@ -35,7 +35,7 @@
 
 # We set "testoutput" as our output define in ReflectCompiler.AddCompiler,
 # so now it tells the compiler to compile to our "test" target to the "out" directory.
--D testoutput=out
+-D testoutput=testlang
 
 # -D mainClass is only required for Haxe v4.2.5 and below
 # Set it to the same value of `-main`.

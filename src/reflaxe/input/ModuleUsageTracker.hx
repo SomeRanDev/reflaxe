@@ -6,9 +6,9 @@ package reflaxe.input;
 
 #if (macro || reflaxe_runtime)
 
+import haxe.ds.ReadOnlyArray;
 import haxe.macro.Compiler;
 import haxe.macro.Context;
-import haxe.macro.Expr;
 import haxe.macro.Type;
 
 using reflaxe.helpers.BaseTypeHelper;
@@ -24,13 +24,13 @@ using reflaxe.helpers.TypeHelper;
 	to a smaller selection for cleaner output.
 **/
 class ModuleUsageTracker {
-	var allModuleTypes: Array<ModuleType>;
+	var allModuleTypes: ReadOnlyArray<ModuleType>;
 	var compiler: BaseCompiler;
 
 	var outputTypes: Array<ModuleType>;
 	var outputTypeMap: Map<String, Bool>;
 
-	public function new(types: Array<ModuleType>, compiler: BaseCompiler) {
+	public function new(types: ReadOnlyArray<ModuleType>, compiler: BaseCompiler) {
 		allModuleTypes = types;
 		this.compiler = compiler;
 

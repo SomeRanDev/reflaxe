@@ -10,6 +10,7 @@ package reflaxe;
 import Type as HaxeType;
 
 import haxe.display.Display.MetadataTarget;
+import haxe.ds.ReadOnlyArray;
 
 import haxe.macro.Compiler;
 import haxe.macro.Context;
@@ -25,6 +26,7 @@ import reflaxe.data.EnumOptionData;
 import reflaxe.input.ClassHierarchyTracker;
 import reflaxe.input.ModuleUsageTracker;
 
+using reflaxe.helpers.BaseTypeHelper;
 using reflaxe.helpers.ClassFieldHelper;
 using reflaxe.helpers.SyntaxHelper;
 using reflaxe.helpers.ModuleTypeHelper;
@@ -123,10 +125,10 @@ class ReflectCompiler {
 	// =======================================================
 	// * Private Members
 	// =======================================================
-	static var moduleTypes: Null<Array<ModuleType>>;
+	static var haxeProvidedModuleTypes: Null<Array<ModuleType>>;
 
-	static function onAfterTyping(mtypes: Array<ModuleType>) {
-		moduleTypes = mtypes;
+	static function onAfterTyping(moduleTypes: Array<ModuleType>) {
+		haxeProvidedModuleTypes = moduleTypes;
 	}
 
 	static function onAfterGenerate() {
@@ -201,6 +203,9 @@ class ReflectCompiler {
 	}
 
 	static function useCompiler(compiler: BaseCompiler) {
+		// Copy over types provided by Haxe compiler
+		final moduleTypes = compiler.filterTypes(haxeProvidedModuleTypes != null ? haxeProvidedModuleTypes.copy() : []);
+
 		// Track Hierarchy
 		if(compiler.options.trackClassHierarchy) {
 			ClassHierarchyTracker.processAllClasses(moduleTypes);
@@ -211,7 +216,7 @@ class ReflectCompiler {
 		compiler.onCompileStart();
 
 		// Compile
-		addClassesToCompiler(compiler);
+		addClassesToCompiler(compiler, moduleTypes);
 
 		// End
 		compiler.onCompileEnd();
@@ -221,7 +226,7 @@ class ReflectCompiler {
 
 		// Compile any additional modules that
 		// may be required after `onCompileEnd`.
-		if(isDynamicDce(compiler)) {
+		if(isManualDCE(compiler)) {
 			dynamicallyAddModulesToCompiler(compiler);
 		}
 
@@ -230,46 +235,88 @@ class ReflectCompiler {
 		compiler.onOutputComplete();
 	}
  
-	static function getAllModulesTypesForCompiler(compiler: BaseCompiler): Array<ModuleType> {
-		final mt = moduleTypes != null ? moduleTypes : [];
-		final result = if(isSmartDce(compiler)) {
-			final tracker = new ModuleUsageTracker(mt, compiler);
-			tracker.filteredTypes(compiler.options.customStdMeta);
-		} else {
-			mt;
-		}
-
+	static function getAllModulesTypesForCompiler(compiler: BaseCompiler, moduleTypes: ReadOnlyArray<ModuleType>): ReadOnlyArray<ModuleType> {
 		return if(compiler.options.ignoreTypes.length > 0) {
 			final ignoreTypes = compiler.options.ignoreTypes;
-			result.filter(function(moduleType) {
+			moduleTypes.filter(function(moduleType) {
 				return !ignoreTypes.contains(moduleType.getPath());
 			});
 		} else {
-			result;
+			moduleTypes;
 		}
 	}
 
-	static function getAllKeepTypes(compiler: BaseCompiler): Array<ModuleType> {
-		final types = moduleTypes != null ? moduleTypes : [];
-		final tracker = new ModuleUsageTracker(types, compiler);
+	static function getAllKeepTypes(compiler: BaseCompiler, moduleTypes: ReadOnlyArray<ModuleType>): ReadOnlyArray<ModuleType> {
+		final tracker = new ModuleUsageTracker(moduleTypes, compiler);
 		return tracker.nonStdTypes().filter(m -> m.getCommonData().meta.has(":keep"));
 	}
 
-	static function addClassesToCompiler(compiler: BaseCompiler) {
-		if(isDynamicDce(compiler)) {
-			if(compiler.getMainExpr() == null) {
-				for(m in getAllModulesTypesForCompiler(compiler)) {
-					compiler.addModuleTypeForCompilation(m);
+	/**
+		Used internally for `getAllIncludedTypes`.
+	**/
+	static var noValueHaxeCompilerArguments = [
+		"--no-output", "--interp", "--run", "-v", "--verbose", "--debug", "-debug", "--prompt", "-prompt",
+		"--no-traces", "--display", "--times", "--no-inline", "--no-opt", "--flash-strict", "--version", "-version", 
+		"-h", "--help", "-help", "--help-defines", "--help-user-defines", "--help-metas", "--help-user-metas",
+		"--haxelib-global",
+	];
+
+	/**
+		The intent of this is to return all types included directly via command
+		line arguments or `.hxml`.
+
+		Unfortunately, there is no official method to obtain these types, so
+		the Haxe compiler arguments are re-parsed to find them.
+
+		This function may be flawed, so please report if a type or package that should
+		be included is not returned from this!!
+	**/
+	static function getAllIncludedTypes(compiler: BaseCompiler, moduleTypes: ReadOnlyArray<ModuleType>): ReadOnlyArray<ModuleType> {
+		final compilerArguments = #if macro Compiler.getConfiguration().args #else [] #end;
+
+		var i = 0;
+		final includedPaths = [];
+		while(i < compilerArguments.length) {
+			final arg = compilerArguments[i];
+			if(StringTools.startsWith(arg, "-")) {
+				if(noValueHaxeCompilerArguments.contains(arg)) {
+					i++;
+				} else {
+					// This is a argument has a value, so skip the next one.
+					i += 2;
+				}
+			} else {
+				// No named argument, so this must be an included module or pack.
+				includedPaths.push(arg);
+				i++;
+			}
+		}
+
+		final tracker = new ModuleUsageTracker(moduleTypes, compiler);
+		return tracker.nonStdTypes().filter(m -> {
+			for(path in includedPaths) {
+				if(m.getCommonData().startsWithDotPath(path)) {
+					return true;
 				}
 			}
+			return false;
+		});
+	}
 
-			for(m in getAllKeepTypes(compiler)) {
+	static function addClassesToCompiler(compiler: BaseCompiler, moduleTypes: Array<ModuleType>) {
+		if(isManualDCE(compiler)) {
+			for(m in getAllKeepTypes(compiler, moduleTypes)) {
 				compiler.addModuleTypeForCompilation(m);
 			}
 
+			for(m in getAllIncludedTypes(compiler, moduleTypes)) {
+				compiler.addModuleTypeForCompilation(m);
+			}
+
+			trace(compiler.dynamicTypeStack);
 			dynamicallyAddModulesToCompiler(compiler);
 		} else {
-			addModulesToCompiler(compiler, getAllModulesTypesForCompiler(compiler));
+			addModulesToCompiler(compiler, getAllModulesTypesForCompiler(compiler, moduleTypes));
 		}
 	}
 
@@ -281,7 +328,7 @@ class ReflectCompiler {
 		}
 	}
 
-	static function addModulesToCompiler(compiler: BaseCompiler, modules: Array<ModuleType>) {
+	static function addModulesToCompiler(compiler: BaseCompiler, modules: ReadOnlyArray<ModuleType>) {
 		final classDecls: Array<Ref<ClassType>> = [];
 		final enumDecls: Array<Ref<EnumType>> = [];
 		final defDecls: Array<Ref<DefType>> = [];
@@ -349,12 +396,8 @@ class ReflectCompiler {
 		return (#if eval Context.definedValue #else Compiler.getDefine #end ("dce")) != "no";
 	}
 
-	static function isSmartDce(compiler: BaseCompiler): Bool {
-		return isDceOn() && compiler.options.smartDCE || compiler.options.dynamicDCE;
-	}
-
-	static function isDynamicDce(compiler: BaseCompiler): Bool {
-		return isDceOn() && compiler.options.dynamicDCE;
+	static function isManualDCE(compiler: BaseCompiler): Bool {
+		return isDceOn() && compiler.options.manualDCE;
 	}
 
 	// =======================================================

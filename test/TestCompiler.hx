@@ -20,6 +20,7 @@ import reflaxe.helpers.OperatorHelper;
 using reflaxe.helpers.SyntaxHelper;
 using reflaxe.helpers.ModuleTypeHelper;
 using reflaxe.helpers.NameMetaHelper;
+using reflaxe.helpers.TypeHelper;
 
 // This is a tool built into Reflaxe for modifying functions
 // before typing using @:build macros. 
@@ -37,7 +38,6 @@ class TestCompiler extends reflaxe.DirectToStringCompiler {
 	}
 
 	public static function Begin() {
-
 		#if (haxe >= version("5.0.0"))
 		switch(haxe.macro.Compiler.getConfiguration().platform) {
 			case CustomTarget("testlang"):
@@ -55,7 +55,7 @@ class TestCompiler extends reflaxe.DirectToStringCompiler {
 			ignoreTypes: [],
 			targetCodeInjectionName: "__testscript__",
 			ignoreBodilessFunctions: true,
-			smartDCE: true
+			manualDCE: true
 		});
 
 		try {
@@ -69,6 +69,14 @@ class TestCompiler extends reflaxe.DirectToStringCompiler {
 		}
 	}
 
+	override function onCompileStart() {
+		// Let's compile the main function manually!
+		//
+		// Other types will be added to the compilation queue due to
+		// `addModuleTypeForCompilation` calls made while compiling the main expression.
+		setExtraFile("Main.testout", "func main():\n" + compileExpression(getMainExpr()).tab());
+	}
+
 	// This is the function from the BaseCompiler to override to compile Haxe classes.
 	// Given the haxe.macro.ClassType and its variables and fields, return the output String.
 	// If `null` is returned, the class is ignored and nothing is compiled for it.
@@ -79,6 +87,16 @@ class TestCompiler extends reflaxe.DirectToStringCompiler {
 		// Works with any object that matches { name: String, meta: MetaAccess }
 		// Returns the value provided in `@:native` if that meta exists, and `name` otherwise.
 		var decl = "class " + classType.getNameOrNative() + ":\n";
+
+		// We need super type to be compiled!!
+		if(classType.superClass != null) {
+			addModuleTypeForCompilation(TClassDecl(classType.superClass.t));
+		}
+
+		// We need interfaces to be compiled!!
+		for(_interface in classType.interfaces) {
+			addModuleTypeForCompilation(TClassDecl(_interface.t));
+		}
 
 		// Iterate through the variables and compile them.
 		var varString = "";
@@ -91,6 +109,9 @@ class TestCompiler extends reflaxe.DirectToStringCompiler {
 				"";
 			}
 			varString += (variableDeclaration + testScriptVal).tab() + "\n";
+
+			// Make sure variable type is compiled.
+			addTypeForCompilation(vf.field.type);
 		}
 
 		// Iterate through the functions and compile them.
@@ -100,6 +121,10 @@ class TestCompiler extends reflaxe.DirectToStringCompiler {
 			final funcHeader = (ff.isStatic ? "static " : "") + "func " + field.getNameOrNative() + "(" + ff.args.map(a -> a.getName()).join(", ") + "):\n";
 			final funcContent = ff.expr != null ? compileClassFuncExpr(ff.expr) : "pass";
 			funcString += (funcHeader + funcContent.tab()).tab() + "\n\n";
+
+			// Make sure argument and return types are compiled.
+			for(arg in ff.args) addTypeForCompilation(arg.type);
+			addTypeForCompilation(ff.ret);
 		}
 
 		// Combine all the compiled content together and return it.
@@ -146,6 +171,7 @@ class TestCompiler extends reflaxe.DirectToStringCompiler {
 			}
 			case TTypeExpr(m): {
 				result = moduleNameToTestScript(m);
+				addModuleTypeForCompilation(m);
 			}
 			case TParenthesis(e): {
 				result = "(" + compileExpression(e) + ")";
@@ -167,6 +193,7 @@ class TestCompiler extends reflaxe.DirectToStringCompiler {
 			case TNew(classTypeRef, _, el): {
 				final className = classTypeRef.get().getNameOrNative();
 				result = className + ".new(" + el.map(e -> compileExpression(e)).join(", ") + ")";
+				addModuleTypeForCompilation(TClassDecl(classTypeRef));
 			}
 			case TUnop(op, postFix, e): {
 				result = unopToTestScript(op, e, postFix);
@@ -331,12 +358,21 @@ class TestCompiler extends reflaxe.DirectToStringCompiler {
 		//
 		// (For example, `obj.func` for instance access vs `obj::func` for static access).
 		final fieldName = switch(fa) {
-			case FInstance(_, _, classFieldRef): classFieldRef.get().name;
-			case FStatic(_, classFieldRef): classFieldRef.get().name;
+			case FInstance(classType, _, classFieldRef): {
+				addModuleTypeForCompilation(TClassDecl(classType));
+				classFieldRef.get().name;
+			}
+			case FStatic(classType, classFieldRef): {
+				addModuleTypeForCompilation(TClassDecl(classType));
+				classFieldRef.get().name;
+			}
 			case FAnon(classFieldRef): classFieldRef.get().name;
 			case FDynamic(s): s;
 			case FClosure(_, classFieldRef): classFieldRef.get().name;
-			case FEnum(_, enumField): enumField.name;
+			case FEnum(enumType, enumField): {
+				addModuleTypeForCompilation(TEnumDecl(enumType));
+				enumField.name;
+			}
 		}
 		return expr + "." + fieldName;
 	}

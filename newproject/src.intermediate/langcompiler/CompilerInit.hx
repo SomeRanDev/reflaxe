@@ -33,7 +33,7 @@ class CompilerInit {
 			fileOutputType: FilePerClass,
 			reservedVarNames: reservedNames(),
 			targetCodeInjectionName: "__LANG__",
-			smartDCE: true,
+			// manualDCE: true,
 			trackUsedTypes: true
 		});
 	}

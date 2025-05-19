@@ -1,0 +1,22 @@
+class MyNativeClass:
+	static func nativeMain():
+		Log.trace("Hello world.", {
+			"fileName": "MyClass.hx"
+			"lineNumber": 7
+			"className": "MyClass"
+			"methodName": "main",
+		})
+
+		var strLen = "string object".length
+
+		Log.trace(strLen, {
+			"fileName": "MyClass.hx"
+			"lineNumber": 10
+			"className": "MyClass"
+			"methodName": "main",
+		})
+		4 *** "Hello"
+
+	static func testMod():
+		return 9999
+
