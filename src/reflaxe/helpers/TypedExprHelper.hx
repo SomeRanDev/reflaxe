@@ -250,8 +250,8 @@ class TypedExprHelper {
 		}
 	}
 
-	public static function isStaticField(expr: TypedExpr, classPath: String, funcName: String): Bool {
-		return switch(getFieldAccess(unwrapParenthesis(expr))) {
+	public static function isStaticField(expr: TypedExpr, classPath: String, funcName: String, unwrapCasts = false): Bool {
+		return switch(getFieldAccess(unwrapCasts ? unwrapUnsafeCasts(expr) : unwrapParenthesis(expr))) {
 			case FStatic(clsRef, cfRef): {
 				if(clsRef.get().matchesDotPath(classPath) && cfRef.get().name == funcName) {
 					true;
