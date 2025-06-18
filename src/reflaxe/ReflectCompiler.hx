@@ -19,6 +19,7 @@ import haxe.macro.Type;
 
 import reflaxe.BaseCompiler;
 import reflaxe.compiler.NullTypeEnforcer;
+import reflaxe.config.Define;
 import reflaxe.data.ClassFuncData;
 import reflaxe.data.ClassVarData;
 import reflaxe.data.EnumOptionArg;
@@ -26,6 +27,7 @@ import reflaxe.data.EnumOptionData;
 import reflaxe.input.ClassHierarchyTracker;
 import reflaxe.input.ModuleUsageTracker;
 
+using reflaxe.helpers.ArrayHelper;
 using reflaxe.helpers.BaseTypeHelper;
 using reflaxe.helpers.ClassFieldHelper;
 using reflaxe.helpers.SyntaxHelper;
@@ -56,6 +58,7 @@ class ReflectCompiler {
 			if(#if eval !Context.defined("display") #else true #end) {
 				Context.onAfterTyping(onAfterTyping);
 				Context.onAfterGenerate(onAfterGenerate);
+				checkServerCache();
 			}
 			called = true;
 		} else {
@@ -99,6 +102,42 @@ class ReflectCompiler {
 			compileFunc: compileFunc
 		};
 	}
+
+	// =======================================================
+	// * Caching System
+	// =======================================================
+	#if !reflaxe.disallow_build_cache_check
+	static var rebuiltClasses: Null<Array<ClassType>> = null;
+	#end
+
+	#if !reflaxe.disallow_build_cache_check
+	@:persistent static var isCachedRun = false;
+	#end
+
+	public static function checkServerCache() {
+		#if !reflaxe.disallow_build_cache_check
+		if(#if eval !Context.defined("display") #else true #end) {
+			if(!isCachedRun) {
+				isCachedRun = true;
+			} else {
+				rebuiltClasses = [];
+				#if eval
+				Compiler.addGlobalMetadata("", "@:build(reflaxe.ReflectCompiler.addToBuildCache())");
+				#end
+			}
+		}
+		#end
+	}
+
+	#if !reflaxe.disallow_build_cache_check
+	static function addToBuildCache(): Array<Field> {
+		final cls = #if eval Context.getLocalClass() #else null #end;
+		if(cls != null) {
+			rebuiltClasses.push(cls.get());
+		}
+		return null;
+	}
+	#end
 
 	// =======================================================
 	// * Plugin System
@@ -211,6 +250,9 @@ class ReflectCompiler {
 			ClassHierarchyTracker.processAllClasses(moduleTypes);
 		}
 
+		// Apply other type filters
+		final moduleTypes = applyModuleFilters(moduleTypes);
+
 		// Start
 		callInitCallbacks(compiler);
 		compiler.onCompileStart();
@@ -234,7 +276,65 @@ class ReflectCompiler {
 		generateFiles(compiler);
 		compiler.onOutputComplete();
 	}
- 
+
+	/**
+		Filters types based on defines and build cache.
+	**/
+	static function applyModuleFilters(moduleTypes: Array<ModuleType>) {
+		final moduleTypes = applyDefineFilters(moduleTypes);
+		final moduleTypes = applyBuildCacheCheckFilter(moduleTypes);
+		return moduleTypes;
+	}
+
+	static function applyDefineFilters(moduleTypes: Array<ModuleType>) {
+		#if (eval && reflaxe.only_generate)
+		final allowedPacks = try { haxe.Json.parse(Context.definedValue(Define.OnlyGenerate)); } catch(_) { []; }
+		return moduleTypes.filter(mt -> {
+			final pack = mt.getCommonData().pack.join(".");
+			for(allowed in allowedPacks) {
+				if(StringTools.startsWith(pack, allowed)) {
+					return true;
+				}
+			}
+			return false;
+		});
+		#elseif (eval && reflaxe.generate_everything_except)
+		final disallowedPacks = try { haxe.Json.parse(Context.definedValue(Define.GenerateEverythingExcept)); } catch(_) { []; }
+		return moduleTypes.filter(mt -> {
+			final pack = mt.getCommonData().pack.join(".");
+			for(allowed in disallowedPacks) {
+				if(StringTools.startsWith(pack, allowed)) {
+					return false;
+				}
+			}
+			return true;
+		});
+		#else
+		return moduleTypes;
+		#end
+	}
+
+	static function applyBuildCacheCheckFilter(moduleTypes: Array<ModuleType>) {
+		#if !reflaxe.disallow_build_cache_check
+		if(rebuiltClasses != null) {
+			return moduleTypes.filter(mt -> {
+				switch(mt) {
+					case TClassDecl(_.get() => c): {
+						for(cls in rebuiltClasses) {
+							if(cls.name == c.name && cls.module == c.module && cls.pack.equals(c.pack)) {
+								return true;
+							}
+						}
+					}
+					case _:
+				}
+				return false;
+			});
+		}
+		#end
+		return moduleTypes;
+	}
+
 	static function getAllModulesTypesForCompiler(compiler: BaseCompiler, moduleTypes: ReadOnlyArray<ModuleType>): ReadOnlyArray<ModuleType> {
 		return if(compiler.options.ignoreTypes.length > 0) {
 			final ignoreTypes = compiler.options.ignoreTypes;
@@ -313,7 +413,6 @@ class ReflectCompiler {
 				compiler.addModuleTypeForCompilation(m);
 			}
 
-			trace(compiler.dynamicTypeStack);
 			dynamicallyAddModulesToCompiler(compiler);
 		} else {
 			addModulesToCompiler(compiler, getAllModulesTypesForCompiler(compiler, moduleTypes));

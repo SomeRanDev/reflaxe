@@ -15,6 +15,22 @@ using reflaxe.helpers.NameMetaHelper;
 **/
 class ArrayHelper {
 	/**
+		Checks if the two arrays are equal using the equality
+		operator on each value.
+	**/
+	public static function equals<T>(self: Array<T>, other: Array<T>) {
+		if(self.length != other.length) {
+			return false;
+		}
+		for(i in 0...self.length) {
+			if(self[i] != other[i]) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	/**
 		Works the same as `Array.join`, but if the array is not empty,
 		the `connector` is appended to the resulting `String`.
 
