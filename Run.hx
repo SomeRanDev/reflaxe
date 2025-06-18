@@ -48,6 +48,13 @@ final commands = {
 		act: (args: Array<String>) -> buildProject(args),
 		example: "build _Build",
 		order: 3
+	},
+	parallel: {
+		desc: "Run multiple .hxml files in parallel",
+		args: ["hxml_path1", "hxml_path2", "..."],
+		act: (args: Array<String>) -> parallel(args),
+		example: "parallel multiprocess/Compile1.hxml multiprocess/Compile2.hxml",
+		order: 4
 	}
 }
 
@@ -127,7 +134,7 @@ function helpContent(): String {
 	final title = '/ Reflaxe v${haxelibJson.version} \\';
 
 	// Ensure "credits" is longer than "title"
-	var credits = "by SomeRanDev (Robert Borghese)";
+	var credits = "by SomeRanDev (Maybee Rezbit)";
 	if(title.length > credits.length) {
 		final half = Math.floor((title.length - credits.length) / 2);
 		credits = StringTools.rpad(StringTools.lpad(credits, " ", half), " " , half);
@@ -643,5 +650,38 @@ function deleteDir(path: String) {
 				FileSystem.deleteFile(path + "/" + entry);
 			}
 		}
+	}
+}
+
+/**
+
+**/
+function parallel(args: Array<String>) {
+	final processes = [];
+	for(arg in args) {
+		final p = new sys.io.Process("haxe", [arg]);
+		p.exitCode(false);
+		processes.push(p);
+	}
+	while(true) {
+		Sys.sleep(1);
+
+		var exit = true;
+		for(p in processes) {
+			if(p.exitCode(false) == null) {
+				exit = false;
+				break;
+			}
+		}
+		if(exit) {
+			break;
+		}
+	}
+
+	for(p in processes) {
+		Sys.println("---");
+		Sys.println(p.stdout.readAll());
+		Sys.println("---");
+		Sys.println(p.stderr.readAll());
 	}
 }
