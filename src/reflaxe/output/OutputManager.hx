@@ -362,6 +362,10 @@ class OutputManager {
 			return;
 		}
 
+		if(outputMetadata == null) {
+			return;
+		}
+
 		outputMetadata.loadedCount = loadedCount + 1;
 		outputMetadata.wasCached = #if !reflaxe.disallow_build_cache_check ReflectCompiler.isCachedRebuild #else false #end;
 
