@@ -107,6 +107,7 @@ class ReflectCompiler {
 	// * Caching System
 	// =======================================================
 	#if !reflaxe.disallow_build_cache_check
+	public static var isCachedRebuild = false;
 	static var rebuiltClasses: Null<Array<ClassType>> = null;
 	#end
 
@@ -317,7 +318,7 @@ class ReflectCompiler {
 	static function applyBuildCacheCheckFilter(moduleTypes: Array<ModuleType>) {
 		#if !reflaxe.disallow_build_cache_check
 		if(rebuiltClasses != null) {
-			return moduleTypes.filter(mt -> {
+			final result = moduleTypes.filter(mt -> {
 				switch(mt) {
 					case TClassDecl(_.get() => c): {
 						for(cls in rebuiltClasses) {
@@ -330,6 +331,13 @@ class ReflectCompiler {
 				}
 				return false;
 			});
+
+			// If anything is filtered out, we ARE doing a cache rebuild.
+			if(result.length != moduleTypes.length) {
+				isCachedRebuild = true;
+			}
+
+			return result;
 		}
 		#end
 		return moduleTypes;

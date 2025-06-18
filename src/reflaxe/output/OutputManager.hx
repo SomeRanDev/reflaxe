@@ -18,6 +18,13 @@ using Lambda;
 using reflaxe.helpers.BaseTypeHelper;
 using reflaxe.helpers.NullHelper;
 
+typedef OutputMetadata = {
+	version: Int,
+	loadedCount: Int,
+	wasCached: Bool,
+	filesGenerated: Array<String>,
+}
+
 /**
 	Class containing all code related to generating the
 	output files from the compiled classes.
@@ -25,8 +32,7 @@ using reflaxe.helpers.NullHelper;
 class OutputManager {
 	// -------------------------------------------------------
 	// constants
-	public final GENERATED_LIST_FILENAME = "_GeneratedFiles.txt";
-	public final GENERATED_LIST_VERSION = "version // 1";
+	public final GENERATED_LIST_FILENAME = "_GeneratedFiles.json";
 
 	// -------------------------------------------------------
 	// fields
@@ -34,7 +40,7 @@ class OutputManager {
 	public var outputDir(default, null): Null<String> = null;
 
 	var outputFiles: Array<String> = [];
-	var oldOutputFiles: Null<Array<String>> = null;
+	var outputMetadata: Null<OutputMetadata> = null;
 
 	/**
 		If any file is modified, created, or deleted, this should be set to `true`.
@@ -75,44 +81,8 @@ class OutputManager {
 	**/
 	function checkForOldFiles() {
 		if(shouldDeleteOldOutput()) {
-			oldOutputFiles = generatedFilesList();
-			loadCompilationCount();
-		}
-	}
-
-	/**
-		Parse the first line to get the compilation count.
-	**/
-	function loadCompilationCount() {
-		if(oldOutputFiles == null) {
-			return;
-		}
-
-		if(oldOutputFiles.length > 1) {
-			final first = oldOutputFiles[0];
-
-			// Parse the version header.
-			final versionPieces = first.split("//").map(s -> StringTools.trim(s));
-			final validVersion = versionPieces.length == 2 && versionPieces[0] == "version";
-			final version = Std.parseInt(versionPieces[1]);
-
-			if(validVersion) {
-				// First line is safely not a file so we can remove
-				oldOutputFiles.shift();
-
-				// Get data
-				final data = oldOutputFiles[1].split("//").map(n -> Std.parseInt(StringTools.trim(n)));
-
-				// Second line is safely not a file so we can remove
-				if(data.length > 0) {
-					oldOutputFiles.shift();
-				}
-
-				// If the first number can be parsed, store it as loaded count
-				if(data[0] != null) {
-					loadedCount = data[0].trustMe();
-				}
-			}
+			outputMetadata = generatedFilesList();
+			loadedCount = outputMetadata.loadedCount;
 		}
 	}
 
@@ -120,12 +90,25 @@ class OutputManager {
 		return options.fileOutputType != SingleFile && options.deleteOldOutput;
 	}
 
-	function generatedFilesList() {
+	function generatedFilesList(): OutputMetadata {
 		final path = generatedFilesPath();
 		if(sys.FileSystem.exists(path)) {
-			return sys.io.File.getContent(path).split("\n").filter(s -> s.length > 0);
+			return try {
+				(haxe.Json.parse(sys.io.File.getContent(path)) : OutputMetadata);
+			} catch(_) {
+				defaultGeneratedData();
+			}
 		}
-		return [];
+		return defaultGeneratedData();
+	}
+
+	function defaultGeneratedData(): OutputMetadata {
+		return {
+			version: 1,
+			loadedCount: 0,
+			wasCached: false,
+			filesGenerated: []
+		};
 	}
 
 	function generatedFilesPath() {
@@ -180,7 +163,7 @@ class OutputManager {
 
 		if(shouldDeleteOldOutput()) {
 			deleteOldOutputFiles();
-			recordAllOutputFiles();
+			recordAllOutputMetadata();
 		}
 	}
 
@@ -325,11 +308,19 @@ class OutputManager {
 		final outputFilePath = StringTools.replace(path, dir, "");
 		outputFiles.push(outputFilePath);
 
-		// -------------------------------------------------------
-		// We overwrote this file if it existed, so we can
-		// remove it from old files we're planning to delete.
-		if(oldOutputFiles != null && oldOutputFiles.contains(outputFilePath)) {
-			oldOutputFiles.remove(outputFilePath);
+		if(outputMetadata != null) {
+			#if !reflaxe.disallow_build_cache_check
+			if(ReflectCompiler.isCachedRebuild) {
+				// Don't modify `filesGenerated` if we are cache rebuilding.
+			} else
+			#end
+
+			// -------------------------------------------------------
+			// We overwrote this file if it existed, so we can
+			// remove it from old files we're planning to delete.
+			if(outputMetadata.filesGenerated.contains(outputFilePath)) {
+				outputMetadata.filesGenerated.remove(outputFilePath);
+			}
 		}
 	}
 
@@ -340,8 +331,14 @@ class OutputManager {
 		want to delete.
 	**/
 	function deleteOldOutputFiles() {
-		if(oldOutputFiles != null && outputDir != null) {
-			for(file in oldOutputFiles) {
+		#if !reflaxe.disallow_build_cache_check
+		if(ReflectCompiler.isCachedRebuild) {
+			return;
+		}
+		#end
+
+		if(outputMetadata != null && outputDir != null) {
+			for(file in outputMetadata.filesGenerated) {
 				final filePath = joinPaths(outputDir, file);
 				if(sys.FileSystem.exists(filePath)) {
 					try {
@@ -356,20 +353,37 @@ class OutputManager {
 		}
 	}
 
-	function recordAllOutputFiles() {
+	function recordAllOutputMetadata() {
 		if(!changed) {
 			Sys.println("No files updated.");
 		}
-		if(outputFiles.length > 0) {
-			final count = loadedCount == -1 ? 0 : (loadedCount + 1);
-			final headerData = [
-				#if !reflaxe_no_generated_metadata
-				GENERATED_LIST_VERSION,      // version of _GeneratedFiles structure
-				'$count//${changed ? 1 : 0}' // [compilation count]//[files changed in last compilation]
-				#end
-			];
-			sys.io.File.saveContent(generatedFilesPath(), headerData.concat(outputFiles).join("\n"));
+
+		if(outputFiles.length <= 0) {
+			return;
 		}
+
+		outputMetadata.loadedCount = loadedCount + 1;
+		outputMetadata.wasCached = #if !reflaxe.disallow_build_cache_check ReflectCompiler.isCachedRebuild #else false #end;
+
+		// -------------------------------------------------------
+		// If this is a cache build, we cannot delete old files.
+		// Instead add this to the list of files generated if it
+		// doesn't exist.
+		#if !reflaxe.disallow_build_cache_check
+		if(ReflectCompiler.isCachedRebuild) {
+			for(outputFile in outputFiles) {
+				if(!outputMetadata.filesGenerated.contains(outputFile)) {
+					outputMetadata.filesGenerated.push(outputFile);
+				}
+			}
+			Sys.println("Only recompiled " + outputFiles.length + " file" + (outputFiles.length != 1 ? "s" : "") + ".");
+		} else
+		#end
+		{
+			outputMetadata.filesGenerated = outputFiles;
+		}
+
+		sys.io.File.saveContent(generatedFilesPath(), haxe.Json.stringify(outputMetadata, "\t"));
 	}
 }
 
