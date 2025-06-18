@@ -130,9 +130,9 @@ class ReflectCompiler {
 	}
 
 	#if !reflaxe.disallow_build_cache_check
-	static function addToBuildCache(): Array<Field> {
+	static function addToBuildCache(): Null<Array<Field>> {
 		final cls = #if eval Context.getLocalClass() #else null #end;
-		if(cls != null) {
+		if(cls != null && rebuiltClasses != null) {
 			rebuiltClasses.push(cls.get());
 		}
 		return null;
