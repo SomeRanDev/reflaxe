@@ -327,7 +327,7 @@ class ReflectCompiler {
 							}
 						}
 					}
-					case _:
+					case _: return true; // Non-class types cannot be tracked with build macros, so always build for now...
 				}
 				return false;
 			});
