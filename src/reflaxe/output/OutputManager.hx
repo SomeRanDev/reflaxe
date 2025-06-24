@@ -378,12 +378,12 @@ class OutputManager {
 			return;
 		}
 
-		if(outputMetadata == null) {
-			return;
-		}
-
-		outputMetadata.id = #if !reflaxe.dont_output_metadata_id lastId + 1 #else 0 #end;
-		outputMetadata.wasCached = #if !reflaxe.disallow_build_cache_check ReflectCompiler.isCachedRebuild #else false #end;
+		final outputMetadata: OutputMetadata = {
+			version: 1,
+			id: #if !reflaxe.dont_output_metadata_id lastId + 1 #else 0 #end,
+			wasCached: #if !reflaxe.disallow_build_cache_check ReflectCompiler.isCachedRebuild #else false #end,
+			filesGenerated: [],
+		};
 
 		// -------------------------------------------------------
 		// If this is a cache build, we cannot delete old files.
