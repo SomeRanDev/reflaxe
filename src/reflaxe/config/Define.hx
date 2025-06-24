@@ -37,4 +37,12 @@ enum abstract Define(String) from String to String {
 		way that requires all types to be recompiled for proper generation.
 	**/
 	var DisallowBuildCacheCheck = "reflaxe.disallow_build_cache_check";
+
+	/**
+		-D reflaxe.dont_output_metadata_id
+
+		If defined, the `id` entry in the output metadata will always be `0`.
+		This is useful for testing Reflaxe targets and ensuring the output is always identical.
+	**/
+	var DontOutputMetadataId = "reflaxe.dont_output_metadata_id";
 }
