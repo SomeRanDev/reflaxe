@@ -98,7 +98,7 @@ class OutputManager {
 	function checkForOldFiles() {
 		if(shouldDeleteOldOutput()) {
 			outputMetadata = generatedFilesList();
-			lastId = outputMetadata.id;
+			lastId = outputMetadata.id ?? -1;
 		}
 	}
 
