@@ -429,3 +429,6 @@ public var metadataTemplates: Array<{
 	compileFunc: Null<(MetadataEntry, Array<String>) -> Null<String>>
 }> = [];
 ```
+
+![cooltext494864605071465](https://github.com/user-attachments/assets/9d61f81f-f2f2-4dc2-8317-63a836297eb1)
+
