@@ -430,5 +430,5 @@ public var metadataTemplates: Array<{
 }> = [];
 ```
 
-![cooltext494864605071465](https://github.com/user-attachments/assets/9d61f81f-f2f2-4dc2-8317-63a836297eb1)
+![me gusta macro](https://github.com/user-attachments/assets/9d61f81f-f2f2-4dc2-8317-63a836297eb1)
 
