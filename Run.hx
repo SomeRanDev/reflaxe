@@ -17,46 +17,54 @@ import haxe.io.Path;
 import sys.FileSystem;
 import sys.io.File;
 
+typedef Command = {
+	desc: String,
+	args: Array<String>,
+	act: (Array<String>) -> Void,
+	example: String,
+	order: Int,
+};
+
 /**
 	The commands that can be used with this script.
 **/
-final commands = {
-	help: {
+final commands: Map<String, Command> = [
+	"help" => {
 		desc: "Shows this message",
 		args: [],
 		act: (args) -> Sys.println(helpContent()),
 		example: "help",
 		order: 0
 	},
-	"new": {
+	"new" => {
 		desc: "Create a new Reflaxe project",
 		args: [],
 		act: (args: Array<String>) -> createNewProject(args),
 		example: "new Rust rs",
 		order: 1
 	},
-	test: {
+	"test" => {
 		desc: "Test your target on .hxml project",
 		args: ["hxml_path"],
 		act: (args: Array<String>) -> testProject(args),
 		example: "test test/Test.hxml",
 		order: 2
 	},
-	build: {
+	"build" => {
 		desc: "Build your project for distribution",
 		args: ["build_folder"],
 		act: (args: Array<String>) -> buildProject(args),
 		example: "build _Build",
 		order: 3
 	},
-	parallel: {
+	"parallel" => {
 		desc: "Run multiple .hxml files in parallel",
 		args: ["hxml_path1", "hxml_path2", "..."],
 		act: (args: Array<String>) -> parallel(args),
 		example: "parallel multiprocess/Compile1.hxml multiprocess/Compile2.hxml",
 		order: 4
 	}
-}
+];
 
 /**
 	The directory this command was run in.
@@ -70,11 +78,11 @@ function main() {
 	final args = Sys.args();
 	commandRunDir = args.splice(args.length - 1, 1)[0];
 	final mainCommand = args.length < 1 ? "help" : args[0];
-	if(Reflect.hasField(commands, mainCommand)) {
-		Reflect.callMethod(commands, Reflect.getProperty(commands, mainCommand).act, [args.slice(1)]);
+	if(commands.exists(mainCommand)) {
+		commands.get(mainCommand)?.act(args.slice(1));
 	} else {
 		printlnRed("Could not find command: " + mainCommand + "\n");
-		commands.help.act(args);
+		commands.get("help")?.act(args);
 	}
 }
 
@@ -107,17 +115,18 @@ function printlnGray(msg: String) { Sys.println('\033[1;30m${msg}\033[0m'); }
 function helpContent(): String {
 	var maxFieldSize = -1;
 
-	final commandNames = Reflect.fields(commands);
+	final commandNames = [for(k in commands.keys()) k];
 	commandNames.sort((a, b) -> {
-		final i = Reflect.getProperty(commands, a)?.order ?? 9999;
-		final j = Reflect.getProperty(commands, b)?.order ?? 9999;
+		final i = commands.get(a)?.order ?? -9999;
+		final j = commands.get(b)?.order ?? -9999;
 		return i - j;
 	});
 
 	// Convert "commands" into an array
 	final data = [];
 	for(field in commandNames) {
-		final c = Reflect.getProperty(commands, field);
+		final c = commands.get(field);
+		if(c == null) continue;
 		final args = c.args.map(c -> "<" + c + ">").join(" ");
 		final helpName = field + (args.length > 0 ? (" " + args) : "");
 
