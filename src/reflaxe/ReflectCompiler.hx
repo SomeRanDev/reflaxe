@@ -532,7 +532,7 @@ class ReflectCompiler {
 					if(shouldGenerateVar(field, compiler, isStatic, readVarAccess, writeVarAccess)) {
 						final data = field.findVarData(cls, isStatic);
 						if(data != null) {
-							varFields.push(data);
+							varFields.push(preprocessVar(compiler, field, data));
 						} else {
 							throw "Variable information not found.";
 						}
@@ -581,6 +581,87 @@ class ReflectCompiler {
 		for(preprocessor in compiler.expressionPreprocessors) {
 			preprocessor.process(data, compiler);
 		}
+		return data;
+	}
+
+	static function preprocessVar(compiler: BaseCompiler, field: ClassField, data: ClassVarData): ClassVarData {
+		var defaultExpr = field.expr();
+		if(defaultExpr == null) {
+			return data;
+		}
+
+		var classRef:Ref<ClassType> = {
+			get: () -> data.classType,
+			toString: () -> data.classType.name
+		};
+		var fieldRef:Ref<ClassField> = {
+			get: () -> field,
+			toString: () -> field.name
+		};
+
+		var fieldExpr:TypedExpr = {
+			expr: TField({
+				expr: TTypeExpr(TClassDecl(classRef)),
+				pos: defaultExpr.pos,
+				t: defaultExpr.t
+			}, FStatic(classRef, fieldRef)),
+			pos: defaultExpr.pos,
+			t: defaultExpr.t
+		};
+
+		defaultExpr = {
+			expr: TBinop(OpAssign, fieldExpr, defaultExpr),
+			pos: defaultExpr.pos,
+			t: defaultExpr.t
+		};
+
+		if(compiler.options.enforceNullTyping) {
+			NullTypeEnforcer.modifyExpression(defaultExpr);
+		}
+		final dataProxy = new ClassFuncData(data.classType.moduleId(), data.classType, field, data.isStatic, MethNormal, field.type, [], null, defaultExpr);
+		for(preprocessor in compiler.expressionPreprocessors) {
+			preprocessor.process(dataProxy, compiler);
+		}
+
+		// The EverythingIsAnExpression sanitizer (tm) should convert a TBinop(op, e1, TBlock(<...>)) into just a block,
+		// we can use this to our advantage to check if we can directly inline the value,
+		// otherwise we may need to wrap the code inside a function and then call it immediately to get the final value.
+		var inlineExpr:Null<TypedExpr> = switch(dataProxy.expr.expr)
+		{
+			case TBinop(op, e1, e2):
+				if (op.match(OpAssign) || op.match(OpAssignOp(_)))
+				{
+					switch(e1.expr)
+					{
+						case TField(targetExpr, fieldAccess):
+							if (targetExpr.expr.match(TTypeExpr(TClassDecl(_))))
+							{
+								switch(targetExpr.expr)
+								{
+									case TTypeExpr(TClassDecl(d)):
+										if (d == classRef)
+											e2;
+										else
+											null;
+									case _:
+										null;
+								}
+							}
+							else
+								null;
+						case _:
+							null;
+					}
+				}
+				else
+					null;
+			case _:
+				null;
+		}
+		if (inlineExpr != null)
+			Reflect.setField(dataProxy, "expr", inlineExpr);
+			
+		Reflect.setField(field, "expr", () -> dataProxy.expr);
 		return data;
 	}
 
