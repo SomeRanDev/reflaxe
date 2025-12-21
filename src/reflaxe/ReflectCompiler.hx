@@ -623,6 +623,9 @@ class ReflectCompiler {
 			preprocessor.process(dataProxy, compiler);
 		}
 
+		if (dataProxy.expr == null)
+			return data;
+
 		// The EverythingIsAnExpression sanitizer (tm) should convert a TBinop(op, e1, TBlock(<...>)) into just a block,
 		// we can use this to our advantage to check if we can directly inline the value,
 		// otherwise we may need to wrap the code inside a function and then call it immediately to get the final value.
