@@ -11,6 +11,7 @@ import haxe.macro.Type;
 import reflaxe.data.ClassFuncArg;
 import reflaxe.data.ClassFuncData;
 import reflaxe.data.ClassVarData;
+import reflaxe.data.ClassFieldData;
 
 using reflaxe.helpers.NameMetaHelper;
 using reflaxe.helpers.NullableMetaAccessHelper;
@@ -77,7 +78,8 @@ class ClassFieldHelper {
 
 		return switch(field.kind) {
 			case FVar(read, write): {
-				final result = new ClassVarData(clsType, field, isStatic, read, write);
+				var e = field.expr();
+				final result = new ClassVarData(id, clsType, field, isStatic, read, write, e);
 				findVarData_cache.set(id, result);
 				result;
 			}
@@ -160,7 +162,7 @@ class ClassFieldHelper {
 		}
 	}
 
-	public static function getAllVariableNames(data: ClassFuncData, compiler: BaseCompiler) {
+	public static function getAllVariableNames(data: ClassFieldData, compiler: BaseCompiler) {
 		final fields = data.classType.fields.get();
 		final fieldNames = [];
 		for(f in fields) {
