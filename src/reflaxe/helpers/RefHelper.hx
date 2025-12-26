@@ -1,7 +1,8 @@
 package reflaxe.helpers;
 
-import haxe.macro.Type.Ref;
 #if (macro || reflaxe_runtime)
+
+import haxe.macro.Type.Ref;
 
 class RefHelper {
 	public static function buildRef<T>(c:T):Ref<T> {
