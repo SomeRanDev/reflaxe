@@ -110,6 +110,10 @@ class TypedExprHelper {
 		}
 	}
 
+	public static function transformAssign(expr: TypedExpr, target: TypedExpr): TypedExpr {
+		return make(TBinop(OpAssign, target, expr), expr.t, expr.pos);
+	}
+
 	public static function hasMeta(expr: TypedExpr, name: String): Bool {
 		return switch(expr.expr) {
 			case TParenthesis(e): {

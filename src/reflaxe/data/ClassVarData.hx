@@ -16,6 +16,8 @@ class ClassVarData extends ClassFieldData {
 	public final read: VarAccess;
 	public final write: VarAccess;
 
+	public var canBeInlined(default, null): Bool = false;
+
 	public var getter(default, null): Null<ClassField>;
 	public var setter(default, null): Null<ClassField>;
 
@@ -77,6 +79,10 @@ class ClassVarData extends ClassFieldData {
 			}
 		}
 		return null;
+	}
+
+	public function setCanBeInlined(value: Bool) {
+		canBeInlined = value;
 	}
 }
 

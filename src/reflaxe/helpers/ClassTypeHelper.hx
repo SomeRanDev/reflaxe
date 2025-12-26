@@ -4,9 +4,11 @@ package reflaxe.helpers;
 
 import haxe.macro.Expr;
 import haxe.macro.Type;
+import reflaxe.helpers.TypedExprHelper;
 
 using reflaxe.helpers.ClassFieldHelper;
 using reflaxe.helpers.NullHelper;
+using reflaxe.helpers.RefHelper;
 
 /**
 	Helper functions for `ClassType`.
@@ -130,6 +132,10 @@ class ClassTypeHelper {
 				t: constructorExpr.t
 			}
 		}
+	}
+
+	public static function generateDeclTExpr(cls: ClassType, t:Type, pos:Null<Position>): TypedExpr {
+		return TypedExprHelper.make(TTypeExpr(TClassDecl(cls.buildRef())), t, pos);
 	}
 }
 

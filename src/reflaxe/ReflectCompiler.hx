@@ -35,6 +35,7 @@ using reflaxe.helpers.ModuleTypeHelper;
 using reflaxe.helpers.NameMetaHelper;
 using reflaxe.helpers.NullableMetaAccessHelper;
 using reflaxe.helpers.TypeHelper;
+using reflaxe.helpers.TypedExprHelper;
 
 /**
 	The heart of Reflaxe.
@@ -584,6 +585,52 @@ class ReflectCompiler {
 		return data;
 	}
 
+
+	static function preprocessVar(compiler: BaseCompiler, field: ClassField, data: ClassVarData): ClassVarData {
+		if(data.expr == null) {
+			return data;
+		}
+
+		final fE = field.buildTField(data.classType);
+		var e = data.expr.transformAssign(fE);
+
+		data.setExpr(e);
+
+		if(compiler.options.enforceNullTyping) {
+			NullTypeEnforcer.modifyExpression(data.expr);
+		}
+		for(preprocessor in compiler.expressionPreprocessors) {
+			preprocessor.process(data, compiler);
+		}
+
+		e = data.expr;
+
+		var isInline = e.expr.match(TBinop(_, _, _)); //e.isMutator();
+		var finalExpr = switch(e.expr)
+		{
+			case TBinop(op, e1, e2):
+				if (op.match(OpAssign) || op.match(OpAssignOp(_)))
+				{
+					if (Std.string(e1) == Std.string(fE))
+						e2;
+					else if (Std.string(e2) == Std.string(fE))
+						e1;
+					else
+						e;
+				}
+				else
+					e;
+			case _:
+				e;
+		}
+
+		data.setExpr(finalExpr);
+		data.setCanBeInlined(isInline);
+
+		return data;
+	}
+
+	/*
 	static function preprocessVar(compiler: BaseCompiler, field: ClassField, data: ClassVarData): ClassVarData {
 		var defaultExpr = field.expr();
 		if(defaultExpr == null) {
@@ -666,7 +713,7 @@ class ReflectCompiler {
 			
 		Reflect.setField(field, "expr", () -> dataProxy.expr);
 		return data;
-	}
+	}*/
 
 	// =======================================================
 	// * transpileEnum
