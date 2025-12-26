@@ -11,9 +11,12 @@ import haxe.macro.Type;
 import reflaxe.data.ClassFuncArg;
 import reflaxe.data.ClassFuncData;
 import reflaxe.data.ClassVarData;
+import reflaxe.data.ClassFieldData;
 
 using reflaxe.helpers.NameMetaHelper;
 using reflaxe.helpers.NullableMetaAccessHelper;
+using reflaxe.helpers.RefHelper;
+using reflaxe.helpers.ClassTypeHelper;
 
 /**
 	Quick static extensions to help with `ClassField`.
@@ -77,7 +80,8 @@ class ClassFieldHelper {
 
 		return switch(field.kind) {
 			case FVar(read, write): {
-				final result = new ClassVarData(clsType, field, isStatic, read, write);
+				var e = field.expr();
+				final result = new ClassVarData(id, clsType, field, isStatic, read, write, e);
 				findVarData_cache.set(id, result);
 				result;
 			}
@@ -160,7 +164,7 @@ class ClassFieldHelper {
 		}
 	}
 
-	public static function getAllVariableNames(data: ClassFuncData, compiler: BaseCompiler) {
+	public static function getAllVariableNames(data: ClassFieldData, compiler: BaseCompiler) {
 		final fields = data.classType.fields.get();
 		final fieldNames = [];
 		for(f in fields) {
@@ -182,6 +186,26 @@ class ClassFieldHelper {
 		} else {
 			field.name;
 		}
+	}
+
+	public static function buildTField(field: ClassField, clsType: ClassType, isStatic: Null<Bool> = null):TypedExpr {
+		if(isStatic == null) {
+			isStatic = false;
+			for(s in clsType.statics.get()) {
+				if(equals(s, field)) {
+					isStatic = true;
+					break;
+				}
+			}
+		}
+		var fa = if (isStatic) {
+			FStatic(clsType.buildRef(), field.buildRef());
+		} else {
+			FInstance(clsType.buildRef(), clsType.params.map(p -> p.t), field.buildRef());
+		}
+
+		final clsRef = clsType.buildRef();
+		return TypedExprHelper.make(TField(clsType.generateDeclTExpr(TInst(clsRef, clsType.params.map(p -> p.t)), field.pos), fa), field.type, field.pos);
 	}
 }
 

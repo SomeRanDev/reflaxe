@@ -1,5 +1,7 @@
 package reflaxe.preprocessors;
 
+import reflaxe.data.ClassFuncArg;
+import reflaxe.data.ClassFieldData;
 import reflaxe.compiler.NullTypeEnforcer;
 import reflaxe.data.ClassFuncData;
 import reflaxe.preprocessors.BasePreprocessor;
@@ -162,7 +164,7 @@ class ExpressionPreprocessorHelper {
 	/**
 		This is where the implementations for the builtin `ExpressionPreprocessor` are.
 	**/
-	public static function process(self: ExpressionPreprocessor, data: ClassFuncData, compiler: BaseCompiler) {
+	public static function process(self: ExpressionPreprocessor, data: ClassFieldData, compiler: BaseCompiler) {
 		if(data.expr == null) {
 			return;
 		}
@@ -182,12 +184,13 @@ class ExpressionPreprocessorHelper {
 				preventRepeatArguments: preventRepeatArguments,
 				extraReservedNames: extraReservedNames
 			}): {
+				var args:Array<ClassFuncArg> = (data is ClassFuncData) ? cast(data, ClassFuncData).args : [];
 				final reservedNames = data.getAllVariableNames(compiler).concatIfNotNull(extraReservedNames);
-				final rvf = new PreventRepeatVariablesImpl(data.expr, null, data.args.map(a -> a.originalName).concat(reservedNames));
+				final rvf = new PreventRepeatVariablesImpl(data.expr, null, args.map(a -> a.originalName).concat(reservedNames));
 
 				// Ensure the argument names don't match any class variables.
-				if(preventRepeatArguments) {
-					for(arg in data.args) {
+				if(preventRepeatArguments && data is ClassFuncData) {
+					for(arg in (cast(data, ClassFuncData)).args) {
 						if(arg.ensureNameDoesntMatch(reservedNames) && arg.tvar != null) {
 							rvf.registerVarReplacement(arg.getName(), arg.tvar);
 						}

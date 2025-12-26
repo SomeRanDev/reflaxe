@@ -12,22 +12,18 @@ using reflaxe.helpers.NullableMetaAccessHelper;
 using reflaxe.helpers.PositionHelper;
 using reflaxe.helpers.TypedExprHelper;
 
-class ClassVarData {
-	public var classType(default, null): ClassType;
-	public var field(default, null): ClassField;
+class ClassVarData extends ClassFieldData {
+	public final read: VarAccess;
+	public final write: VarAccess;
 
-	public var isStatic(default, null): Bool;
-	public var read(default, null): VarAccess;
-	public var write(default, null): VarAccess;
+	public var canBeInlined(default, null): Bool = false;
 
 	public var getter(default, null): Null<ClassField>;
 	public var setter(default, null): Null<ClassField>;
 
-	public function new(classType: ClassType, field: ClassField, isStatic: Bool, read: VarAccess, write: VarAccess) {
-		this.classType = classType;
-		this.field = field;
+	public function new(id:String, classType: ClassType, field: ClassField, isStatic: Bool, read: VarAccess, write: VarAccess, expr:Null<TypedExpr> = null) {
+		super(id, classType, field, isStatic, expr);
 
-		this.isStatic = isStatic;
 		this.read = read;
 		this.write = write;
 
@@ -83,6 +79,10 @@ class ClassVarData {
 			}
 		}
 		return null;
+	}
+
+	public function setCanBeInlined(value: Bool) {
+		canBeInlined = value;
 	}
 }
 
