@@ -592,7 +592,11 @@ class ReflectCompiler {
 		}
 
 		final fE = field.buildTField(data.classType);
-		var e = data.expr.transformAssign(fE);
+		var e = if (compiler.options.convertStaticVarExpressionsToFunctions) {
+			data.expr.transformLambaSelfCall(true);
+		} else {
+			data.expr.transformAssign(fE);
+		};
 
 		data.setExpr(e);
 
@@ -625,7 +629,7 @@ class ReflectCompiler {
 		}
 
 		data.setExpr(finalExpr);
-		data.setCanBeInlined(isInline);
+		data.setCanBeInlined(compiler.options.convertStaticVarExpressionsToFunctions ? true : isInline);
 
 		return data;
 	}
