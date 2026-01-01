@@ -592,45 +592,11 @@ class ReflectCompiler {
 		}
 
 		final fE = field.buildTField(data.classType);
-		var e = {
-			var canInline:TypedExpr -> Bool;
-			canInline = (ex:TypedExpr) -> switch(ex.expr)
-			{
-				case TConst(_) |
-					 TLocal(_) |
-					 TArray(_, _) |
-					 TField(_, _) |
-					 TTypeExpr(_) |
-					 TObjectDecl(_) |
-					 TArrayDecl(_) |
-					 TCall(_, _) |
-					 TNew(_, _, _) |
-					 TFunction(_) |
-					 TCast(_, _) |
-					 TMeta(_, _) |
-					 TEnumParameter(_, _, _) |
-					 TEnumIndex(_) |
-					 TIdent(_): true;
-
-				case TThrow(_): true;
-				case TUnop(_, _, _): false;
-				case TParenthesis(e): canInline(e);
-				case TBinop(op, e1, e2):
-					if (!op.match(OpAssign) && !op.match(OpAssignOp(_)))
-						canInline(e2);
-					else 
-						false;
-				case _: false;
-			}
-
-			if (canInline(data.expr)) {
-				data.expr.transformAssign(fE);
-			} else if (compiler.options.convertStaticVarExpressionsToFunctions) {
-				data.expr.transformLambaSelfCall(true);
-			} else {
-				data.expr.transformAssign(fE);
-			}
-		};
+		var e = if (compiler.options.convertStaticVarExpressionsToFunctions) {
+			data.expr.transformLambaSelfCall(true);
+		} else {
+			data.expr.transformAssign(fE);
+		}
 
 		data.setExpr(e);
 
@@ -641,7 +607,38 @@ class ReflectCompiler {
 			preprocessor.process(data, compiler);
 		}
 
-		e = data.expr;
+		e = {
+			if (compiler.options.convertStaticVarExpressionsToFunctions) {
+				switch(data.expr.expr)
+				{
+					case TCall(e, _):
+						switch(e.unwrapParenthesis().expr)
+						{
+							case TFunction(tfunc):
+								final block = tfunc.expr.unwrapBlock();
+								if (block.length == 1)
+								{
+									final b = block[0];
+									switch(b.expr)
+									{
+										case TReturn(e):
+											e;
+										case _:
+											b;
+									}
+								}
+								else
+									data.expr;
+
+							case _: data.expr;
+						}
+					
+					case _: data.expr;
+				}
+			} else {
+				data.expr;
+			}
+		}
 
 		var isInline = e.expr.match(TBinop(_, _, _)); //e.isMutator();
 		var finalExpr = switch(e.expr)
