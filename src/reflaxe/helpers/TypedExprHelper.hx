@@ -110,6 +110,29 @@ class TypedExprHelper {
 		}
 	}
 
+	/**
+		Transforms the typed expression into an assignment expression given a `target` typedExpr.
+		This will return (in Haxe code) `target = self`.
+	**/
+	public static function transformAssign(expr: TypedExpr, target: TypedExpr): TypedExpr {
+		return make(TBinop(OpAssign, target, expr), expr.t, expr.pos);
+	}
+
+	/**
+		Transforms the typed expression into a lamba function that auto calls itself immediately after.
+	**/
+	public static function transformLambaSelfCall(expr: TypedExpr, addReturn: Bool = false): TypedExpr {
+		final mk = (e:TypedExprDef) -> make(e, expr.t, expr.pos);
+		return mk(TCall(mk(TParenthesis(mk(TFunction({
+			args: [],
+			t: expr.t,
+			expr: if (addReturn)
+					mk(TReturn(mk(expr.expr)))
+				else 
+					expr
+		})))), []));
+	}
+
 	public static function hasMeta(expr: TypedExpr, name: String): Bool {
 		return switch(expr.expr) {
 			case TParenthesis(e): {

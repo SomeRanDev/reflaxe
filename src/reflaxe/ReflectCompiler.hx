@@ -35,6 +35,7 @@ using reflaxe.helpers.ModuleTypeHelper;
 using reflaxe.helpers.NameMetaHelper;
 using reflaxe.helpers.NullableMetaAccessHelper;
 using reflaxe.helpers.TypeHelper;
+using reflaxe.helpers.TypedExprHelper;
 
 /**
 	The heart of Reflaxe.
@@ -532,7 +533,7 @@ class ReflectCompiler {
 					if(shouldGenerateVar(field, compiler, isStatic, readVarAccess, writeVarAccess)) {
 						final data = field.findVarData(cls, isStatic);
 						if(data != null) {
-							varFields.push(data);
+							varFields.push(preprocessVar(compiler, field, data));
 						} else {
 							throw "Variable information not found.";
 						}
@@ -581,6 +582,86 @@ class ReflectCompiler {
 		for(preprocessor in compiler.expressionPreprocessors) {
 			preprocessor.process(data, compiler);
 		}
+		return data;
+	}
+
+
+	static function preprocessVar(compiler: BaseCompiler, field: ClassField, data: ClassVarData): ClassVarData {
+		if(data.expr == null) {
+			return data;
+		}
+
+		final fE = field.buildTField(data.classType);
+		var e = if (compiler.options.convertStaticVarExpressionsToFunctions) {
+			data.expr.transformLambaSelfCall(true);
+		} else {
+			data.expr.transformAssign(fE);
+		}
+
+		data.setExpr(e);
+
+		if(compiler.options.enforceNullTyping) {
+			NullTypeEnforcer.modifyExpression(data.expr);
+		}
+		for(preprocessor in compiler.expressionPreprocessors) {
+			preprocessor.process(data, compiler);
+		}
+
+		e = {
+			if (compiler.options.convertStaticVarExpressionsToFunctions) {
+				switch(data.expr.expr)
+				{
+					case TCall(e, _):
+						switch(e.unwrapParenthesis().expr)
+						{
+							case TFunction(tfunc):
+								final block = tfunc.expr.unwrapBlock();
+								if (block.length == 1)
+								{
+									final b = block[0];
+									switch(b.expr)
+									{
+										case TReturn(e):
+											e;
+										case _:
+											b;
+									}
+								}
+								else
+									data.expr;
+
+							case _: data.expr;
+						}
+					
+					case _: data.expr;
+				}
+			} else {
+				data.expr;
+			}
+		}
+
+		var isInline = e.expr.match(TBinop(_, _, _));
+		var finalExpr = switch(e.expr)
+		{
+			case TBinop(op, e1, e2):
+				if (op.match(OpAssign) || op.match(OpAssignOp(_)))
+				{
+					if (Std.string(e1) == Std.string(fE))
+						e2;
+					else if (Std.string(e2) == Std.string(fE))
+						e1;
+					else
+						e;
+				}
+				else
+					e;
+			case _:
+				e;
+		}
+
+		data.setExpr(finalExpr);
+		data.setCanBeInlined(compiler.options.convertStaticVarExpressionsToFunctions ? true : isInline);
+
 		return data;
 	}
 
