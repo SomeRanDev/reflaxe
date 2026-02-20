@@ -254,6 +254,7 @@ class ExpressionPreprocessorHelper {
 			RemoveReassignedVariableDeclarations,
 			RemoveLocalVariableAliases,
 			MarkUnusedVariables,
+			RemoveUnusedBlockResults,
 		];
 	}
 }
