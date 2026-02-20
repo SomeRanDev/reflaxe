@@ -14,6 +14,7 @@ import reflaxe.preprocessors.implementations.RemoveTemporaryVariablesImpl;
 import reflaxe.preprocessors.implementations.RemoveTemporaryVariablesImpl.RemoveTemporaryVariablesMode;
 import reflaxe.preprocessors.implementations.RemoveUnnecessaryBlocksImpl;
 import reflaxe.preprocessors.implementations.WrapLambdaCaptureVariablesInArrayImpl;
+import reflaxe.preprocessors.implementations.RemoveUnusedBlockResultsImpl;
 
 using reflaxe.helpers.ArrayHelper;
 using reflaxe.helpers.ClassFieldHelper;
@@ -140,6 +141,16 @@ enum ExpressionPreprocessor {
 	**/
 	WrapLambdaCaptureVariablesInArray(options: WrapLambdaCaptureVariablesInArrayOptions);
 
+	/**
+		Removes or converts the final expression value of blocks whose value
+		is not used by the surrounding code.
+	
+		This fixes inlined functions that produce a return-expression when
+		the caller does not use thereturned value (which produces invalid
+		code in non-expression-based languages).
+	**/
+	RemoveUnusedBlockResults;
+
 	RemoveSingleExpressionBlocks;
 	RemoveConstantBoolIfs;
 	RemoveUnnecessaryBlocks;
@@ -217,6 +228,9 @@ class ExpressionPreprocessorHelper {
 			}
 			case MarkUnusedVariables: {
 				data.setExprList(MarkUnusedVariablesImpl.mark(data.expr.unwrapBlock()));
+			}
+			case RemoveUnusedBlockResults: {
+				data.setExpr(RemoveUnusedBlockResultsImpl.process(data.expr));
 			}
 			case Custom(preprocessor): {
 				preprocessor.process(data, compiler);
