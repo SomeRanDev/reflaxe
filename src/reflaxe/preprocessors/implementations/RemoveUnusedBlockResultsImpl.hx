@@ -3,11 +3,11 @@
 // =======================================================
 package reflaxe.preprocessors.implementations;
 
-import haxe.Exception;
-import haxe.macro.TypedExprTools;
 #if (macro || reflaxe_runtime)
 import haxe.macro.Expr;
 import haxe.macro.Type;
+import haxe.Exception;
+import haxe.macro.TypedExprTools;
 
 using reflaxe.helpers.NullableMetaAccessHelper;
 using reflaxe.helpers.PositionHelper;
