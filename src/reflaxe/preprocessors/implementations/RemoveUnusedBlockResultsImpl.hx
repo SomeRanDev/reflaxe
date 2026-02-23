@@ -22,8 +22,11 @@ using Lambda;
 class RemoveUnusedBlockResultsImpl {
 	public static function process(list:Array<TypedExpr>):Array<TypedExpr> {
 		// public static function process(expr: TypedExpr): TypedExpr {
-		final result = [];
+		var result = [];
 
+		result = OptimizerTexpr.blockElement(true, result, list);
+		result.reverse();
+		/*
 		for (i in 0...list.length) {
 			var e = list[i];
 			var sideEff = OptimizerTexpr.hasSideEffects(e);
@@ -35,7 +38,7 @@ class RemoveUnusedBlockResultsImpl {
 				result.push(TBinop(OpAssign, TIdent("--[=[").make(e.t, e.pos), 
 			TBinop(OpAssign, e, TIdent("]=]--").make(e.t, e.pos)).make(e.t, e.pos)
 			).make(e.t, e.pos));
-		}
+		}*/
 
 		return result;
 	}
@@ -141,7 +144,181 @@ private class OptimizerTexpr {
 			throw e;
 		}
 	}
+
+	public static function blockElement(loopBottom:Bool, acc:Array<TypedExpr>, el:Array<TypedExpr>):Array<TypedExpr> {
+		function loop(acc:Array<TypedExpr>, el:Array<TypedExpr>):Array<TypedExpr> {
+			if (el.length == 0)
+				return acc;
+
+			var head = el[0];
+			var tail = el.slice(1);
+
+			switch (head.expr) {
+				case TBinop(OpAssign, { expr: TLocal(v1) }, { expr: TLocal(v2) }) if (v1 == v2):
+					return loop(acc, tail);
+				case TBinop(op, _, _) if (op.match(OpAssignOp(_)) || op == OpAssign):
+					return loop([head].concat(acc), tail);
+				case TUnop(op, _, _) if (op == OpIncrement || op == OpDecrement):
+					return loop([head].concat(acc), tail);
+				//case TLocal(_): if (!config.local_dce):
+				//	return loop([head].concat(acc), tail);
+				case TLocal(v):
+					return loop(acc, tail);
+				case TField(_, fa) if (!PurityState.isPureFieldAccess(fa)):
+					return loop([head].concat(acc), tail);
+				case TFunction(_), TConst(_), TTypeExpr(_):
+					return loop(acc, tail);
+				case TMeta(meta, _) if (PurityState.getPurityFromMeta(meta) == Pure):
+					return loop(acc, tail);
+				// Pure field call
+				//case TCall({ expr: TField(e1, fa) }, el1) if (PurityState.isPureFieldAccess(fa) && config.local_dce):
+				//	return loop(acc, [e1].concat(el1).concat(tail));
+				// Pure constructor
+				//case TNew(c, tl, el1) if (c.get().constructor != null && PurityState.isPure(PurityState.getPurity(c.get(), c.get().constructor.get())) && config.local_dce):
+				//	return loop(acc, el1.concat(tail));
+				case TIf({ expr: TConst(TBool(t)) }, e1, e2):
+					if (t)
+						return loop(acc, [e1].concat(tail));
+					else
+						return switch (e2) {
+							case null: loop(acc, tail);
+							case e: loop(acc, [e].concat(tail));
+						}
+				case TSwitch(e, cases, edef):
+					var opt = checkConstantSwitch({e: e, cases: cases, edef: edef});
+					if (opt != null)
+						return loop(acc, [opt].concat(tail));
+					else
+						return loop([head].concat(acc), tail);
+				case TParenthesis(e1), TMeta(_, e1), TCast(e1, null), TField(e1, _), TUnop(_, _, e1), TEnumIndex(e1), TEnumParameter(e1, _, _):
+					return loop(acc, [e1].concat(tail));
+
+				case TArray(e1, e2), TBinop(_, e1, e2):
+					return loop(acc, [e1, e2].concat(tail));
+
+				case TArrayDecl(el1), TCall({ expr: TField(_, FEnum(_)) }, el1):
+					return loop(acc, el1.concat(tail));
+
+				case TObjectDecl(fl):
+					var values = [for (f in fl) f.expr];
+					return loop(acc, values.concat(tail));
+
+				case TIf(e1, e2, null) if (!hasSideEffects(e2)):
+					return loop(acc, [e1].concat(tail));
+
+				case TIf(e1, e2, e3) 
+					if (e3 != null && !hasSideEffects(e2) && !hasSideEffects(e3)):
+					return loop(acc, [e1].concat(tail));
+				
+				case TBlock([e1]):
+					return loop(acc, [e1].concat(tail));
+
+				case TBlock([]):
+					return loop(acc, tail);
+
+				case TContinue if (loopBottom):
+					return loop([], tail);
+
+				default:
+					return loop([head].concat(acc), tail);
+			}
+			return null;
+		}
+
+		return loop(acc, el);
+	}
+
+	static function extractConstantValue(e:TypedExpr):Null<TypedExpr> {
+		switch (e.expr) {
+	   		case TConst(ct):
+				switch (ct) {
+					case TInt(_), TFloat(_), TString(_), TBool(_), TNull:
+						return e;
+					case TThis, TSuper:
+						return null;
+				}
+			case TField(_, FStatic(c, cf)):
+				switch (cf.get().kind) {
+					case FVar(read, write) if (write == AccNever):
+						if (cf.get().expr != null)
+							return extractConstantValue(cf.get().expr());
+						else
+							return null;
+					default:
+				}
+				return null;
+			case TField(_, FEnum(_)):
+				return e;
+			case TParenthesis(e1):
+				return extractConstantValue(e1);
+			default:
+				return null;
+		}
+	}
+
+
+	static function checkConstantSwitch(sw:{e:TypedExpr, cases:Array<TSwitchCase>, edef:Null<TypedExpr>}):Null<TypedExpr> {
+		function loop(e1:TypedExpr, cases:Array<TSwitchCase>):Null<TypedExpr> {
+			for (case_ in cases) {
+				var resolved:Array<TypedExpr> = [];
+				for (e2 in case_.values) {
+					var c = extractConstantValue(e2);
+					if (c == null)
+						return null;
+					resolved.push(c);
+				}
+
+				for (e2 in resolved)
+					if (e1.equals(e2))
+						return case_.expr;
+			}
+
+			return sw.edef;
+		}
+
+		function isEmpty(e:TypedExpr):Bool {
+			return switch (e.expr) {
+				case TBlock([]): true;
+				default: false;
+			}
+		}
+
+		function isEmptyDefault():Bool {
+			if (sw.edef == null)
+				return true;
+
+			return isEmpty(sw.edef);
+		}
+
+		var subject = sw.e;
+
+		switch (subject.expr) {
+
+			case TConst(ct):
+				switch (ct) {
+					case TSuper, TThis:
+						return null;
+					default:
+						return loop(subject, sw.cases);
+				}
+
+			default:
+				var allEmpty = true;
+				for (case_ in sw.cases)
+					if (!isEmpty(case_.expr)) {
+						allEmpty = false;
+						break;
+					}
+
+				if (allEmpty && isEmptyDefault())
+					return sw.e;
+
+				return null;
+		}
+	}
 }
+
+typedef TSwitchCase = {values:Array<TypedExpr>, expr:TypedExpr}
 
 enum Purity {
 	Pure;
