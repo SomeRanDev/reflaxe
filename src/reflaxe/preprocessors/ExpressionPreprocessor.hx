@@ -230,7 +230,8 @@ class ExpressionPreprocessorHelper {
 				data.setExprList(MarkUnusedVariablesImpl.mark(data.expr.unwrapBlock()));
 			}
 			case RemoveUnusedBlockResults: {
-				data.setExpr(RemoveUnusedBlockResultsImpl.process(data.expr));
+				data.setExprList(RemoveUnusedBlockResultsImpl.process(data.expr.unwrapBlock()));
+				//data.setExpr(RemoveUnusedBlockResultsImpl.process(data.expr));
 			}
 			case Custom(preprocessor): {
 				preprocessor.process(data, compiler);
