@@ -124,10 +124,8 @@ private class OptimizerTexpr {
 						throw exitObj;
 					case TCast(_, m) if (m != null):
 						throw exitObj;
-					case TVar(_):
-						throw exitObj;
 					case TArray(_), TEnumParameter(_), TEnumIndex(_), TCast(_, null), TBinop(_, _, _), TUnop(_, _, _), TParenthesis(_), TMeta(_), TWhile(_),
-						TField(_, _), TIf(_), TTry(_), TSwitch(_), TArrayDecl(_), TBlock(_), TObjectDecl(_):
+						TField(_, _), TIf(_), TTry(_), TSwitch(_), TArrayDecl(_), TBlock(_), TObjectDecl(_), TVar(_):
 						TypedExprTools.iter(e, loop);
 						return;
 					default:
@@ -194,9 +192,14 @@ private class OptimizerTexpr {
 					return loop(acc, [e1].concat(tail));
 
 				case TArray(e1, e2), TBinop(_, e1, e2):
+					//if (!hasSideEffects(e1) && !hasSideEffects(e2))
+					//	return loop(acc, tail);
 					return loop(acc, [e1, e2].concat(tail));
 
-				case TArrayDecl(el1), TCall({ expr: TField(_, FEnum(_)) }, el1):
+				case TArrayDecl(el1):
+					return loop(acc, el1.concat(tail));
+
+				case TCall({ expr: TField(_, FEnum(_)) }, el1):
 					return loop(acc, el1.concat(tail));
 
 				case TObjectDecl(fl):
@@ -215,14 +218,20 @@ private class OptimizerTexpr {
 
 				case TBlock([]):
 					return loop(acc, tail);
+				
+				case TBlock(el1):
+					var r:Array<TypedExpr> = [];
+					r = OptimizerTexpr.blockElement(true, r, el1);
+					r.reverse();
+					return loop(acc, r.concat(tail));
 
 				case TContinue if (loopBottom):
 					return loop([], tail);
 
-				default:
+				case _:
 					return loop([head].concat(acc), tail);
 			}
-			return null;
+			return acc;
 		}
 
 		return loop(acc, el);
