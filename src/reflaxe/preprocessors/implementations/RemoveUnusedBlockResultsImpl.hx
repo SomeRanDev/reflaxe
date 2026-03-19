@@ -21,26 +21,22 @@ using Lambda;
 **/
 class RemoveUnusedBlockResultsImpl {
 	public static function process(list:Array<TypedExpr>):Array<TypedExpr> {
-		// public static function process(expr: TypedExpr): TypedExpr {
-		var result = [];
-
-		result = OptimizerTexpr.blockElement(true, result, list);
+		var processed = [for (e in list) processRecursive(e)];
+		var result = OptimizerTexpr.blockElement(true, [], processed);
 		result.reverse();
-		/*
-		for (i in 0...list.length) {
-			var e = list[i];
-			var sideEff = OptimizerTexpr.hasSideEffects(e);
-			if (sideEff)
-				result.push(e);
-			else if (i == list.length - 1)
-				result.push(e);
-			else 
-				result.push(TBinop(OpAssign, TIdent("--[=[").make(e.t, e.pos), 
-			TBinop(OpAssign, e, TIdent("]=]--").make(e.t, e.pos)).make(e.t, e.pos)
-			).make(e.t, e.pos));
-		}*/
-
 		return result;
+	}
+
+	static function processRecursive(expr:TypedExpr):TypedExpr {
+		var mapped = haxe.macro.TypedExprTools.map(expr, processRecursive);
+		return switch (mapped.expr) {
+			case TBlock(el):
+				var result = OptimizerTexpr.blockElement(true, [], el);
+				result.reverse();
+				mapped.copy(TBlock(result));
+			case _:
+				mapped;
+		};
 	}
 }
 
@@ -212,13 +208,13 @@ private class OptimizerTexpr {
 				case TIf(e1, e2, e3) 
 					if (e3 != null && !hasSideEffects(e2) && !hasSideEffects(e3)):
 					return loop(acc, [e1].concat(tail));
-				
+
 				case TBlock([e1]):
 					return loop(acc, [e1].concat(tail));
 
 				case TBlock([]):
 					return loop(acc, tail);
-				
+
 				case TBlock(el1):
 					var r:Array<TypedExpr> = [];
 					r = OptimizerTexpr.blockElement(true, r, el1);
