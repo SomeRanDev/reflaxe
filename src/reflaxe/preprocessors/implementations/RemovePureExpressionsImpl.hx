@@ -1,5 +1,5 @@
 // =======================================================
-// * RemoveUnusedBlockResults
+// * RemovePureExpressions
 // =======================================================
 package reflaxe.preprocessors.implementations;
 
@@ -17,9 +17,13 @@ using reflaxe.helpers.TypeHelper;
 using Lambda;
 
 /**
-	Removes or converts the final expression value of blocks whose value is not used by the surrounding code.
+	Walks the expression tree and removes pure (side-effect-free)
+	expressions from blocks that are not used as values.
 **/
-class RemoveUnusedBlockResultsImpl {
+class RemovePureExpressionsImpl {
+	/**
+		Entry point. Processes the unwrapped block elements of a function body.
+	**/
 	public static function process(list:Array<TypedExpr>):Array<TypedExpr> {
 		var processed = [for (e in list) processRecursive(e)];
 		var result = OptimizerTexpr.blockElement(true, [], processed);
@@ -27,6 +31,10 @@ class RemoveUnusedBlockResultsImpl {
 		return result;
 	}
 
+	/**
+		Recursively walks the expression tree. At each `TBlock`,
+		removes pure expressions from its element list via `blockElement`.
+	**/
 	static function processRecursive(expr:TypedExpr):TypedExpr {
 		var mapped = haxe.macro.TypedExprTools.map(expr, processRecursive);
 		return switch (mapped.expr) {
@@ -40,7 +48,11 @@ class RemoveUnusedBlockResultsImpl {
 	}
 }
 
-@:allow(RemoveUnusedBlockResultsImpl)
+/**
+	Provides purity detection for fields, classes, and field accesses
+	based on `@:pure` metadata annotations.
+**/
+@:allow(RemovePureExpressionsImpl)
 private class PurityState {
 	public static function getPurityFromMeta(mt:MetadataEntry):Purity {
 		if (mt == null || mt.params == null || mt.params.length == 0)
@@ -89,8 +101,19 @@ private class PurityState {
 @:allow(OptimizerTexpr)
 private class ExitLoopException {public function new() {}}
 
-@:allow(RemoveUnusedBlockResultsImpl)
+/**
+	Core optimization logic ported from the Haxe compiler's `optimizerTexpr.ml`
+	and `analyzerTexpr.ml`. Provides side-effect detection and block-level
+	pure expression removal.
+**/
+@:allow(RemovePureExpressionsImpl)
 private class OptimizerTexpr {
+	/**
+		Returns `true` if the expression has observable side effects
+		(e.g. function calls, assignments, increments, throws).
+		Pure field calls and constructors annotated with `@:pure`
+		are not considered side-effecting.
+	**/
 	public static function hasSideEffects(expr:TypedExpr):Bool {
 		final exitObj = new ExitLoopException();
 		try {
@@ -139,6 +162,11 @@ private class OptimizerTexpr {
 		}
 	}
 
+	/**
+		Processes a block's element list, removing pure (side-effect-free)
+		expressions that don't contribute to the program state. The result
+		is built in reverse order and must be reversed by the caller.
+	**/
 	public static function blockElement(loopBottom:Bool, acc:Array<TypedExpr>, el:Array<TypedExpr>):Array<TypedExpr> {
 		function loop(acc:Array<TypedExpr>, el:Array<TypedExpr>):Array<TypedExpr> {
 			if (el.length == 0)
@@ -227,7 +255,6 @@ private class OptimizerTexpr {
 				case _:
 					return loop([head].concat(acc), tail);
 			}
-			return acc;
 		}
 
 		return loop(acc, el);
@@ -323,8 +350,15 @@ private class OptimizerTexpr {
 	}
 }
 
+/**
+	Helper type, this way we don't have to pass the original TSwitch texpr,
+	skipping the need to re-capture the parameters.
+**/
 typedef TSwitchCase = {values:Array<TypedExpr>, expr:TypedExpr}
 
+/**
+	Represents the purity level of a class, field, or expression.
+**/
 enum Purity {
 	Pure;
 	Impure;

@@ -14,7 +14,7 @@ import reflaxe.preprocessors.implementations.RemoveTemporaryVariablesImpl;
 import reflaxe.preprocessors.implementations.RemoveTemporaryVariablesImpl.RemoveTemporaryVariablesMode;
 import reflaxe.preprocessors.implementations.RemoveUnnecessaryBlocksImpl;
 import reflaxe.preprocessors.implementations.WrapLambdaCaptureVariablesInArrayImpl;
-import reflaxe.preprocessors.implementations.RemoveUnusedBlockResultsImpl;
+import reflaxe.preprocessors.implementations.RemovePureExpressionsImpl;
 
 using reflaxe.helpers.ArrayHelper;
 using reflaxe.helpers.ClassFieldHelper;
@@ -142,14 +142,14 @@ enum ExpressionPreprocessor {
 	WrapLambdaCaptureVariablesInArray(options: WrapLambdaCaptureVariablesInArrayOptions);
 
 	/**
-		Removes or converts the final expression value of blocks whose value
-		is not used by the surrounding code.
-	
-		This fixes inlined functions that produce a return-expression when
-		the caller does not use thereturned value (which produces invalid
-		code in non-expression-based languages).
+		Walks the expression tree and removes pure (side-effect-free)
+		expressions from blocks that are not used as values.
+
+		For example, standalone `myArr[6];` or `a + b;` statements
+		will be removed, while expressions with side effects like
+		function calls or assignments are preserved.
 	**/
-	RemoveUnusedBlockResults;
+	RemovePureExpressions;
 
 	RemoveSingleExpressionBlocks;
 	RemoveConstantBoolIfs;
@@ -229,9 +229,8 @@ class ExpressionPreprocessorHelper {
 			case MarkUnusedVariables: {
 				data.setExprList(MarkUnusedVariablesImpl.mark(data.expr.unwrapBlock()));
 			}
-			case RemoveUnusedBlockResults: {
-				data.setExprList(RemoveUnusedBlockResultsImpl.process(data.expr.unwrapBlock()));
-				//data.setExpr(RemoveUnusedBlockResultsImpl.process(data.expr));
+			case RemovePureExpressions: {
+				data.setExprList(RemovePureExpressionsImpl.process(data.expr.unwrapBlock()));
 			}
 			case Custom(preprocessor): {
 				preprocessor.process(data, compiler);
@@ -255,7 +254,7 @@ class ExpressionPreprocessorHelper {
 			RemoveReassignedVariableDeclarations,
 			RemoveLocalVariableAliases,
 			MarkUnusedVariables,
-			RemoveUnusedBlockResults,
+			RemovePureExpressions,
 		];
 	}
 }
