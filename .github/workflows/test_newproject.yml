@@ -10,13 +10,13 @@ jobs:
   test_newproject_direct:
     runs-on: ubuntu-latest
     steps:
-      - name: Setup Haxe 4.3.0
-        uses: krdlab/setup-haxe@v1
+      - name: Setup Haxe 4.3.7
+        uses: krdlab/setup-haxe@v2
         with:
-          haxe-version: 4.3.0
+          haxe-version: 4.3.7
 
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
 
       - name: Check Haxe Version
         run: haxe -version
@@ -38,13 +38,13 @@ jobs:
   test_newproject_intermediate:
     runs-on: ubuntu-latest
     steps:
-      - name: Setup Haxe 4.3.0
-        uses: krdlab/setup-haxe@v1
+      - name: Setup Haxe 4.3.7
+        uses: krdlab/setup-haxe@v2
         with:
-          haxe-version: 4.3.0
+          haxe-version: 4.3.7
 
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
 
       - name: Check Haxe Version
         run: haxe -version

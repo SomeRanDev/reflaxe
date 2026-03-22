@@ -9,10 +9,10 @@ jobs:
     runs-on: ubuntu-latest
     environment: my-secrets
     steps:
-      - uses: actions/checkout@v2
-      - uses: krdlab/setup-haxe@v1
+      - uses: actions/checkout@v6
+      - uses: krdlab/setup-haxe@v2
         with:
-          haxe-version: 4.3.6
+          haxe-version: 4.3.7
       - uses: edgarrc/action-7z@v1
         with:
           args: 7z a reflaxe.zip newproject/* src/* LICENSE Run.hx extraParams.hxml haxelib.json
