@@ -14,6 +14,7 @@ import reflaxe.preprocessors.implementations.RemoveTemporaryVariablesImpl;
 import reflaxe.preprocessors.implementations.RemoveTemporaryVariablesImpl.RemoveTemporaryVariablesMode;
 import reflaxe.preprocessors.implementations.RemoveUnnecessaryBlocksImpl;
 import reflaxe.preprocessors.implementations.WrapLambdaCaptureVariablesInArrayImpl;
+import reflaxe.preprocessors.implementations.RemovePureExpressionsImpl;
 
 using reflaxe.helpers.ArrayHelper;
 using reflaxe.helpers.ClassFieldHelper;
@@ -140,6 +141,16 @@ enum ExpressionPreprocessor {
 	**/
 	WrapLambdaCaptureVariablesInArray(options: WrapLambdaCaptureVariablesInArrayOptions);
 
+	/**
+		Walks the expression tree and removes pure (side-effect-free)
+		expressions from blocks that are not used as values.
+
+		For example, standalone `myArr[6];` or `a + b;` statements
+		will be removed, while expressions with side effects like
+		function calls or assignments are preserved.
+	**/
+	RemovePureExpressions;
+
 	RemoveSingleExpressionBlocks;
 	RemoveConstantBoolIfs;
 	RemoveUnnecessaryBlocks;
@@ -218,6 +229,9 @@ class ExpressionPreprocessorHelper {
 			case MarkUnusedVariables: {
 				data.setExprList(MarkUnusedVariablesImpl.mark(data.expr.unwrapBlock()));
 			}
+			case RemovePureExpressions: {
+				data.setExprList(RemovePureExpressionsImpl.process(data.expr.unwrapBlock()));
+			}
 			case Custom(preprocessor): {
 				preprocessor.process(data, compiler);
 			}
@@ -240,6 +254,7 @@ class ExpressionPreprocessorHelper {
 			RemoveReassignedVariableDeclarations,
 			RemoveLocalVariableAliases,
 			MarkUnusedVariables,
+			RemovePureExpressions,
 		];
 	}
 }
