@@ -14,6 +14,7 @@ using reflaxe.helpers.PositionHelper;
 using reflaxe.helpers.TVarHelper;
 using reflaxe.helpers.TypedExprHelper;
 using reflaxe.helpers.TypeHelper;
+using reflaxe.helpers.NullHelper;
 using Lambda;
 
 /**
@@ -55,7 +56,7 @@ class RemovePureExpressionsImpl {
 @:allow(RemovePureExpressionsImpl)
 private class PurityState {
 	public static function getPurityFromMeta(mt:MetadataEntry):Purity {
-		if (mt == null || mt.params == null || mt.params.length == 0)
+		if (mt == null || mt.params == null || mt.params.trustMe().length == 0)
 			return MaybePure;
 		return switch (mt.params[0].expr) {
 			case EConst(CIdent(ident)): switch (ident) {
@@ -126,8 +127,8 @@ private class OptimizerTexpr {
 						for (arg in el)
 							loop(arg);
 						return;
-					case TNew(c, _, el) if (c.get().constructor.get() != null
-						&& PurityState.isPure(PurityState.getPurity(c.get(), c.get().constructor.get()))):
+					case TNew(c, _, el) if (c.get().constructor?.get() != null
+						&& PurityState.isPure(PurityState.getPurity(c.get(), c.get().constructor.trustMe().get()))):
 						for (arg in el)
 							loop(arg);
 						return;
@@ -204,12 +205,12 @@ private class OptimizerTexpr {
 					else
 						return switch (e2) {
 							case null: loop(acc, tail);
-							case e: loop(acc, [e].concat(tail));
+							case e: loop(acc, [e.trustMe()].concat(tail));
 						}
 				case TSwitch(e, cases, edef):
 					var opt = checkConstantSwitch({e: e, cases: cases, edef: edef});
 					if (opt != null)
-						return loop(acc, [opt].concat(tail));
+						return loop(acc, [opt.trustMe()].concat(tail));
 					else
 						return loop([head].concat(acc), tail);
 				case TParenthesis(e1), TMeta(_, e1), TCast(e1, null), TField(e1, _), TUnop(_, _, e1), TEnumIndex(e1), TEnumParameter(e1, _, _):
@@ -272,8 +273,9 @@ private class OptimizerTexpr {
 			case TField(_, FStatic(c, cf)):
 				switch (cf.get().kind) {
 					case FVar(read, write) if (write == AccNever):
-						if (cf.get().expr != null)
-							return extractConstantValue(cf.get().expr());
+						var ex = cf.get()?.expr();
+						if (ex != null)
+							return extractConstantValue(ex.trustMe());
 						else
 							return null;
 					default:
