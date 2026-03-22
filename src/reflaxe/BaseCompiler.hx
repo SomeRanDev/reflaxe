@@ -257,6 +257,23 @@ class BaseCompilerOptions {
 		paramTypes: Null<Array<MetaArgumentType>>,
 		compileFunc: Null<(MetadataEntry, Array<String>) -> Null<String>>
 	}> = [];
+
+	/**
+		Converts all static variable declarations to have a self
+		calling lambda function where needed. This does not affect
+		variables with a deterministic/constant value.
+
+		Useful if your target language does not support blocks as values
+		for variables, however the target language also needs to support
+		lambda function declarations and executing code directly on the top stack
+		(great examples are lua and python).
+
+		You can use the ClassVarData.canBeInlined variable to check if
+		the variable does not need any kind of wrapper. You can also use
+		it with `convertStaticVarExpressionsToFunctions` turned off to
+		implement your own system.
+	**/
+	public var convertStaticVarExpressionsToFunctions: Bool = true;
 }
 
 /**
