@@ -36,6 +36,7 @@ using reflaxe.helpers.NameMetaHelper;
 using reflaxe.helpers.NullableMetaAccessHelper;
 using reflaxe.helpers.TypeHelper;
 using reflaxe.helpers.TypedExprHelper;
+using reflaxe.helpers.NullHelper;
 
 /**
 	The heart of Reflaxe.
@@ -592,7 +593,7 @@ class ReflectCompiler {
 		}
 
 		final fE = field.buildTField(data.classType);
-		var e = if (compiler.options.convertStaticVarExpressionsToFunctions) {
+		var e:TypedExpr = if (compiler.options.convertStaticVarExpressionsToFunctions) {
 			data.expr.transformLambaSelfCall(true);
 		} else {
 			data.expr.transformAssign(fE);
@@ -622,7 +623,7 @@ class ReflectCompiler {
 									switch(b.expr)
 									{
 										case TReturn(e):
-											e;
+											e.trustMe();
 										case _:
 											b;
 									}
@@ -633,10 +634,10 @@ class ReflectCompiler {
 							case _: data.expr;
 						}
 					
-					case _: data.expr;
+					case _: data.expr.trustMe();
 				}
 			} else {
-				data.expr;
+				data.expr.trustMe();
 			}
 		}
 
