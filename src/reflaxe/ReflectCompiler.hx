@@ -57,7 +57,11 @@ class ReflectCompiler {
 		#elseif eval
 		static var called = false;
 		if(!called) {
-			if(#if eval !Context.defined("display") #else true #end) {
+			if(#if eval
+				!Context.defined("display") &&
+				!Context.defined("no-compilation") &&
+				!Compiler.getConfiguration().args.contains("--no-output")
+			#else true #end) {
 				Context.onAfterTyping(onAfterTyping);
 				Context.onAfterGenerate(onAfterGenerate);
 				checkServerCache();
