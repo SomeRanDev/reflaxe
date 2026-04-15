@@ -209,13 +209,13 @@ private class OptimizerTexpr {
 				TSwitch(_), TArrayDecl(_), TBlock(_),
 				TObjectDecl(_), TVar(_):
 			{
-				var isPure = true;
+				var hasEffect = false;
 				TypedExprTools.iter(expr, function(subExpr) {
 					if(hasSideEffects(subExpr)) {
-						isPure = false;
+						hasEffect = true;
 					}
 				});
-				return isPure;
+				return hasEffect;
 			}
 			case _: {
 				return false;
