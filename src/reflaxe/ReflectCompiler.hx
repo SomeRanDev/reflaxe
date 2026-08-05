@@ -168,7 +168,13 @@ class ReflectCompiler {
 	static var haxeProvidedModuleTypes: Null<Array<ModuleType>>;
 
 	static function onAfterTyping(moduleTypes: Array<ModuleType>) {
-		haxeProvidedModuleTypes = moduleTypes;
+		if(haxeProvidedModuleTypes == null){
+			haxeProvidedModuleTypes = moduleTypes;
+		} else {
+			for(type in moduleTypes){
+				haxeProvidedModuleTypes.push(type);
+			}
+		}
 	}
 
 	static function onAfterGenerate() {
